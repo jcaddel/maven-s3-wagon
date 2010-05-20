@@ -26,6 +26,7 @@ import org.apache.maven.wagon.events.SessionListener;
 import org.apache.maven.wagon.events.TransferEvent;
 import org.apache.maven.wagon.events.TransferListener;
 import org.apache.maven.wagon.proxy.ProxyInfo;
+import org.apache.maven.wagon.proxy.ProxyInfoProvider;
 import org.apache.maven.wagon.repository.Repository;
 import org.apache.maven.wagon.resource.Resource;
 
@@ -41,6 +42,8 @@ import java.util.List;
  */
 public abstract class AbstractWagon implements Wagon {
 
+	private int timeout;
+	
     private boolean interactive;
 
     private Repository repository;
@@ -100,7 +103,7 @@ public abstract class AbstractWagon implements Wagon {
     }
 
     public final void connect(Repository source) throws ConnectionException, AuthenticationException {
-        connect(source, null, null);
+    	doConnect(source, null, null);
     }
 
     public final void connect(Repository source, ProxyInfo proxyInfo) throws ConnectionException,
@@ -110,10 +113,10 @@ public abstract class AbstractWagon implements Wagon {
 
     public final void connect(Repository source, AuthenticationInfo authenticationInfo) throws ConnectionException,
             AuthenticationException {
-        connect(source, authenticationInfo, null);
+    	doConnect(source, authenticationInfo, null);
     }
-
-    public final void connect(Repository source, AuthenticationInfo authenticationInfo, ProxyInfo proxyInfo)
+    
+    protected void doConnect(Repository source, AuthenticationInfo authenticationInfo, ProxyInfo proxyInfo)             
             throws ConnectionException, AuthenticationException {
         repository = source;
         sessionListeners.fireSessionOpening();
@@ -131,6 +134,11 @@ public abstract class AbstractWagon implements Wagon {
         }
         sessionListeners.fireSessionLoggedIn();
         sessionListeners.fireSessionOpened();
+    }
+
+    public final void connect(Repository source, AuthenticationInfo authenticationInfo, ProxyInfo proxyInfo)
+            throws ConnectionException, AuthenticationException {
+    	doConnect(source, authenticationInfo, proxyInfo);
     }
 
     public final void disconnect() throws ConnectionException {
@@ -334,5 +342,21 @@ public abstract class AbstractWagon implements Wagon {
      *                   handled by the base class
      */
     protected abstract void putResource(File source, String destination, TransferProgress progress) throws Exception;
+
+	public void connect(Repository source, AuthenticationInfo authenticationInfo, ProxyInfoProvider proxyInfoProvider) throws ConnectionException, AuthenticationException {
+		doConnect(source, authenticationInfo, null);
+	}
+
+	public void connect(Repository source, ProxyInfoProvider proxyInfoProvider) throws ConnectionException, AuthenticationException {
+		doConnect(source, null, null);
+	}
+
+	public int getTimeout() {
+		return this.timeout;
+	}
+
+	public void setTimeout(int timeoutValue) {
+		this.timeout = timeoutValue;
+	}
 
 }
