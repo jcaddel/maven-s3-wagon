@@ -45,10 +45,29 @@ import java.util.List;
  * <code>static.springframework.org</code> bucket on the S3 service.
  * <p/>
  * This implementation uses the <code>username</code> and
- * <code>passphrase</code> portions of the server authentication metadata for
+ * <code>password</code> portions of the server authentication metadata for
  * credentials.
+ * 
+ * <noformat>
+ * 
+ *  pom.xml
+ *  <snapshotRepository>
+ *    <id>kuali.snapshot</id>
+ *    <name>Kuali Snapshot Repository</name>
+ *    <url>s3://maven.kuali.org/snapshot</url>
+ *  </snapshotRepository>
+ * 
+ *  settings.xml
+ *  <server>
+ *    <id>ks.aws</id>
+ *    <username>[AWS Access Key ID]</username>
+ *    <password>[AWS Secret Access Key]</password>
+ *  </server>
+ *  
+ * </noformat>
  *
  * @author Ben Hale
+ * @author Jeff Caddel - use password instead of passphrase from settings.xml (Maven 3.0 is ignoring passphrase)
  */
 public class SimpleStorageServiceWagon extends AbstractWagon {
 
@@ -194,9 +213,9 @@ public class SimpleStorageServiceWagon extends AbstractWagon {
             return null;
         }
         String accessKey = authenticationInfo.getUserName();
-        String secretKey = authenticationInfo.getPassphrase();
+        String secretKey = authenticationInfo.getPassword();
         if (accessKey == null || secretKey == null) {
-            throw new AuthenticationException("S3 requires a username and passphrase to be set");
+            throw new AuthenticationException("S3 requires a username and password to be set");
         }
         return new AWSCredentials(accessKey, secretKey);
     }

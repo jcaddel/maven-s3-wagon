@@ -38,6 +38,7 @@ import java.util.List;
  * other common behaviors.
  *
  * @author Ben Hale
+ * @author Jeff Caddel - Updates for version 1.0-beta-6 of the Wagon interface 
  * @since 1.1
  */
 public abstract class AbstractWagon implements Wagon {
