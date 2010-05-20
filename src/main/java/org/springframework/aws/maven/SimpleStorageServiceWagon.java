@@ -15,6 +15,7 @@
  */
 package org.springframework.aws.maven;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.maven.wagon.ResourceDoesNotExistException;
 import org.apache.maven.wagon.authentication.AuthenticationException;
 import org.apache.maven.wagon.authentication.AuthenticationInfo;
@@ -35,188 +36,209 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
- * An implementation of the Maven Wagon interface that allows you to access the
- * Amazon S3 service. URLs that reference the S3 service should be in the form
- * of <code>s3://bucket.name</code>. As an example
- * <code>s3://static.springframework.org</code> would put files into the
- * <code>static.springframework.org</code> bucket on the S3 service.
+ * An implementation of the Maven Wagon interface that allows you to access the Amazon S3 service. URLs that reference
+ * the S3 service should be in the form of <code>s3://bucket.name</code>. As an example
+ * <code>s3://maven.kuali.org</code> puts files into the <code>maven.kuali.org</code> bucket on the S3 service.
  * <p/>
- * This implementation uses the <code>username</code> and
- * <code>password</code> portions of the server authentication metadata for
- * credentials.
+ * This implementation uses the <code>username</code> and <code>password</code> portions of the server authentication
+ * metadata for credentials.
  * 
- * <noformat>
+ * <code>
  * 
- *  pom.xml
- *  <snapshotRepository>
- *    <id>kuali.snapshot</id>
- *    <name>Kuali Snapshot Repository</name>
- *    <url>s3://maven.kuali.org/snapshot</url>
+ * pom.xml 
+ * <snapshotRepository> 
+ *   <id>kuali.snapshot</id> 
+ *   <name>Kuali Snapshot Repository</name>
+ *   <url>s3://maven.kuali.org/snapshot</url> 
  *  </snapshotRepository>
  * 
- *  settings.xml
- *  <server>
- *    <id>ks.aws</id>
- *    <username>[AWS Access Key ID]</username>
- *    <password>[AWS Secret Access Key]</password>
- *  </server>
- *  
- * </noformat>
- *
+ * settings.xml 
+ * <server> 
+ *   <id>ks.aws</id> 
+ *   <username>[AWS Access Key ID]</username> 
+ *   <password>[AWS Secret Access Key]</password> 
+ * </server>
+ * 
+ * </code>
+ * 
+ * 1) Use password instead of passphrase for AWS Secret Access Key (Maven 3.0 is ignoring passphrase)<br>
+ * 2) Fixed a bug in getBaseDir() if it was passed a one character string<br>
+ * 3) Optimized buildDestinationPath to skip directory creation if the directory exists already
+ * 
  * @author Ben Hale
- * @author Jeff Caddel - use password instead of passphrase from settings.xml (Maven 3.0 is ignoring passphrase)
+ * @author Jeff Caddel
+ * 
  */
 public class SimpleStorageServiceWagon extends AbstractWagon {
 
-    private S3Service service;
+	private S3Service service;
 
-    private S3Bucket bucket;
+	private S3Bucket bucket;
 
-    private String basedir;
+	private String basedir;
 
-    public SimpleStorageServiceWagon() {
-        super(false);
-    }
+	Map<String, S3Object> directoryCache = new HashMap<String, S3Object>();
 
-    protected void connectToRepository(Repository source, AuthenticationInfo authenticationInfo, ProxyInfo proxyInfo)
-            throws AuthenticationException {
-        try {
-            service = new RestS3Service(getCredentials(authenticationInfo));
-        } catch (S3ServiceException e) {
-            throw new AuthenticationException("Cannot authenticate with current credentials", e);
-        }
-        bucket = new S3Bucket(source.getHost());
-        basedir = getBaseDir(source);
-    }
+	public SimpleStorageServiceWagon() {
+		super(false);
+	}
 
-    protected boolean doesRemoteResourceExist(String resourceName) {
-        try {
-            service.getObjectDetails(bucket, basedir + resourceName);
-        } catch (S3ServiceException e) {
-            return false;
-        }
-        return true;
-    }
+	protected void connectToRepository(Repository source, AuthenticationInfo authenticationInfo, ProxyInfo proxyInfo) throws AuthenticationException {
+		try {
+			service = new RestS3Service(getCredentials(authenticationInfo));
+		} catch (S3ServiceException e) {
+			throw new AuthenticationException("Cannot authenticate with current credentials", e);
+		}
+		bucket = new S3Bucket(source.getHost());
+		basedir = getBaseDir(source);
+	}
 
-    protected void disconnectFromRepository() {
-        // Nothing to do for S3
-    }
+	protected boolean doesRemoteResourceExist(String resourceName) {
+		try {
+			service.getObjectDetails(bucket, basedir + resourceName);
+		} catch (S3ServiceException e) {
+			return false;
+		}
+		return true;
+	}
 
-    protected void getResource(String resourceName, File destination, TransferProgress progress)
-            throws ResourceDoesNotExistException, S3ServiceException, IOException {
-        S3Object object;
-        try {
-            object = service.getObject(bucket, basedir + resourceName);
-        } catch (S3ServiceException e) {
-            throw new ResourceDoesNotExistException("Resource " + resourceName + " does not exist in the repository", e);
-        }
+	protected void disconnectFromRepository() {
+		// Nothing to do for S3
+	}
 
-        InputStream in = null;
-        OutputStream out = null;
-        try {
-            in = object.getDataInputStream();
-            out = new TransferProgressFileOutputStream(destination, progress);
-            byte[] buffer = new byte[1024];
-            int length;
-            while ((length = in.read(buffer)) != -1) {
-                out.write(buffer, 0, length);
-            }
-        } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException e) {
-                    // Nothing possible at this point
-                }
-            }
-            if (out != null) {
-                try {
-                    out.close();
-                } catch (IOException e) {
-                    // Nothing possible at this point
-                }
-            }
-        }
-    }
+	protected void getResource(String resourceName, File destination, TransferProgress progress) throws ResourceDoesNotExistException, S3ServiceException, IOException {
+		S3Object object;
+		try {
+			String key = basedir + resourceName;
+			System.out.println("Getting:" + key);
+			object = service.getObject(bucket, key);
+		} catch (S3ServiceException e) {
+			throw new ResourceDoesNotExistException("Resource " + resourceName + " does not exist in the repository", e);
+		}
 
-    protected boolean isRemoteResourceNewer(String resourceName, long timestamp) throws S3ServiceException {
-        S3Object object = service.getObjectDetails(bucket, basedir + resourceName);
-        return object.getLastModifiedDate().compareTo(new Date(timestamp)) < 0;
-    }
+		InputStream in = null;
+		OutputStream out = null;
+		try {
+			in = object.getDataInputStream();
+			out = new TransferProgressFileOutputStream(destination, progress);
+			byte[] buffer = new byte[1024];
+			int length;
+			while ((length = in.read(buffer)) != -1) {
+				out.write(buffer, 0, length);
+			}
+		} finally {
+			IOUtils.closeQuietly(in);
+			IOUtils.closeQuietly(out);
+		}
+	}
 
-    protected List<String> listDirectory(String directory) throws Exception {
-        S3Object[] objects = service.listObjects(bucket, basedir + directory, "");
-        List<String> fileNames = new ArrayList<String>(objects.length);
-        for (S3Object object : objects) {
-            fileNames.add(object.getKey());
-        }
-        return fileNames;
-    }
+	protected boolean isRemoteResourceNewer(String resourceName, long timestamp) throws S3ServiceException {
+		S3Object object = service.getObjectDetails(bucket, basedir + resourceName);
+		return object.getLastModifiedDate().compareTo(new Date(timestamp)) < 0;
+	}
 
-    protected void putResource(File source, String destination, TransferProgress progress) throws S3ServiceException, IOException {
-    	buildDestinationPath(getDestinationPath(destination));
-        S3Object object = new S3Object(basedir + destination);
-        object.setAcl(AccessControlList.REST_CANNED_PUBLIC_READ);
-        object.setDataInputFile(source);
-        object.setContentLength(source.length());
+	protected List<String> listDirectory(String directory) throws Exception {
+		S3Object[] objects = service.listObjects(bucket, basedir + directory, "");
+		List<String> fileNames = new ArrayList<String>(objects.length);
+		for (S3Object object : objects) {
+			fileNames.add(object.getKey());
+		}
+		return fileNames;
+	}
 
-        InputStream in = null;
-        try {
-            service.putObject(bucket, object);
+	protected void putResource(File source, String destination, TransferProgress progress) throws S3ServiceException, IOException {
+		buildDestinationPath(getDestinationPath(destination));
+		String key = basedir + destination;
+		System.out.println("Putting:" + key);
+		S3Object object = new S3Object(key);
+		object.setAcl(AccessControlList.REST_CANNED_PUBLIC_READ);
+		object.setDataInputFile(source);
+		object.setContentLength(source.length());
 
-            in = new FileInputStream(source);
-            byte[] buffer = new byte[1024];
-            int length;
-            while ((length = in.read(buffer)) != -1) {
-                progress.notify(buffer, length);
-            }
-        } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException e) {
-                    // Nothing possible at this point
-                }
-            }
-        }
-    }
-    
-    private void buildDestinationPath(String destination) throws S3ServiceException {
-    	S3Object object = new S3Object(basedir + destination + "/");
-    	object.setAcl(AccessControlList.REST_CANNED_PUBLIC_READ);
-    	object.setContentLength(0);
-    	service.putObject(bucket, object);
-    	int index = destination.lastIndexOf('/');
-    	if(index != -1) {
-    		buildDestinationPath(destination.substring(0, index));
-    	}
-    }
-    
-    private String getDestinationPath(String destination) {
-    	return destination.substring(0, destination.lastIndexOf('/'));
-    }
+		InputStream in = null;
+		try {
+			service.putObject(bucket, object);
 
-    private String getBaseDir(Repository source) {
-        StringBuilder sb = new StringBuilder(source.getBasedir());
-        sb.deleteCharAt(0);
-        if (sb.charAt(sb.length() - 1) != '/') {
-            sb.append('/');
-        }
-        return sb.toString();
-    }
+			in = new FileInputStream(source);
+			byte[] buffer = new byte[1024];
+			int length;
+			while ((length = in.read(buffer)) != -1) {
+				progress.notify(buffer, length);
+			}
+		} finally {
+			IOUtils.closeQuietly(in);
+		}
+	}
 
-    private AWSCredentials getCredentials(AuthenticationInfo authenticationInfo) throws AuthenticationException {
-        if (authenticationInfo == null) {
-            return null;
-        }
-        String accessKey = authenticationInfo.getUserName();
-        String secretKey = authenticationInfo.getPassword();
-        if (accessKey == null || secretKey == null) {
-            throw new AuthenticationException("S3 requires a username and password to be set");
-        }
-        return new AWSCredentials(accessKey, secretKey);
-    }
+	protected boolean isExistingDirectory(String key) throws S3ServiceException {
+		S3Object object = directoryCache.get(key);
+		if (object != null) {
+			return true;
+		}
+		try {
+			object = service.getObject(bucket, key);
+			IOUtils.closeQuietly(object.getDataInputStream());
+			directoryCache.put(key, object);
+			return true;
+		} catch (S3ServiceException e) {
+			if (e.getResponseCode() == 404) {
+				return false;
+			} else {
+				throw e;
+			}
+		}
+	}
+
+	protected void createFolderIfNeeded(String key) throws S3ServiceException {
+		if (isExistingDirectory(key)) {
+			return;
+		}
+		S3Object object = new S3Object(key);
+		object.setAcl(AccessControlList.REST_CANNED_PUBLIC_READ);
+		object.setContentLength(0);
+		service.putObject(bucket, object);
+		directoryCache.put(key, object);
+	}
+
+	protected void buildDestinationPath(String destination) throws S3ServiceException {
+		String key = basedir + destination + "/";
+		createFolderIfNeeded(key);
+		int index = destination.lastIndexOf('/');
+		if (index != -1) {
+			buildDestinationPath(destination.substring(0, index));
+		}
+	}
+
+	protected String getDestinationPath(String destination) {
+		return destination.substring(0, destination.lastIndexOf('/'));
+	}
+
+	protected String getBaseDir(Repository source) {
+		StringBuilder sb = new StringBuilder(source.getBasedir());
+		sb.deleteCharAt(0);
+		if (sb.length() == 0) {
+			return "";
+		}
+		if (sb.charAt(sb.length() - 1) != '/') {
+			sb.append('/');
+		}
+		return sb.toString();
+	}
+
+	protected AWSCredentials getCredentials(AuthenticationInfo authenticationInfo) throws AuthenticationException {
+		if (authenticationInfo == null) {
+			return null;
+		}
+		String accessKey = authenticationInfo.getUserName();
+		String secretKey = authenticationInfo.getPassword();
+		if (accessKey == null || secretKey == null) {
+			throw new AuthenticationException("S3 requires a username and password to be set");
+		}
+		return new AWSCredentials(accessKey, secretKey);
+	}
 }
