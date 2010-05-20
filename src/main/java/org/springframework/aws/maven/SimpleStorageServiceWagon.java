@@ -34,6 +34,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -82,6 +83,11 @@ public class SimpleStorageServiceWagon extends AbstractWagon {
 
 	private String basedir;
 
+	/**
+	 * After we have created a directory, we cache it here. No need to create the same directory again. This speeds
+	 * things up by ~20% for typical Maven usage. Also makes the timestamps more meaningful when looking to see when the
+	 * directory was created.
+	 */
 	Map<String, S3Object> directoryCache = new HashMap<String, S3Object>();
 
 	public SimpleStorageServiceWagon() {
@@ -111,11 +117,13 @@ public class SimpleStorageServiceWagon extends AbstractWagon {
 		// Nothing to do for S3
 	}
 
+	/**
+	 * Pull an object out of an S3 bucket and write it to a file
+	 */
 	protected void getResource(String resourceName, File destination, TransferProgress progress) throws ResourceDoesNotExistException, S3ServiceException, IOException {
 		S3Object object;
 		try {
 			String key = basedir + resourceName;
-			System.out.println("Getting:" + key);
 			object = service.getObject(bucket, key);
 		} catch (S3ServiceException e) {
 			throw new ResourceDoesNotExistException("Resource " + resourceName + " does not exist in the repository", e);
@@ -137,11 +145,17 @@ public class SimpleStorageServiceWagon extends AbstractWagon {
 		}
 	}
 
+	/**
+	 * Is the S3 object newer than the timestamp passed in?
+	 */
 	protected boolean isRemoteResourceNewer(String resourceName, long timestamp) throws S3ServiceException {
 		S3Object object = service.getObjectDetails(bucket, basedir + resourceName);
 		return object.getLastModifiedDate().compareTo(new Date(timestamp)) < 0;
 	}
 
+	/**
+	 * List all of the objects in a given directory
+	 */
 	protected List<String> listDirectory(String directory) throws Exception {
 		S3Object[] objects = service.listObjects(bucket, basedir + directory, "");
 		List<String> fileNames = new ArrayList<String>(objects.length);
@@ -151,10 +165,15 @@ public class SimpleStorageServiceWagon extends AbstractWagon {
 		return fileNames;
 	}
 
+	/**
+	 * Store a resource into S3
+	 */
 	protected void putResource(File source, String destination, TransferProgress progress) throws S3ServiceException, IOException {
+		// Create the directory hierarchy
 		buildDestinationPath(getDestinationPath(destination));
+		// Generate our key for this file
 		String key = basedir + destination;
-		System.out.println("Putting:" + key);
+		// Create an S3 object and make it available to be read by the public
 		S3Object object = new S3Object(key);
 		object.setAcl(AccessControlList.REST_CANNED_PUBLIC_READ);
 		object.setDataInputFile(source);
@@ -175,18 +194,21 @@ public class SimpleStorageServiceWagon extends AbstractWagon {
 		}
 	}
 
+	/**
+	 * Check to see if this key already exists. If it exists in our directoryCache or it exists in S3 return true. If it
+	 * exists on S3 but is not in our cache, add it to our cache.
+	 */
 	protected boolean isExistingDirectory(String key) throws S3ServiceException {
 		S3Object object = directoryCache.get(key);
 		if (object != null) {
 			return true;
 		}
 		try {
-			object = service.getObject(bucket, key);
-			IOUtils.closeQuietly(object.getDataInputStream());
+			object = service.getObjectDetails(bucket, key);
 			directoryCache.put(key, object);
 			return true;
 		} catch (S3ServiceException e) {
-			if (e.getResponseCode() == 404) {
+			if (e.getResponseCode() == HttpURLConnection.HTTP_NOT_FOUND) {
 				return false;
 			} else {
 				throw e;
@@ -194,10 +216,14 @@ public class SimpleStorageServiceWagon extends AbstractWagon {
 		}
 	}
 
-	protected void createFolderIfNeeded(String key) throws S3ServiceException {
+	/**
+	 * Create a directory if it does not exist already
+	 */
+	protected void createDirectoryIfNeeded(String key) throws S3ServiceException {
 		if (isExistingDirectory(key)) {
 			return;
 		}
+		// Create a directory and add it to our cache
 		S3Object object = new S3Object(key);
 		object.setAcl(AccessControlList.REST_CANNED_PUBLIC_READ);
 		object.setContentLength(0);
@@ -205,9 +231,13 @@ public class SimpleStorageServiceWagon extends AbstractWagon {
 		directoryCache.put(key, object);
 	}
 
+	/**
+	 * We are about to place an object into S3. Make sure the directory structure the object is going to be placed into
+	 * exists before we do so.
+	 */
 	protected void buildDestinationPath(String destination) throws S3ServiceException {
 		String key = basedir + destination + "/";
-		createFolderIfNeeded(key);
+		createDirectoryIfNeeded(key);
 		int index = destination.lastIndexOf('/');
 		if (index != -1) {
 			buildDestinationPath(destination.substring(0, index));
@@ -218,6 +248,11 @@ public class SimpleStorageServiceWagon extends AbstractWagon {
 		return destination.substring(0, destination.lastIndexOf('/'));
 	}
 
+	/**
+	 * Convert "/" -> ""<br>
+	 * Convert "/snapshot/" -> "snapshot/"<br>
+	 * Convert "/snapshot" -> "snapshot/"<br>
+	 */
 	protected String getBaseDir(Repository source) {
 		StringBuilder sb = new StringBuilder(source.getBasedir());
 		sb.deleteCharAt(0);
@@ -230,6 +265,9 @@ public class SimpleStorageServiceWagon extends AbstractWagon {
 		return sb.toString();
 	}
 
+	/**
+	 * Create AWSCredentionals from the information in settings.xml
+	 */
 	protected AWSCredentials getCredentials(AuthenticationInfo authenticationInfo) throws AuthenticationException {
 		if (authenticationInfo == null) {
 			return null;
