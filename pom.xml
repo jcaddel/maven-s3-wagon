@@ -19,9 +19,7 @@
   It was originally coded to use username and passphrase for AWS Access Key ID and AWS Secret Access Key.
   Maven 3 however was not picking up passphrase from settings.xml.  The getCredentials() logic was changed to pull the AWS Secret Access Key 
   from the password field instead of the passphrase field.  These 2 changes allow the publishing of artifacts using the S3 wagon
-  for all current versions of Maven (2.0, 2.2, and 3.0).  Also implemented a directory caching algorithm that speeds things up quite a bit.
-  If a directory we need already exists on S3 the logic skips trying to create it.  The original Spring algorithm was always recreating the 
-  entire directory hierarchy for every file it uploaded.
+  for all current versions of Maven (2.0, 2.2, and 3.0).
   </description>
   <repositories>
     <repository>
