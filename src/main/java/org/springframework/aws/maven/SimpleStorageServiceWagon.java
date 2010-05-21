@@ -34,12 +34,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * An implementation of the Maven Wagon interface that allows you to access the Amazon S3 service. URLs that reference
@@ -60,20 +57,22 @@ import java.util.Map;
  * 
  * settings.xml 
  * <server> 
- *   <id>ks.aws</id> 
+ *   <id>kuali.snapshot</id> 
  *   <username>[AWS Access Key ID]</username> 
  *   <password>[AWS Secret Access Key]</password> 
  * </server>
  * 
  * </code>
- * 
+ *
+ * Kuali Updates
+ * -------------
  * 1) Use password instead of passphrase for AWS Secret Access Key (Maven 3.0 is ignoring passphrase)<br>
  * 2) Fixed a bug in getBaseDir() if it was passed a one character string<br>
- * 3) Optimized buildDestinationPath to skip directory creation if the directory exists already
+ * 3) Removed directory creation. The concept of a "directory" inside an AWS bucket is not needed for tools like S3Fox
+ * and https://s3browse.springsource.com/browse/maven.kuali.org/snapshot to correctly display the contents of the bucket
  * 
  * @author Ben Hale
  * @author Jeff Caddel
- * 
  */
 public class SimpleStorageServiceWagon extends AbstractWagon {
 
@@ -82,13 +81,6 @@ public class SimpleStorageServiceWagon extends AbstractWagon {
 	private S3Bucket bucket;
 
 	private String basedir;
-
-	/**
-	 * After we have created a directory, we cache it here. No need to create the same directory again. This speeds
-	 * things up by ~20% for typical Maven usage. Also makes the timestamps more meaningful when looking to see when the
-	 * directory was created.
-	 */
-	Map<String, S3Object> directoryCache = new HashMap<String, S3Object>();
 
 	public SimpleStorageServiceWagon() {
 		super(false);
@@ -169,8 +161,6 @@ public class SimpleStorageServiceWagon extends AbstractWagon {
 	 * Store a resource into S3
 	 */
 	protected void putResource(File source, String destination, TransferProgress progress) throws S3ServiceException, IOException {
-		// Create the directory hierarchy
-		buildDestinationPath(getDestinationPath(destination));
 		// Generate our key for this file
 		String key = basedir + destination;
 		// Create an S3 object and make it available to be read by the public
@@ -191,56 +181,6 @@ public class SimpleStorageServiceWagon extends AbstractWagon {
 			}
 		} finally {
 			IOUtils.closeQuietly(in);
-		}
-	}
-
-	/**
-	 * Check to see if this key already exists. If it exists in our directoryCache or it exists in S3 return true. If it
-	 * exists on S3 but is not in our cache, add it to our cache.
-	 */
-	protected boolean isExistingDirectory(String key) throws S3ServiceException {
-		S3Object object = directoryCache.get(key);
-		if (object != null) {
-			return true;
-		}
-		try {
-			object = service.getObjectDetails(bucket, key);
-			directoryCache.put(key, object);
-			return true;
-		} catch (S3ServiceException e) {
-			if (e.getResponseCode() == HttpURLConnection.HTTP_NOT_FOUND) {
-				return false;
-			} else {
-				throw e;
-			}
-		}
-	}
-
-	/**
-	 * Create a directory if it does not exist already
-	 */
-	protected void createDirectoryIfNeeded(String key) throws S3ServiceException {
-		if (isExistingDirectory(key)) {
-			return;
-		}
-		// Create a directory and add it to our cache
-		S3Object object = new S3Object(key);
-		object.setAcl(AccessControlList.REST_CANNED_PUBLIC_READ);
-		object.setContentLength(0);
-		service.putObject(bucket, object);
-		directoryCache.put(key, object);
-	}
-
-	/**
-	 * We are about to place an object into S3. Make sure the directory structure the object is going to be placed into
-	 * exists before we do so.
-	 */
-	protected void buildDestinationPath(String destination) throws S3ServiceException {
-		String key = basedir + destination + "/";
-		createDirectoryIfNeeded(key);
-		int index = destination.lastIndexOf('/');
-		if (index != -1) {
-			buildDestinationPath(destination.substring(0, index));
 		}
 	}
 
