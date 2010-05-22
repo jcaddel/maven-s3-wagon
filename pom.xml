@@ -7,7 +7,7 @@
   </parent>
   <groupId>org.springframework.aws</groupId>
   <artifactId>spring-aws-maven</artifactId>
-  <version>1.2-KUALI3-SNAPSHOT</version>
+  <version>1.2-KUALI-1-SNAPSHOT</version>
   <name>AWS S3 Wagon</name>
   <description>
   Spring developed a wagon for S3 but hasn't maintained it for a few years.  The version of the wagon-provider-api they
