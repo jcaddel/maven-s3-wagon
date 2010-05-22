@@ -83,8 +83,8 @@
     </dependency>
   </dependencies>
   <scm>
-    <connection>scm:svn:https://test.kuali.org/svn/student/deploymentlab/trunk/spring-aws-maven</connection>
-    <developerConnection>scm:svn:https://test.kuali.org/svn/student/deploymentlab/trunk/spring-aws-maven</developerConnection>
+    <connection>scm:svn:https://test.kuali.org/svn/student/deploymentlab/trunk/kuali-wagon-s3</connection>
+    <developerConnection>scm:svn:https://test.kuali.org/svn/student/deploymentlab/trunk/kuali-wagon-s3</developerConnection>
     <url>http://www.kuali.org/</url>
   </scm>
 </project>
