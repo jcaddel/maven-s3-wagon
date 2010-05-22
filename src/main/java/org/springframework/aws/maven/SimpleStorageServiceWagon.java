@@ -28,6 +28,7 @@ import org.jets3t.service.impl.rest.httpclient.RestS3Service;
 import org.jets3t.service.model.S3Bucket;
 import org.jets3t.service.model.S3Object;
 import org.jets3t.service.security.AWSCredentials;
+import org.jets3t.service.utils.Mimetypes;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -53,7 +54,7 @@ import java.util.List;
  *   <id>kuali.snapshot</id> 
  *   <name>Kuali Snapshot Repository</name>
  *   <url>s3://maven.kuali.org/snapshot</url> 
- *  </snapshotRepository>
+ * </snapshotRepository>
  * 
  * settings.xml 
  * <server> 
@@ -63,10 +64,9 @@ import java.util.List;
  * </server>
  * 
  * </code>
- *
- * Kuali Updates
- * -------------
- * 1) Use password instead of passphrase for AWS Secret Access Key (Maven 3.0 is ignoring passphrase)<br>
+ * 
+ * Kuali Updates ------------- 1) Use password instead of passphrase for AWS Secret Access Key (Maven 3.0 is ignoring
+ * passphrase)<br>
  * 2) Fixed a bug in getBaseDir() if it was passed a one character string<br>
  * 3) Removed directory creation. The concept of a "directory" inside an AWS bucket is not needed for tools like S3Fox
  * and https://s3browse.springsource.com/browse/maven.kuali.org/snapshot to correctly display the contents of the bucket
@@ -81,6 +81,8 @@ public class SimpleStorageServiceWagon extends AbstractWagon {
 	private S3Bucket bucket;
 
 	private String basedir;
+
+	private Mimetypes mimeTypes = Mimetypes.getInstance();
 
 	public SimpleStorageServiceWagon() {
 		super(false);
@@ -168,6 +170,8 @@ public class SimpleStorageServiceWagon extends AbstractWagon {
 		object.setAcl(AccessControlList.REST_CANNED_PUBLIC_READ);
 		object.setDataInputFile(source);
 		object.setContentLength(source.length());
+		String mimeType = mimeTypes.getMimetype(destination);
+		object.setContentType(mimeType);
 
 		InputStream in = null;
 		try {
