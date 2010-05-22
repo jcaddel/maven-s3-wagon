@@ -7,7 +7,7 @@
   </parent>
   <groupId>org.kuali.maven</groupId>
   <artifactId>kuali-wagon-s3</artifactId>
-  <version>1.0.4</version>
+  <version>1.0.5-SNAPSHOT</version>
   <name>AWS S3 Wagon</name>
   <description>
   Spring developed a wagon for S3 but hasn't maintained it for a few years.  The version of the wagon-provider-api they
@@ -83,8 +83,8 @@
     </dependency>
   </dependencies>
   <scm>
-    <connection>scm:svn:https://test.kuali.org/svn/student/deploymentlab/tags/kuali-wagon-s3-1.0.4</connection>
-    <developerConnection>scm:svn:https://test.kuali.org/svn/student/deploymentlab/tags/kuali-wagon-s3-1.0.4</developerConnection>
-    <url>http://www.kuali.org/tags/kuali-wagon-s3-1.0.4</url>
+    <connection>scm:svn:https://test.kuali.org/svn/student/deploymentlab/trunk/kuali-wagon-s3</connection>
+    <developerConnection>scm:svn:https://test.kuali.org/svn/student/deploymentlab/trunk/kuali-wagon-s3</developerConnection>
+    <url>http://www.kuali.org/</url>
   </scm>
 </project>
