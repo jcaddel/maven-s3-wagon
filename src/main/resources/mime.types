@@ -102,6 +102,9 @@ image/x-xwindowdump	xwd
 text/css	css
 text/html	body htm html
 text/javascript	js
+# Add some maven friendly mime-type mappings
+# .sha1 and .md5 are hashes Maven uses to verify files have not been tampered with
+# .pom is how Maven renames the pom.xml files when storing them into the repo
 text/plain	java jsf jspf txt pom sha1 md5 xml
 text/richtext	rtx
 text/tab-separated-values	tsv
