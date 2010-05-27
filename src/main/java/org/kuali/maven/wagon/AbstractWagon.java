@@ -214,6 +214,7 @@ public abstract class AbstractWagon implements Wagon {
 	}
 
 	public final void put(File source, String destination) throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
+		System.out.println("source=" + source.getAbsolutePath() + " destination=" + destination);
 		Resource resource = new Resource(destination);
 		transferListeners.fireTransferInitiated(resource, TransferEvent.REQUEST_PUT);
 		transferListeners.fireTransferStarted(resource, TransferEvent.REQUEST_PUT);
@@ -234,8 +235,16 @@ public abstract class AbstractWagon implements Wagon {
 	}
 
 	public final void putDirectory(File sourceDirectory, String destinationDirectory) throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
+		System.out.println("sourceDirectory=" + sourceDirectory.getAbsolutePath() + " destinationDirectory=" + destinationDirectory);
 		for (File f : sourceDirectory.listFiles()) {
-			put(f, destinationDirectory + "/" + f.getName());
+			if (f.isDirectory()) {
+				if (destinationDirectory.equals(".")) {
+					destinationDirectory = "foo";
+				}
+				putDirectory(f, destinationDirectory + "/" + f.getName());
+			} else {
+				put(f, destinationDirectory + "/" + f.getName());
+			}
 		}
 	}
 

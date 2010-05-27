@@ -85,7 +85,7 @@ public class SimpleStorageServiceWagon extends AbstractWagon {
 	private Mimetypes mimeTypes = Mimetypes.getInstance();
 
 	public SimpleStorageServiceWagon() {
-		super(false);
+		super(true);
 	}
 
 	protected void connectToRepository(Repository source, AuthenticationInfo authenticationInfo, ProxyInfo proxyInfo) throws AuthenticationException {
