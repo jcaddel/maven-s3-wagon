@@ -37,24 +37,31 @@ public class TransferProgressFileInputStream extends FileInputStream {
 
 	public int read() throws IOException {
 		int b = super.read();
-		progress.notify(new byte[] { (byte) b }, 1);
+		if (b != -1) {
+			progress.notify(new byte[] { (byte) b }, 1);
+		}
 		return b;
 	}
 
 	public int read(byte b[]) throws IOException {
 		int length = super.read(b);
-		progress.notify(b, length);
+		if (length != -1) {
+			progress.notify(b, length);
+		}
 		return length;
 	}
 
 	public int read(byte b[], int off, int len) throws IOException {
 		int count = super.read(b, off, len);
+		if (count == -1) {
+			return count;
+		}
 		if (off == 0) {
-			progress.notify(b, len);
+			progress.notify(b, count);
 		} else {
 			byte[] bytes = new byte[len];
-			System.arraycopy(b, off, bytes, 0, len);
-			progress.notify(bytes, len);
+			System.arraycopy(b, off, bytes, 0, count);
+			progress.notify(bytes, count);
 		}
 		return count;
 	}
