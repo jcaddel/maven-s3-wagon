@@ -76,7 +76,7 @@ import java.util.List;
  * @author Ben Hale
  * @author Jeff Caddel
  */
-public class SimpleStorageServiceWagon extends AbstractWagon {
+public class S3Wagon extends AbstractWagon {
 
 	private S3Service service;
 
@@ -86,9 +86,11 @@ public class SimpleStorageServiceWagon extends AbstractWagon {
 
 	private Mimetypes mimeTypes = Mimetypes.getInstance();
 
-	public SimpleStorageServiceWagon() {
+	public S3Wagon() {
 		super(true);
-		super.addTransferListener(new SimpleTransferListener());
+		S3Listener listener = new S3Listener();
+		super.addSessionListener(listener);
+		super.addTransferListener(listener);
 	}
 
 	protected void connectToRepository(Repository source, AuthenticationInfo authenticationInfo, ProxyInfo proxyInfo) throws AuthenticationException {

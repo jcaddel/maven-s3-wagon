@@ -25,6 +25,7 @@ import org.apache.maven.wagon.authorization.AuthorizationException;
 import org.apache.maven.wagon.events.SessionListener;
 import org.apache.maven.wagon.events.TransferEvent;
 import org.apache.maven.wagon.events.TransferListener;
+import org.apache.maven.wagon.observers.Debug;
 import org.apache.maven.wagon.proxy.ProxyInfo;
 import org.apache.maven.wagon.proxy.ProxyInfoProvider;
 import org.apache.maven.wagon.repository.Repository;
@@ -59,6 +60,10 @@ public abstract class AbstractWagon implements Wagon {
 	}
 
 	public final void addSessionListener(SessionListener listener) {
+		if (listener.getClass().equals(Debug.class)) {
+			// This is a junky listener that spews things to System.out in an ugly way
+			return;
+		}
 		sessionListeners.addListener(listener);
 	}
 

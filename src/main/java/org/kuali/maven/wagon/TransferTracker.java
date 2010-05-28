@@ -1,13 +1,18 @@
 package org.kuali.maven.wagon;
 
-public class TransferTimer {
+/**
+ * Holds timing and byte count information about a transfer operation
+ * 
+ * @author Jeff Caddel
+ * 
+ * @since May 27, 2010 6:51:19 PM
+ */
+public class TransferTracker {
 	long initiated;
 	long started;
 	long completed;
 	int byteCount;
-	ByteFormatter byteFormatter = new ByteFormatter();
-	SpeedFormatter speedFormatter = new SpeedFormatter();
-	TimeFormatter timeFormatter = new TimeFormatter();
+	SimpleFormatter formatter = new SimpleFormatter();
 
 	public long getInitiated() {
 		return initiated;
@@ -44,9 +49,10 @@ public class TransferTimer {
 	public String toString() {
 		long elapsed = completed - started;
 		StringBuffer sb = new StringBuffer();
-		sb.append("Time:" + timeFormatter.getString(elapsed));
-		sb.append("  Size:" + byteFormatter.getString(byteCount));
-		sb.append("  Rate:" + speedFormatter.getString(elapsed, byteCount));
+		sb.append("[" + formatter.getTime(elapsed));
+		sb.append(", " + formatter.getSize(byteCount));
+		sb.append(", " + formatter.getRate(elapsed, byteCount));
+		sb.append("]");
 		return sb.toString();
 	}
 }

@@ -52,6 +52,11 @@ class TransferListenerSupport {
 	 *            The listener to add
 	 */
 	public void addListener(TransferListener listener) {
+		if (listener.getClass().equals(org.apache.maven.wagon.observers.Debug.class)) {
+			// This class clutters up the console with a bunch of incorrect junk about the transfer
+			// Timing information is zero'd out
+			return;
+		}
 		listeners.add(listener);
 	}
 
