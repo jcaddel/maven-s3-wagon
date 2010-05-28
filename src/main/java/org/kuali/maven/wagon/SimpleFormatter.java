@@ -17,6 +17,9 @@ public class SimpleFormatter {
 	private static final double KB = 1024;
 	private static final double MB = 1024 * KB;
 	private static final double GB = 1024 * MB;
+	private static final double ONE_SECOND = 1000;
+	private static final double ONE_MINUTE = 60 * ONE_SECOND;
+	private static final double FIFTEEN_MINUTES = 15 * ONE_MINUTE;
 
 	NumberFormat sizeFormatter = NumberFormat.getInstance();
 	NumberFormat timeFormatter = NumberFormat.getInstance();
@@ -42,17 +45,26 @@ public class SimpleFormatter {
 		double seconds = millis / 1000D;
 		double kilobytes = bytes / 1024D;
 		double kilobytesPerSecond = kilobytes / seconds;
-		return rateFormatter.format(kilobytesPerSecond) + " kB/s";
+		if (kilobytesPerSecond < 1024) {
+			return StringUtils.leftPad(rateFormatter.format(kilobytesPerSecond) + " kB/s", 10, " ");
+		} else {
+			double transferRate = kilobytesPerSecond / 1024;
+			return StringUtils.leftPad(rateFormatter.format(transferRate) + " MB/s", 10, " ");
+		}
 	}
 
 	/**
-	 * Given milliseconds, return seconds
+	 * Given milliseconds, return seconds or minutes
 	 */
 	public String getTime(long millis) {
-		if (millis < 1000) {
+		if (millis < ONE_SECOND) {
 			return StringUtils.leftPad(millis + "ms", 6, " ");
+		} else if (millis < 10 * ONE_SECOND) {
+			return StringUtils.leftPad(timeFormatter.format(millis / ONE_SECOND) + "s", 6, " ");
+		} else if (millis < FIFTEEN_MINUTES) {
+			return StringUtils.leftPad(rateFormatter.format(millis / ONE_SECOND) + "s", 6, " ");
 		} else {
-			return StringUtils.leftPad(timeFormatter.format(millis / 1000D) + "s", 6, " ");
+			return StringUtils.leftPad(rateFormatter.format(millis / ONE_MINUTE) + "m", 6, " ");
 		}
 	}
 
@@ -62,11 +74,11 @@ public class SimpleFormatter {
 	 */
 	public String getSize(long bytes) {
 		if (bytes < MB) {
-			return sizeFormatter.format(bytes / KB) + "k";
+			return StringUtils.leftPad(sizeFormatter.format(bytes / KB) + "k", 7, " ");
 		}
 		if (bytes < GB) {
-			return sizeFormatter.format(bytes / MB) + "m";
+			return StringUtils.leftPad(sizeFormatter.format(bytes / MB) + "m", 7, " ");
 		}
-		return sizeFormatter.format(bytes / GB) + "g";
+		return StringUtils.leftPad(sizeFormatter.format(bytes / GB) + "g", 7, " ");
 	}
 }
