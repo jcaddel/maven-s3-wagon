@@ -1,6 +1,5 @@
 package org.kuali.maven.wagon;
 
-import java.io.PrintStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -20,15 +19,9 @@ import org.apache.maven.wagon.events.TransferListener;
 public class S3Listener implements TransferListener, SessionListener {
 	SimpleFormatter formatter = new SimpleFormatter();
 	SessionTracker sessionTracker = new SessionTracker();
-	PrintStream out = null;
-
-	public S3Listener() {
-		super();
-		this.out = System.out;
-	}
 
 	protected void log(String message) {
-		out.println("[INFO] " + message);
+		System.out.println("[INFO] " + message);
 	}
 
 	@Override
@@ -39,7 +32,7 @@ public class S3Listener implements TransferListener, SessionListener {
 	public void transferCompleted(TransferEvent transferEvent) {
 		TransferTracker tt = sessionTracker.getCurrentTransfer();
 		tt.setCompleted(System.currentTimeMillis());
-		out.println();
+		System.out.println();
 		log(tt.toString());
 	}
 
@@ -64,7 +57,7 @@ public class S3Listener implements TransferListener, SessionListener {
 		TransferTracker tt = sessionTracker.getCurrentTransfer();
 		int byteCount = tt.getByteCount() + length;
 		tt.setByteCount(byteCount);
-		out.print("#");
+		System.out.print("#");
 	}
 
 	@Override
@@ -77,7 +70,7 @@ public class S3Listener implements TransferListener, SessionListener {
 			String uri = transferEvent.getWagon().getRepository().getUrl() + "/" + transferEvent.getResource().getName();
 			log("Uploading: " + getNormalizedURI(uri));
 		}
-		out.print("[INFO] ");
+		System.out.print("[INFO] ");
 	}
 
 	protected String getNormalizedURI(String uri) {
