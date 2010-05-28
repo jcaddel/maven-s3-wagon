@@ -31,10 +31,11 @@ import org.jets3t.service.security.AWSCredentials;
 import org.jets3t.service.utils.Mimetypes;
 
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -65,11 +66,12 @@ import java.util.List;
  * 
  * </code>
  * 
- * Kuali Updates ------------- 1) Use password instead of passphrase for AWS Secret Access Key (Maven 3.0 is ignoring
- * passphrase)<br>
+ * Kuali Updates -------------<br>
+ * 1) Use username/password instead of passphrase/privatekey for AWS credentials (Maven 3.0 is ignoring passphrase)<br>
  * 2) Fixed a bug in getBaseDir() if it was passed a one character string<br>
- * 3) Removed directory creation. The concept of a "directory" inside an AWS bucket is not needed for tools like S3Fox
- * and https://s3browse.springsource.com/browse/maven.kuali.org/snapshot to correctly display the contents of the bucket
+ * 3) Removed directory creation. The concept of a "directory" inside an AWS bucket is not needed for tools like S3Fox,
+ * Bucket Explorer and https://s3browse.springsource.com/browse/maven.kuali.org/snapshot to correctly display the
+ * contents of the bucket
  * 
  * @author Ben Hale
  * @author Jeff Caddel
@@ -86,15 +88,21 @@ public class SimpleStorageServiceWagon extends AbstractWagon {
 
 	public SimpleStorageServiceWagon() {
 		super(true);
+		super.addTransferListener(new SimpleTransferListener());
 	}
 
 	protected void connectToRepository(Repository source, AuthenticationInfo authenticationInfo, ProxyInfo proxyInfo) throws AuthenticationException {
 		try {
-			service = new RestS3Service(getCredentials(authenticationInfo));
+			AWSCredentials credentials = getCredentials(authenticationInfo);
+			service = new RestS3Service(credentials);
 		} catch (S3ServiceException e) {
 			throw new AuthenticationException("Cannot authenticate with current credentials", e);
 		}
-		bucket = new S3Bucket(source.getHost());
+		try {
+			bucket = service.getOrCreateBucket(source.getHost());
+		} catch (S3ServiceException e) {
+			throw new AuthenticationException("Cannot get or create bucket: " + source.getHost(), e);
+		}
 		basedir = getBaseDir(source);
 	}
 
@@ -115,7 +123,8 @@ public class SimpleStorageServiceWagon extends AbstractWagon {
 	 * Pull an object out of an S3 bucket and write it to a file
 	 */
 	protected void getResource(String resourceName, File destination, TransferProgress progress) throws ResourceDoesNotExistException, S3ServiceException, IOException {
-		S3Object object;
+		// Obtain the object from S3
+		S3Object object = null;
 		try {
 			String key = basedir + resourceName;
 			object = service.getObject(bucket, key);
@@ -123,6 +132,7 @@ public class SimpleStorageServiceWagon extends AbstractWagon {
 			throw new ResourceDoesNotExistException("Resource " + resourceName + " does not exist in the repository", e);
 		}
 
+		// 
 		InputStream in = null;
 		OutputStream out = null;
 		try {
@@ -160,32 +170,63 @@ public class SimpleStorageServiceWagon extends AbstractWagon {
 	}
 
 	/**
+	 * Normalize the key to our S3 object<br>
+	 * 
+	 * 1. Convert "./css/style.css" into "/css/style.css"<br>
+	 * 2. Convert "/foo/bar/../../css/style.css" into "/css/style.css"
+	 * 
+	 * @see java.net.URI.normalize()
+	 */
+	protected String getNormalizedKey(File source, String destination) {
+		// Generate our bucket key for this file
+		String key = basedir + destination;
+		try {
+			String prefix = "http://s3.amazonaws.com/" + bucket.getName() + "/";
+			String urlString = prefix + key;
+			URI rawURI = new URI(urlString);
+			URI normalizedURI = rawURI.normalize();
+			String normalized = normalizedURI.toString();
+			int pos = normalized.indexOf(prefix) + prefix.length();
+			String normalizedKey = normalized.substring(pos);
+			return normalizedKey;
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * Create an S3Object based on the source file and destination passed in
+	 */
+	protected S3Object createS3Object(File source, String destination, TransferProgress progress) throws FileNotFoundException {
+
+		// Generate our bucket key for this file
+		String key = getNormalizedKey(source, destination);
+
+		// Create an S3 object
+		S3Object object = new S3Object(key);
+
+		// Make it available to the public
+		object.setAcl(AccessControlList.REST_CANNED_PUBLIC_READ);
+		// object.setDataInputFile(source);
+		object.setDataInputStream(new TransferProgressFileInputStream(source, progress));
+		object.setContentLength(source.length());
+
+		// Set the mime type according to the extension of the destination file
+		String mimeType = mimeTypes.getMimetype(destination);
+		object.setContentType(mimeType);
+		return object;
+	}
+
+	/**
 	 * Store a resource into S3
 	 */
 	protected void putResource(File source, String destination, TransferProgress progress) throws S3ServiceException, IOException {
-		// Generate our key for this file
-		String key = basedir + destination;
-		// Create an S3 object and make it available to be read by the public
-		S3Object object = new S3Object(key);
-		object.setAcl(AccessControlList.REST_CANNED_PUBLIC_READ);
-		object.setDataInputFile(source);
-		object.setContentLength(source.length());
-		String mimeType = mimeTypes.getMimetype(destination);
-		object.setContentType(mimeType);
 
-		InputStream in = null;
-		try {
-			service.putObject(bucket, object);
+		// Create a new S3Object
+		S3Object object = createS3Object(source, destination, progress);
 
-			in = new FileInputStream(source);
-			byte[] buffer = new byte[1024];
-			int length;
-			while ((length = in.read(buffer)) != -1) {
-				progress.notify(buffer, length);
-			}
-		} finally {
-			IOUtils.closeQuietly(in);
-		}
+		// Store the file on S3
+		service.putObject(bucket, object);
 	}
 
 	protected String getDestinationPath(String destination) {
@@ -209,17 +250,27 @@ public class SimpleStorageServiceWagon extends AbstractWagon {
 		return sb.toString();
 	}
 
+	protected String getAuthenticationErrorMessage() {
+		StringBuffer sb = new StringBuffer();
+		sb.append("<server>\n");
+		sb.append("  <id>my.server</id>\n");
+		sb.append("  <username>[AWS Access Key ID]</username>\n");
+		sb.append("  <password>[AWS Secret Access Key]</password>\n");
+		sb.append("</server>\n");
+		return sb.toString();
+	}
+
 	/**
 	 * Create AWSCredentionals from the information in settings.xml
 	 */
 	protected AWSCredentials getCredentials(AuthenticationInfo authenticationInfo) throws AuthenticationException {
 		if (authenticationInfo == null) {
-			return null;
+			throw new AuthenticationException("The S3 wagon needs AWS Access Key set as the username and AWS Secret Key set as the password. eg:\n " + getAuthenticationErrorMessage());
 		}
 		String accessKey = authenticationInfo.getUserName();
 		String secretKey = authenticationInfo.getPassword();
 		if (accessKey == null || secretKey == null) {
-			throw new AuthenticationException("S3 requires a username and password to be set");
+			throw new AuthenticationException("The S3 wagon needs AWS Access Key set as the username and AWS Secret Key set as the password. eg:\n " + getAuthenticationErrorMessage());
 		}
 		return new AWSCredentials(accessKey, secretKey);
 	}
