@@ -8,7 +8,7 @@
     from the password field instead of the passphrase field. These 2 changes allow the publishing of artifacts using the S3 wagon for all current versions of Maven (2.0, 2.2, and 3.0). 
   </description>
   <properties>
-    <sourceReleaseAssemblyDescriptor>source-release</sourceReleaseAssemblyDescriptor>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
   <repositories>
     <repository>
