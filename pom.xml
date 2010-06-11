@@ -1,44 +1,52 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <parent>
-    <groupId>org.kuali</groupId>
-    <artifactId>kuali-parent</artifactId>
-    <version>5</version>
-  </parent>
   <groupId>org.kuali.maven</groupId>
   <artifactId>kuali-wagon-s3</artifactId>
   <version>1.0.7-SNAPSHOT</version>
   <name>AWS S3 Wagon</name>
-  <description>
-  Spring developed a wagon for S3 but hasn't maintained it for a few years.  The version of the wagon-provider-api they
-  developed against (1.0-beta-2) has changed in a manner that is incompatible with versions 2.2 and 3.0 of Maven.
-  This project updates the Spring S3 Wagon so that it is compatible with Maven 2.2 and 3.0.  The first step was to update
-  the version of the wagon-provider-api to 1.0-beta-6.  Then there was a minor update to AbstractWagon where it 
-  was not implementing a few methods declared in the 1.0-beta-6 Wagon interface.  This version does not truly implement those methods, 
-  it just changes AbstractWagon so that it no longer produces a compile error.  The other update needed was to SimpleServiceStorageWagon.getCredentials()
-  It was originally coded to use username and passphrase for AWS Access Key ID and AWS Secret Access Key.
-  Maven 3 however was not picking up passphrase from settings.xml.  The getCredentials() logic was changed to pull the AWS Secret Access Key 
-  from the password field instead of the passphrase field.  These 2 changes allow the publishing of artifacts using the S3 wagon
-  for all current versions of Maven (2.0, 2.2, and 3.0).
-  </description>
+  <description> Spring developed a wagon for S3 but hasn't maintained it for a few years. The version of the wagon-provider-api they developed against (1.0-beta-2) has changed in a manner that is incompatible with versions 2.2 and 3.0 of Maven. This project updates the Spring S3 Wagon so that it is compatible with Maven 2.2 and 3.0. The first step was to update the version of the wagon-provider-api to 1.0-beta-6. Then there was a minor update to AbstractWagon where it was not implementing a few methods declared in the 1.0-beta-6 Wagon interface. This version does not truly implement those methods, it just changes AbstractWagon so that it no longer produces a compile error. The other update needed was to SimpleServiceStorageWagon.getCredentials() It was originally coded to use username and passphrase for AWS Access Key ID and AWS Secret Access Key. Maven 3 however was not picking up passphrase from settings.xml. The getCredentials() logic was changed to pull the AWS Secret Access Key
+    from the password field instead of the passphrase field. These 2 changes allow the publishing of artifacts using the S3 wagon for all current versions of Maven (2.0, 2.2, and 3.0). </description>
   <repositories>
     <repository>
-      <id>kuali.release</id>
+      <id>kuali.nexus</id>
       <name>Main Kuali Repository</name>
-      <url>https://test.kuali.org/maven</url>
+      <url>http://kuali-nexus-lb-287160402.us-east-1.elb.amazonaws.com/content/groups/public</url>
       <snapshots>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
       </snapshots>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
     </repository>
   </repositories>
   <build>
+    <extensions>
+      <extension>
+        <groupId>org.kuali.maven</groupId>
+        <artifactId>kuali-wagon-s3</artifactId>
+        <version>1.0.7-SNAPSHOT</version>
+      </extension>
+    </extensions>
     <pluginManagement>
       <plugins>
         <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-compiler-plugin</artifactId>
+          <version>2.0.2</version>
           <configuration>
             <source>1.6</source>
             <target>1.6</target>
+            <encoding>${project.build.sourceEncoding}</encoding>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-release-plugin</artifactId>
+          <version>2.0-beta-9</version>
+          <configuration>
+            <useReleaseProfile>false</useReleaseProfile>
+            <goals>deploy</goals>
+            <arguments>-Pkuali-release ${extraReleaseArguments} </arguments>
           </configuration>
         </plugin>
       </plugins>
@@ -84,6 +92,77 @@
   <scm>
     <connection>scm:svn:https://test.kuali.org/svn/student/deploymentlab/trunk/kuali-wagon-s3</connection>
     <developerConnection>scm:svn:https://test.kuali.org/svn/student/deploymentlab/trunk/kuali-wagon-s3</developerConnection>
-    <url>http://www.kuali.org/</url>
   </scm>
+  <profiles>
+    <profile>
+      <id>kuali-release</id>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <dependencies>
+              <dependency>
+                <groupId>org.apache.apache.resources</groupId>
+                <artifactId>apache-source-release-assembly-descriptor
+                </artifactId>
+                <version>1.0.2</version>
+              </dependency>
+            </dependencies>
+            <executions>
+              <execution>
+                <id>source-release-assembly</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>single</goal>
+                </goals>
+                <configuration>
+                  <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
+                  <descriptorRefs>
+                    <descriptorRef>${sourceReleaseAssemblyDescriptor} </descriptorRef>
+                  </descriptorRefs>
+                  <tarLongFileFormat>gnu</tarLongFileFormat>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+          <!-- TODO: Use maven-gpg-plugin to sign all kuali artifacts (poms, jars, etc) -->
+          <plugin>
+            <inherited>true</inherited>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-deploy-plugin</artifactId>
+            <configuration>
+              <updateReleaseInfo>true</updateReleaseInfo>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <configuration>
+              <encoding>${project.build.sourceEncoding}</encoding>
+            </configuration>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>
