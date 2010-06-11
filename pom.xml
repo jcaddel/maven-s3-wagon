@@ -63,8 +63,46 @@
           <configuration>
             <useReleaseProfile>false</useReleaseProfile>
             <goals>deploy</goals>
-            <arguments>-Pkuali-release ${extraReleaseArguments} </arguments>
+            <arguments>-Dmaven.test.skip=true</arguments>
           </configuration>
+        </plugin>
+        <plugin>
+          <inherited>true</inherited>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <version>2.5</version>
+          <configuration>
+            <updateReleaseInfo>true</updateReleaseInfo>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-source-plugin</artifactId>
+          <version>2.1.1</version>
+          <executions>
+            <execution>
+              <id>attach-sources</id>
+              <goals>
+                <goal>jar</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>2.5</version>
+          <configuration>
+            <encoding>${project.build.sourceEncoding}</encoding>
+          </configuration>
+          <executions>
+            <execution>
+              <id>attach-javadocs</id>
+              <goals>
+                <goal>jar</goal>
+              </goals>
+            </execution>
+          </executions>
         </plugin>
       </plugins>
     </pluginManagement>
@@ -110,51 +148,4 @@
     <connection>scm:svn:https://test.kuali.org/svn/student/deploymentlab/trunk/kuali-wagon-s3</connection>
     <developerConnection>scm:svn:https://test.kuali.org/svn/student/deploymentlab/trunk/kuali-wagon-s3</developerConnection>
   </scm>
-  <profiles>
-    <profile>
-      <id>kuali-release</id>
-      <build>
-        <plugins>
-          <plugin>
-            <inherited>true</inherited>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-deploy-plugin</artifactId>
-            <version>2.5</version>
-            <configuration>
-              <updateReleaseInfo>true</updateReleaseInfo>
-            </configuration>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-source-plugin</artifactId>
-            <version>2.1.1</version>
-            <executions>
-              <execution>
-                <id>attach-sources</id>
-                <goals>
-                  <goal>jar</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-          <plugin>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-javadoc-plugin</artifactId>
-            <version>2.5</version>
-            <configuration>
-              <encoding>${project.build.sourceEncoding}</encoding>
-            </configuration>
-            <executions>
-              <execution>
-                <id>attach-javadocs</id>
-                <goals>
-                  <goal>jar</goal>
-                </goals>
-              </execution>
-            </executions>
-          </plugin>
-        </plugins>
-      </build>
-    </profile>
-  </profiles>
 </project>
