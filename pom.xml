@@ -19,6 +19,23 @@
       </releases>
     </repository>
   </repositories>
+  <distributionManagement>
+    <site>
+      <id>kuali.site</id>
+      <name>Kuali Maven Site</name>
+      <url>s3://site.kuali.org/kuali-wagon-s3</url>
+    </site>
+    <repository>
+      <id>kuali.release</id>
+      <name>Main Kuali Repository</name>
+      <url>s3://maven.kuali.org/release</url>
+    </repository>
+    <snapshotRepository>
+      <id>kuali.snapshot</id>
+      <name>Kuali Snapshot Repository</name>
+      <url>s3://maven.kuali.org/snapshot</url>
+    </snapshotRepository>
+  </distributionManagement>
   <build>
     <extensions>
       <extension>
