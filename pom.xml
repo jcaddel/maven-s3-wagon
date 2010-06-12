@@ -13,8 +13,8 @@
   <repositories>
     <repository>
       <id>kuali.nexus</id>
-      <name>Main Kuali Repository</name>
-      <url>http://kuali-nexus-lb-287160402.us-east-1.elb.amazonaws.com/content/groups/public</url>
+      <name>Kuali Nexus Repository Manager</name>
+      <url>http://nexus.kuali.org/content/groups/public</url>
       <snapshots>
         <enabled>true</enabled>
       </snapshots>
@@ -31,7 +31,7 @@
     </site>
     <repository>
       <id>kuali.release</id>
-      <name>Main Kuali Repository</name>
+      <name>Kuali Release Repository</name>
       <url>s3://maven.kuali.org/release</url>
     </repository>
     <snapshotRepository>
@@ -45,7 +45,7 @@
       <extension>
         <groupId>org.kuali.maven</groupId>
         <artifactId>kuali-wagon-s3</artifactId>
-        <version>${project.version}</version>
+        <version>1.0.8-SNAPSHOT</version>
       </extension>
     </extensions>
     <pluginManagement>
@@ -151,5 +151,6 @@
   <scm>
     <connection>scm:svn:https://test.kuali.org/svn/student/deploymentlab/trunk/kuali-wagon-s3</connection>
     <developerConnection>scm:svn:https://test.kuali.org/svn/student/deploymentlab/trunk/kuali-wagon-s3</developerConnection>
+    <url>https://test.kuali.org/svn/student/deploymentlab/trunk/kuali-wagon-s3</url>
   </scm>
 </project>
