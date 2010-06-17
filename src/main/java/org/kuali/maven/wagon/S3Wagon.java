@@ -254,6 +254,7 @@ public class S3Wagon extends AbstractWagon {
 
 	protected String getAuthenticationErrorMessage() {
 		StringBuffer sb = new StringBuffer();
+		sb.append("The S3 wagon needs AWS Access Key set as the username and AWS Secret Key set as the password. eg:\n");
 		sb.append("<server>\n");
 		sb.append("  <id>my.server</id>\n");
 		sb.append("  <username>[AWS Access Key ID]</username>\n");
@@ -267,12 +268,12 @@ public class S3Wagon extends AbstractWagon {
 	 */
 	protected AWSCredentials getCredentials(AuthenticationInfo authenticationInfo) throws AuthenticationException {
 		if (authenticationInfo == null) {
-			throw new AuthenticationException("The S3 wagon needs AWS Access Key set as the username and AWS Secret Key set as the password. eg:\n " + getAuthenticationErrorMessage());
+			throw new AuthenticationException(getAuthenticationErrorMessage());
 		}
 		String accessKey = authenticationInfo.getUserName();
 		String secretKey = authenticationInfo.getPassword();
 		if (accessKey == null || secretKey == null) {
-			throw new AuthenticationException("The S3 wagon needs AWS Access Key set as the username and AWS Secret Key set as the password. eg:\n " + getAuthenticationErrorMessage());
+			throw new AuthenticationException(getAuthenticationErrorMessage());
 		}
 		return new AWSCredentials(accessKey, secretKey);
 	}
