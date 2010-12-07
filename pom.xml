@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.kuali.maven</groupId>
   <artifactId>kuali-wagon-s3</artifactId>
-  <version>1.0.10-SNAPSHOT</version>
+  <version>1.0.9-SNAPSHOT</version>
   <name>AWS S3 Wagon</name>
   <description> Spring developed a wagon for S3 but hasn't maintained it for a few years. The version of the wagon-provider-api they developed against (1.0-beta-2) has changed in a manner that is incompatible with versions 2.2 and 3.0 of Maven. This project updates the Spring S3 Wagon so that it is compatible with Maven 2.2 and 3.0. The first step was to update the version of the wagon-provider-api to 1.0-beta-6. Then there was a minor update to AbstractWagon where it was not implementing a few methods declared in the 1.0-beta-6 Wagon interface. This version does not truly implement those methods, it just changes AbstractWagon so that it no longer produces a compile error. The other update needed was to SimpleServiceStorageWagon.getCredentials() It was originally coded to use username and passphrase for AWS Access Key ID and AWS Secret Access Key. Maven 3 however was not picking up passphrase from settings.xml. The getCredentials() logic was changed to pull the AWS Secret Access Key
     from the password field instead of the passphrase field. These 2 changes allow the publishing of artifacts using the S3 wagon for all current versions of Maven (2.0, 2.2, and 3.0). 
