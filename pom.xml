@@ -41,7 +41,7 @@
     <site>
       <id>kuali.site</id>
       <name>Kuali Maven Site</name>
-      <url>s3://site.kuali.org/maven-plugins/${project.artifactId}/${project.version}/</url>
+      <url>s3://site.origin.kuali.org/maven-plugins/${project.artifactId}/${project.version}/</url>
     </site>
     <repository>
       <id>kuali.release</id>
@@ -59,7 +59,7 @@
       <extension>
         <groupId>org.kuali.maven</groupId>
         <artifactId>kuali-wagon-s3</artifactId>
-        <version>1.0.8</version>
+        <version>1.0.9-SNAPSHOT</version>
       </extension>
     </extensions>
     <pluginManagement>
@@ -89,7 +89,7 @@
           <version>2.0</version>
           <configuration>
             <useReleaseProfile>false</useReleaseProfile>
-            <goals>clean deploy site-deploy</goals>
+            <goals>deploy</goals>
             <arguments>-Dmaven.test.skip=true</arguments>
           </configuration>
         </plugin>
