@@ -36,11 +36,12 @@
       </snapshots>
     </pluginRepository>
   </pluginRepositories>
+  <url>http://site.kuali.org/maven-plugins/${project.artifactId}/${project.version}/</url>
   <distributionManagement>
     <site>
       <id>kuali.site</id>
       <name>Kuali Maven Site</name>
-      <url>s3://site.kuali.org/kuali-wagon-s3</url>
+      <url>s3://site.kuali.org/maven-plugins/${project.artifactId}/${project.version}/</url>
     </site>
     <repository>
       <id>kuali.release</id>
