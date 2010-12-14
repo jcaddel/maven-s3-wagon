@@ -37,7 +37,6 @@
       <kuali.site.public.url>http://${kuali.site.hostname}/${kuali.site.path}</kuali.site.public.url>
       <kuali.site.publish.url>s3://${kuali.site.bucket}/${kuali.site.path}</kuali.site.publish.url>
       <kuali.site.server.id>kuali.site</kuali.site.server.id>
-    </properties>
   </properties>
   <repositories>
     <repository>
@@ -88,7 +87,7 @@
       <extension>
         <groupId>org.kuali.maven</groupId>
         <artifactId>kuali-wagon-s3</artifactId>
-        <version>1.0.10-SNAPSHOT</version>
+        <version>1.0.9</version>
       </extension>
     </extensions>
     <pluginManagement>
