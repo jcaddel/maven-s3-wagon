@@ -9,7 +9,6 @@
   </description>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <properties>
       <maven.build.timestamp.format>yyyy-MM-dd HH:mm z</maven.build.timestamp.format>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <kuali.clover.plugin.version>3.0.2</kuali.clover.plugin.version>
