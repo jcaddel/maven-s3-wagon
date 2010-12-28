@@ -1,5 +1,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.kuali</groupId>
+    <artifactId>kuali</artifactId>
+    <version>51</version>
+  </parent>
   <groupId>org.kuali.maven</groupId>
   <artifactId>kuali-wagon-s3</artifactId>
   <version>1.0.10-SNAPSHOT</version>
@@ -8,35 +13,7 @@
     from the password field instead of the passphrase field. These 2 changes allow the publishing of artifacts using the S3 wagon for all current versions of Maven (2.0, 2.2, and 3.0). 
   </description>
   <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-      <maven.build.timestamp.format>yyyy-MM-dd HH:mm z</maven.build.timestamp.format>
-      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-      <kuali.clover.plugin.version>3.0.2</kuali.clover.plugin.version>
-      <kuali.clover.history.dir>${user.home}/.clover/history/${project.groupId}/${project.artifactId}</kuali.clover.history.dir>
-
-      <kuali.findbugs.plugin.version>2.0.1</kuali.findbugs.plugin.version>
-      <kuali.cobertura.plugin.version>2.4</kuali.cobertura.plugin.version>
-      <kuali.javadoc.plugin.version>2.7</kuali.javadoc.plugin.version>
-
-      <kuali.source.release.assembly.descriptor>source-release</kuali.source.release.assembly.descriptor>
-      <kuali.compile.source>1.6</kuali.compile.source>
-      <kuali.compile.target>1.6</kuali.compile.target>
-
-    <!-- Overriding this to "verify" will cause sources to be bundled as jar's in addition to the binaries -->
-      <kuali.attach.sources.phase>none</kuali.attach.sources.phase>
-
-    <!-- Overriding this to "initialize" will add Subversion info to jar's and war's (eg revision number, repository, etc) -->
-      <kuali.svn.info.phase>none</kuali.svn.info.phase>
-    
-    <!-- These properties are used when generating/deploying the maven generated site -->
-      <kuali.site.bucket>site.origin.kuali.org</kuali.site.bucket>
-    <!-- Maven is not resolving this property correctly for some reason  -->
-    <!-- <kuali.site.bucket.update.phase>site-deploy</kuali.site.bucket.update.phase> -->
-      <kuali.site.hostname>site.kuali.org</kuali.site.hostname>
-      <kuali.site.path>${project.artifactId}/${project.version}/</kuali.site.path>
-      <kuali.site.public.url>http://${kuali.site.hostname}/${kuali.site.path}</kuali.site.public.url>
-      <kuali.site.publish.url>s3://${kuali.site.bucket}/${kuali.site.path}</kuali.site.publish.url>
-      <kuali.site.server.id>kuali.site</kuali.site.server.id>
+    <kuali.site.download.path>org/kuali/maven</kuali.site.download.path>
   </properties>
   <repositories>
     <repository>
@@ -51,19 +28,6 @@
       </releases>
     </repository>
   </repositories>
-  <pluginRepositories>
-    <pluginRepository>
-      <id>kuali.nexus</id>
-      <name>Nexus Repository Manager</name>
-      <url>http://nexus.kuali.org/content/groups/public</url>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-    </pluginRepository>
-  </pluginRepositories>
   <url>${kuali.site.public.url}</url>
   <distributionManagement>
     <site>
@@ -82,169 +46,6 @@
       <url>s3://maven.kuali.org/snapshot</url>
     </snapshotRepository>
   </distributionManagement>
-  <build>
-    <extensions>
-      <extension>
-        <groupId>org.kuali.maven</groupId>
-        <artifactId>kuali-wagon-s3</artifactId>
-        <version>1.0.9</version>
-      </extension>
-    </extensions>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-eclipse-plugin</artifactId>
-          <configuration>
-            <downloadSources>true</downloadSources>
-            <downloadJavadocs>false</downloadJavadocs>
-          </configuration>
-          <version>2.8</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>2.0.2</version>
-          <configuration>
-            <source>1.6</source>
-            <target>1.6</target>
-            <encoding>${project.build.sourceEncoding}</encoding>
-          </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-release-plugin</artifactId>
-          <version>2.0</version>
-          <configuration>
-            <useReleaseProfile>false</useReleaseProfile>
-            <goals>deploy</goals>
-            <arguments>-Dmaven.test.skip=true</arguments>
-          </configuration>
-        </plugin>
-        <plugin>
-          <inherited>true</inherited>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-deploy-plugin</artifactId>
-          <version>2.5</version>
-          <configuration>
-            <updateReleaseInfo>true</updateReleaseInfo>
-          </configuration>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-source-plugin</artifactId>
-          <version>2.1.1</version>
-          <executions>
-            <execution>
-              <id>attach-sources</id>
-              <goals>
-                <goal>jar</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-javadoc-plugin</artifactId>
-          <version>2.5</version>
-          <configuration>
-            <encoding>${project.build.sourceEncoding}</encoding>
-          </configuration>
-          <executions>
-            <execution>
-              <id>attach-javadocs</id>
-              <goals>
-                <goal>jar</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-  </build>
-  <reporting>
-    <plugins>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>cobertura-maven-plugin</artifactId>
-        <version>${kuali.cobertura.plugin.version}</version>
-        <configuration>
-          <formats>
-            <format>html</format>
-          </formats>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
-        <version>2.3</version>
-      </plugin>
-      <plugin>
-        <groupId>com.atlassian.maven.plugins</groupId>
-        <artifactId>maven-clover2-plugin</artifactId>
-        <version>3.0.2</version>
-        <configuration>
-          <license><![CDATA[rQQrPasjfItwAkMJKkmNMCxgroOBLImTnqHdkoJrjKCIWJb
-mj2Krd<9J9nD6sR<IqbMLA7P2L01abPDWMorvjKhHqZHUh0 RPoRTSOrOpmOqPrmMPqXVqOqoOQQrrnOrotXvWxXwUTWuVN xUpvTWwxxuUvQnmqmUUnosomvnsmmmmmUUnosomvnsmmmmm UULkfsbopfqvWlcW1ofwlkXUUn]]>
-          </license>
-          <generateHistorical>true</generateHistorical>
-          <historyDir>${kuali.clover.history.dir}</historyDir>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-javadoc-plugin</artifactId>
-        <version>${kuali.javadoc.plugin.version}</version>
-        <configuration>
-          <maxmemory>256m</maxmemory>
-          <aggregate>true</aggregate>
-          <show>private</show>
-          <quiet>true</quiet>
-          <bottom>Copyright © 2010 The Kuali Foundation. All rights reserved.</bottom>
-          <excludePackageNames>*.service.jaxws:*.exceptions.jaxws</excludePackageNames>
-          <source>1.6</source>
-        </configuration>
-        <reportSets>
-          <reportSet>
-            <reports>
-              <report>javadoc</report>
-              <report>test-javadoc</report>
-            </reports>
-          </reportSet>
-        </reportSets>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-jxr-plugin</artifactId>
-        <version>2.2</version>
-        <configuration>
-          <inputEncoding>${project.build.sourceEncoding}</inputEncoding>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-pmd-plugin</artifactId>
-        <version>2.4</version>
-        <configuration>
-          <targetJdk>${kuali.compile.source}</targetJdk>
-          <aggregate>true</aggregate>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-project-info-reports-plugin</artifactId>
-        <version>2.1.2</version>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>taglist-maven-plugin</artifactId>
-        <version>2.4</version>
-        <configuration>
-          <aggregate>true</aggregate>
-        </configuration>
-      </plugin>
-    </plugins>
-  </reporting>
   <dependencies>
     <dependency>
       <groupId>commons-codec</groupId>
