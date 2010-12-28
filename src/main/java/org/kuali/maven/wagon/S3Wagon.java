@@ -25,10 +25,18 @@ import org.apache.maven.wagon.authentication.AuthenticationInfo;
 import org.apache.maven.wagon.proxy.ProxyInfo;
 import org.apache.maven.wagon.repository.Repository;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.internal.Mimetypes;
-import com.amazonaws.services.s3.model.AccessControlList;
+import com.amazonaws.services.s3.model.Bucket;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 /**
  * An implementation of the Maven Wagon interface that is integrated with the Amazon S3 service. URLs that reference the
@@ -64,9 +72,9 @@ import com.amazonaws.services.s3.model.S3Object;
  */
 public class S3Wagon extends AbstractWagon {
 
-    private S3Service service;
+    private AmazonS3Client service;
 
-    private S3Bucket bucket;
+    private Bucket bucket;
 
     private String basedir;
 
@@ -79,28 +87,30 @@ public class S3Wagon extends AbstractWagon {
         super.addTransferListener(listener);
     }
 
+    protected Bucket getOrCreateBucket(final AmazonS3Client client, final String bucketName) {
+        List<Bucket> buckets = client.listBuckets();
+        for (Bucket bucket : buckets) {
+            if (bucket.getName().equals(bucketName)) {
+                return bucket;
+            }
+        }
+        return client.createBucket(bucketName);
+    }
+
     @Override
-    protected void connectToRepository(final Repository source, final AuthenticationInfo authenticationInfo, final ProxyInfo proxyInfo)
-            throws AuthenticationException {
-        try {
-            AWSCredentials credentials = getCredentials(authenticationInfo);
-            service = new RestS3Service(credentials);
-        } catch (S3ServiceException e) {
-            throw new AuthenticationException("Cannot authenticate with current credentials", e);
-        }
-        try {
-            bucket = service.getOrCreateBucket(source.getHost());
-        } catch (S3ServiceException e) {
-            throw new AuthenticationException("Cannot get or create bucket: " + source.getHost(), e);
-        }
+    protected void connectToRepository(final Repository source, final AuthenticationInfo authenticationInfo,
+            final ProxyInfo proxyInfo) throws AuthenticationException {
+        AWSCredentials credentials = getCredentials(authenticationInfo);
+        service = new AmazonS3Client(credentials);
+        bucket = getOrCreateBucket(service, source.getHost());
         basedir = getBaseDir(source);
     }
 
     @Override
     protected boolean doesRemoteResourceExist(final String resourceName) {
         try {
-            service.getObjectDetails(bucket, basedir + resourceName);
-        } catch (S3ServiceException e) {
+            service.getObjectMetadata(bucket.getName(), basedir + resourceName);
+        } catch (AmazonClientException e1) {
             return false;
         }
         return true;
@@ -116,13 +126,13 @@ public class S3Wagon extends AbstractWagon {
      */
     @Override
     protected void getResource(final String resourceName, final File destination, final TransferProgress progress)
-            throws ResourceDoesNotExistException, S3ServiceException, IOException {
+            throws ResourceDoesNotExistException, IOException {
         // Obtain the object from S3
         S3Object object = null;
         try {
             String key = basedir + resourceName;
-            object = service.getObject(bucket, key);
-        } catch (S3ServiceException e) {
+            object = service.getObject(bucket.getName(), key);
+        } catch (Exception e) {
             throw new ResourceDoesNotExistException("Resource " + resourceName + " does not exist in the repository", e);
         }
 
@@ -130,7 +140,7 @@ public class S3Wagon extends AbstractWagon {
         InputStream in = null;
         OutputStream out = null;
         try {
-            in = object.getDataInputStream();
+            in = object.getObjectContent();
             out = new TransferProgressFileOutputStream(destination, progress);
             byte[] buffer = new byte[1024];
             int length;
@@ -147,9 +157,9 @@ public class S3Wagon extends AbstractWagon {
      * Is the S3 object newer than the timestamp passed in?
      */
     @Override
-    protected boolean isRemoteResourceNewer(final String resourceName, final long timestamp) throws S3ServiceException {
-        S3Object object = service.getObjectDetails(bucket, basedir + resourceName);
-        return object.getLastModifiedDate().compareTo(new Date(timestamp)) < 0;
+    protected boolean isRemoteResourceNewer(final String resourceName, final long timestamp) {
+        ObjectMetadata metadata = service.getObjectMetadata(bucket.getName(), basedir + resourceName);
+        return metadata.getLastModified().compareTo(new Date(timestamp)) < 0;
     }
 
     /**
@@ -157,10 +167,10 @@ public class S3Wagon extends AbstractWagon {
      */
     @Override
     protected List<String> listDirectory(final String directory) throws Exception {
-        S3Object[] objects = service.listObjects(bucket, basedir + directory, "");
-        List<String> fileNames = new ArrayList<String>(objects.length);
-        for (S3Object object : objects) {
-            fileNames.add(object.getKey());
+        ObjectListing objectListing = service.listObjects(bucket.getName(), basedir + directory);
+        List<String> fileNames = new ArrayList<String>();
+        for (S3ObjectSummary summary : objectListing.getObjectSummaries()) {
+            fileNames.add(summary.getKey());
         }
         return fileNames;
     }
@@ -189,42 +199,43 @@ public class S3Wagon extends AbstractWagon {
         }
     }
 
-    /**
-     * Create an S3Object based on the source file and destination passed in
-     */
-    protected S3Object createS3Object(final File source, final String destination, final TransferProgress progress)
-            throws FileNotFoundException {
-
-        // Generate our bucket key for this file
-        String key = getNormalizedKey(source, destination);
-
-        // Create an S3 object
-        S3Object object = new S3Object(key);
-
-        // Make it available to the public
-        object.setAcl(AccessControlList.REST_CANNED_PUBLIC_READ);
-        // object.setDataInputFile(source);
-        object.setDataInputStream(new TransferProgressFileInputStream(source, progress));
-        object.setContentLength(source.length());
-
+    protected ObjectMetadata getObjectMetadata(final File source, final String destination) {
         // Set the mime type according to the extension of the destination file
-        String mimeType = mimeTypes.getMimetype(destination);
-        object.setContentType(mimeType);
-        return object;
+        String contentType = mimeTypes.getMimetype(destination);
+        long contentLength = source.length();
+
+        ObjectMetadata omd = new ObjectMetadata();
+        omd.setContentLength(contentLength);
+        omd.setContentType(contentType);
+        return omd;
+    }
+
+    /**
+     * Create a PutObjectRequest based on the source file and destination passed in
+     */
+    protected PutObjectRequest getPutObjectRequest(final File source, final String destination,
+            final TransferProgress progress) throws FileNotFoundException {
+        String key = getNormalizedKey(source, destination);
+        String bucketName = bucket.getName();
+        InputStream input = new TransferProgressFileInputStream(source, progress);
+        ObjectMetadata metadata = getObjectMetadata(source, destination);
+        PutObjectRequest request = new PutObjectRequest(bucketName, key, input, metadata);
+        request.setCannedAcl(CannedAccessControlList.PublicRead);
+        return request;
     }
 
     /**
      * Store a resource into S3
      */
     @Override
-    protected void putResource(final File source, final String destination, final TransferProgress progress) throws S3ServiceException,
-            IOException {
+    protected void putResource(final File source, final String destination, final TransferProgress progress)
+            throws IOException {
 
         // Create a new S3Object
-        S3Object object = createS3Object(source, destination, progress);
+        PutObjectRequest request = getPutObjectRequest(source, destination, progress);
 
         // Store the file on S3
-        service.putObject(bucket, object);
+        service.putObject(request);
     }
 
     protected String getDestinationPath(final String destination) {
@@ -271,6 +282,6 @@ public class S3Wagon extends AbstractWagon {
         if (accessKey == null || secretKey == null) {
             throw new AuthenticationException(getAuthenticationErrorMessage());
         }
-        return new AWSCredentials(accessKey, secretKey);
+        return new BasicAWSCredentials(accessKey, secretKey);
     }
 }
