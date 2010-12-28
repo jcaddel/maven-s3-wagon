@@ -19,6 +19,9 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 import org.apache.maven.wagon.ResourceDoesNotExistException;
 import org.apache.maven.wagon.authentication.AuthenticationException;
 import org.apache.maven.wagon.authentication.AuthenticationInfo;
@@ -72,7 +75,7 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
  */
 public class S3Wagon extends AbstractWagon {
 
-    private AmazonS3Client service;
+    private AmazonS3Client client;
 
     private Bucket bucket;
 
@@ -85,6 +88,14 @@ public class S3Wagon extends AbstractWagon {
         S3Listener listener = new S3Listener();
         super.addSessionListener(listener);
         super.addTransferListener(listener);
+        // By default the AWS sdk is pretty verbose about each request
+        toneDownAWSLogging();
+    }
+
+    protected void toneDownAWSLogging() {
+        Logger rootLogger = LogManager.getRootLogger();
+        Logger pkgLogger = rootLogger.getLoggerRepository().getLogger("com.amazonaws");
+        pkgLogger.setLevel(Level.WARN);
     }
 
     protected Bucket getOrCreateBucket(final AmazonS3Client client, final String bucketName) {
@@ -100,16 +111,17 @@ public class S3Wagon extends AbstractWagon {
     @Override
     protected void connectToRepository(final Repository source, final AuthenticationInfo authenticationInfo,
             final ProxyInfo proxyInfo) throws AuthenticationException {
+
         AWSCredentials credentials = getCredentials(authenticationInfo);
-        service = new AmazonS3Client(credentials);
-        bucket = getOrCreateBucket(service, source.getHost());
+        client = new AmazonS3Client(credentials);
+        bucket = getOrCreateBucket(client, source.getHost());
         basedir = getBaseDir(source);
     }
 
     @Override
     protected boolean doesRemoteResourceExist(final String resourceName) {
         try {
-            service.getObjectMetadata(bucket.getName(), basedir + resourceName);
+            client.getObjectMetadata(bucket.getName(), basedir + resourceName);
         } catch (AmazonClientException e1) {
             return false;
         }
@@ -131,7 +143,7 @@ public class S3Wagon extends AbstractWagon {
         S3Object object = null;
         try {
             String key = basedir + resourceName;
-            object = service.getObject(bucket.getName(), key);
+            object = client.getObject(bucket.getName(), key);
         } catch (Exception e) {
             throw new ResourceDoesNotExistException("Resource " + resourceName + " does not exist in the repository", e);
         }
@@ -158,7 +170,7 @@ public class S3Wagon extends AbstractWagon {
      */
     @Override
     protected boolean isRemoteResourceNewer(final String resourceName, final long timestamp) {
-        ObjectMetadata metadata = service.getObjectMetadata(bucket.getName(), basedir + resourceName);
+        ObjectMetadata metadata = client.getObjectMetadata(bucket.getName(), basedir + resourceName);
         return metadata.getLastModified().compareTo(new Date(timestamp)) < 0;
     }
 
@@ -167,7 +179,7 @@ public class S3Wagon extends AbstractWagon {
      */
     @Override
     protected List<String> listDirectory(final String directory) throws Exception {
-        ObjectListing objectListing = service.listObjects(bucket.getName(), basedir + directory);
+        ObjectListing objectListing = client.listObjects(bucket.getName(), basedir + directory);
         List<String> fileNames = new ArrayList<String>();
         for (S3ObjectSummary summary : objectListing.getObjectSummaries()) {
             fileNames.add(summary.getKey());
@@ -235,7 +247,7 @@ public class S3Wagon extends AbstractWagon {
         PutObjectRequest request = getPutObjectRequest(source, destination, progress);
 
         // Store the file on S3
-        service.putObject(request);
+        client.putObject(request);
     }
 
     protected String getDestinationPath(final String destination) {

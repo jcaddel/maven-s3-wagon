@@ -1,5 +1,8 @@
 package org.springframework.aws.maven;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+
 /**
  *
  */
@@ -10,8 +13,17 @@ public class Foo {
      */
     public static void main(final String[] args) {
         try {
-            System.out.println("Starting up");
-            System.out.println("All done");
+            PrintStream oldOut = System.out;
+
+            ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+            PrintStream newOut = new PrintStream(bytesOut);
+            System.setOut(newOut);
+            System.out.print("foo");
+
+            String s = bytesOut.toString() + " bar";
+            System.setOut(oldOut);
+            System.out.println(s);
+
         } catch (Exception e) {
             e.printStackTrace();
         }
