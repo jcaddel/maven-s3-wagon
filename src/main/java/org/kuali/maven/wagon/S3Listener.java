@@ -66,12 +66,12 @@ public class S3Listener implements TransferListener, SessionListener {
         TransferTracker tt = sessionTracker.getCurrentTransfer();
         tt.setStarted(System.currentTimeMillis());
         if (transferEvent.getRequestType() == TransferEvent.REQUEST_GET) {
-            // log("Downloading: " + transferEvent.getResource().getName() + " from " +
-            // transferEvent.getWagon().getRepository().getUrl());
+            log("Downloading: " + transferEvent.getResource().getName() + " from "
+                    + transferEvent.getWagon().getRepository().getUrl());
         } else {
-            // String uri = transferEvent.getWagon().getRepository().getUrl() + "/"
-            // + transferEvent.getResource().getName();
-            // log("Uploading: " + getNormalizedURI(uri));
+            String uri = transferEvent.getWagon().getRepository().getUrl() + "/"
+                    + transferEvent.getResource().getName();
+            log("Uploading: " + getNormalizedURI(uri));
         }
         // System.out.print("[INFO] ");
     }
