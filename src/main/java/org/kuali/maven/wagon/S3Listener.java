@@ -21,15 +21,6 @@ public class S3Listener implements TransferListener, SessionListener {
     SimpleFormatter formatter = new SimpleFormatter();
     SessionTracker sessionTracker = new SessionTracker();
 
-    protected void log(final String message) {
-        log.info(message);
-    }
-
-    @Override
-    public void debug(final String message) {
-        log.debug(message);
-    }
-
     @Override
     public void transferCompleted(final TransferEvent transferEvent) {
         TransferTracker tt = sessionTracker.getCurrentTransfer();
@@ -66,9 +57,9 @@ public class S3Listener implements TransferListener, SessionListener {
         TransferTracker tt = sessionTracker.getCurrentTransfer();
         tt.setStarted(System.currentTimeMillis());
         if (transferEvent.getRequestType() == TransferEvent.REQUEST_GET) {
-            log("Downloading: " + getURI(transferEvent));
+            log.info("Downloading: " + getURI(transferEvent));
         } else {
-            log("Uploading: " + getURI(transferEvent));
+            log.info("Uploading: " + getURI(transferEvent));
         }
         // System.out.print("[INFO] ");
     }
@@ -136,7 +127,7 @@ public class S3Listener implements TransferListener, SessionListener {
         sb.append(" Amount: " + formatter.getSize(byteCount));
         sb.append(" Rate: " + formatter.getRate(transferElapsed, byteCount));
         sb.append(" Throughput: " + formatter.getRate(elapsed, byteCount));
-        log(sb.toString());
+        log.info(sb.toString());
     }
 
     /**
@@ -145,7 +136,7 @@ public class S3Listener implements TransferListener, SessionListener {
     @Override
     public void sessionConnectionRefused(final SessionEvent sessionEvent) {
         sessionTracker.addSessionEvent(sessionEvent);
-        log(sessionEvent.getWagon().getRepository().getUrl() + " - Connection refused");
+        log.warn(sessionEvent.getWagon().getRepository().getUrl() + " - Connection refused");
     }
 
     /**
@@ -155,7 +146,7 @@ public class S3Listener implements TransferListener, SessionListener {
     public void sessionLoggedIn(final SessionEvent sessionEvent) {
         sessionTracker.addSessionEvent(sessionEvent);
         sessionTracker.setLoggedIn(System.currentTimeMillis());
-        log("Logged in - " + sessionEvent.getWagon().getRepository().getUrl());
+        log.info("Logged in - " + sessionEvent.getWagon().getRepository().getHost());
     }
 
     /**
@@ -165,13 +156,18 @@ public class S3Listener implements TransferListener, SessionListener {
     public void sessionLoggedOff(final SessionEvent sessionEvent) {
         sessionTracker.addSessionEvent(sessionEvent);
         sessionTracker.setLoggedOff(System.currentTimeMillis());
-        log("Logged off - " + sessionEvent.getWagon().getRepository().getUrl());
+        log.info("Logged off - " + sessionEvent.getWagon().getRepository().getHost());
     }
 
     @Override
     public void sessionError(final SessionEvent sessionEvent) {
         sessionTracker.addSessionEvent(sessionEvent);
         log.error("Session error: " + sessionEvent.getException(), sessionEvent.getException());
+    }
+
+    @Override
+    public void debug(final String message) {
+        log.debug(message);
     }
 
 }
