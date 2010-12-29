@@ -1,4 +1,4 @@
-package org.springframework.aws.maven;
+package org.kuali.maven.wagon;
 
 /**
  * Maps a mime-type to a file extension
@@ -11,7 +11,7 @@ public class Mapping {
 		return type;
 	}
 
-	public void setType(String type) {
+	public void setType(final String type) {
 		this.type = type;
 	}
 
@@ -19,7 +19,7 @@ public class Mapping {
 		return extension;
 	}
 
-	public void setExtension(String extension) {
+	public void setExtension(final String extension) {
 		this.extension = extension;
 	}
 

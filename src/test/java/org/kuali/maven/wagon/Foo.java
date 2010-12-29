@@ -1,4 +1,4 @@
-package org.springframework.aws.maven;
+package org.kuali.maven.wagon;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
