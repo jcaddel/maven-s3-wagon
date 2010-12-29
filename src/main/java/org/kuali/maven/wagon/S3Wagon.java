@@ -19,9 +19,6 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.apache.maven.wagon.ResourceDoesNotExistException;
 import org.apache.maven.wagon.authentication.AuthenticationException;
 import org.apache.maven.wagon.authentication.AuthenticationInfo;
@@ -88,14 +85,6 @@ public class S3Wagon extends AbstractWagon {
         S3Listener listener = new S3Listener();
         super.addSessionListener(listener);
         super.addTransferListener(listener);
-        // By default the AWS sdk is pretty verbose about each request
-        toneDownAWSLogging();
-    }
-
-    protected void toneDownAWSLogging() {
-        Logger rootLogger = LogManager.getRootLogger();
-        Logger pkgLogger = rootLogger.getLoggerRepository().getLogger("com.amazonaws");
-        pkgLogger.setLevel(Level.WARN);
     }
 
     protected Bucket getOrCreateBucket(final AmazonS3Client client, final String bucketName) {
