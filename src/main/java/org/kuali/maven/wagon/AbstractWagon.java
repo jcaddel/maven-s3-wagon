@@ -15,6 +15,9 @@
  */
 package org.kuali.maven.wagon;
 
+import java.io.File;
+import java.util.List;
+
 import org.apache.maven.wagon.ConnectionException;
 import org.apache.maven.wagon.ResourceDoesNotExistException;
 import org.apache.maven.wagon.TransferFailedException;
@@ -31,12 +34,9 @@ import org.apache.maven.wagon.proxy.ProxyInfoProvider;
 import org.apache.maven.wagon.repository.Repository;
 import org.apache.maven.wagon.resource.Resource;
 
-import java.io.File;
-import java.util.List;
-
 /**
  * An abstract implementation of the Wagon interface. This implementation manages listener and other common behaviors.
- * 
+ *
  * @author Ben Hale
  * @author Jeff Caddel - Updates for version 1.0-beta-6 of the Wagon interface
  * @since 1.1
@@ -49,17 +49,18 @@ public abstract class AbstractWagon implements Wagon {
 
     private Repository repository;
 
-    private boolean supportsDirectoryCopy;
+    private final boolean supportsDirectoryCopy;
 
-    private SessionListenerSupport sessionListeners = new SessionListenerSupport(this);
+    private final SessionListenerSupport sessionListeners = new SessionListenerSupport(this);
 
-    private TransferListenerSupport transferListeners = new TransferListenerSupport(this);
+    private final TransferListenerSupport transferListeners = new TransferListenerSupport(this);
 
-    protected AbstractWagon(boolean supportsDirectoryCopy) {
+    protected AbstractWagon(final boolean supportsDirectoryCopy) {
         this.supportsDirectoryCopy = supportsDirectoryCopy;
     }
 
-    public final void addSessionListener(SessionListener listener) {
+    @Override
+    public final void addSessionListener(final SessionListener listener) {
         if (listener.getClass().equals(Debug.class)) {
             // This is a junky listener that spews things to System.out in an ugly way
             return;
@@ -71,15 +72,18 @@ public abstract class AbstractWagon implements Wagon {
         return sessionListeners;
     }
 
-    public final boolean hasSessionListener(SessionListener listener) {
+    @Override
+    public final boolean hasSessionListener(final SessionListener listener) {
         return sessionListeners.hasListener(listener);
     }
 
-    public final void removeSessionListener(SessionListener listener) {
+    @Override
+    public final void removeSessionListener(final SessionListener listener) {
         sessionListeners.removeListener(listener);
     }
 
-    public final void addTransferListener(TransferListener listener) {
+    @Override
+    public final void addTransferListener(final TransferListener listener) {
         transferListeners.addListener(listener);
     }
 
@@ -87,39 +91,50 @@ public abstract class AbstractWagon implements Wagon {
         return transferListeners;
     }
 
-    public final boolean hasTransferListener(TransferListener listener) {
+    @Override
+    public final boolean hasTransferListener(final TransferListener listener) {
         return transferListeners.hasListener(listener);
     }
 
-    public final void removeTransferListener(TransferListener listener) {
+    @Override
+    public final void removeTransferListener(final TransferListener listener) {
         transferListeners.removeListener(listener);
     }
 
+    @Override
     public final Repository getRepository() {
         return repository;
     }
 
+    @Override
     public final boolean isInteractive() {
         return interactive;
     }
 
-    public final void setInteractive(boolean interactive) {
+    @Override
+    public final void setInteractive(final boolean interactive) {
         this.interactive = interactive;
     }
 
-    public final void connect(Repository source) throws ConnectionException, AuthenticationException {
+    @Override
+    public final void connect(final Repository source) throws ConnectionException, AuthenticationException {
         doConnect(source, null, null);
     }
 
-    public final void connect(Repository source, ProxyInfo proxyInfo) throws ConnectionException, AuthenticationException {
+    @Override
+    public final void connect(final Repository source, final ProxyInfo proxyInfo) throws ConnectionException,
+            AuthenticationException {
         connect(source, null, proxyInfo);
     }
 
-    public final void connect(Repository source, AuthenticationInfo authenticationInfo) throws ConnectionException, AuthenticationException {
+    @Override
+    public final void connect(final Repository source, final AuthenticationInfo authenticationInfo) throws ConnectionException,
+            AuthenticationException {
         doConnect(source, authenticationInfo, null);
     }
 
-    protected void doConnect(Repository source, AuthenticationInfo authenticationInfo, ProxyInfo proxyInfo) throws ConnectionException, AuthenticationException {
+    protected void doConnect(final Repository source, final AuthenticationInfo authenticationInfo, final ProxyInfo proxyInfo)
+            throws ConnectionException, AuthenticationException {
         repository = source;
         sessionListeners.fireSessionOpening();
         try {
@@ -138,10 +153,13 @@ public abstract class AbstractWagon implements Wagon {
         sessionListeners.fireSessionOpened();
     }
 
-    public final void connect(Repository source, AuthenticationInfo authenticationInfo, ProxyInfo proxyInfo) throws ConnectionException, AuthenticationException {
+    @Override
+    public final void connect(final Repository source, final AuthenticationInfo authenticationInfo, final ProxyInfo proxyInfo)
+            throws ConnectionException, AuthenticationException {
         doConnect(source, authenticationInfo, proxyInfo);
     }
 
+    @Override
     public final void disconnect() throws ConnectionException {
         sessionListeners.fireSessionDisconnecting();
         try {
@@ -157,13 +175,16 @@ public abstract class AbstractWagon implements Wagon {
         sessionListeners.fireSessionDisconnected();
     }
 
-    public final void get(String resourceName, File destination) throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
+    @Override
+    public final void get(final String resourceName, final File destination) throws TransferFailedException,
+            ResourceDoesNotExistException, AuthorizationException {
         Resource resource = new Resource(resourceName);
         transferListeners.fireTransferInitiated(resource, TransferEvent.REQUEST_GET);
         transferListeners.fireTransferStarted(resource, TransferEvent.REQUEST_GET);
 
         try {
-            getResource(resourceName, destination, new TransferProgress(resource, TransferEvent.REQUEST_GET, transferListeners));
+            getResource(resourceName, destination, new TransferProgress(resource, TransferEvent.REQUEST_GET,
+                    transferListeners));
             transferListeners.fireTransferCompleted(resource, TransferEvent.REQUEST_GET);
         } catch (TransferFailedException e) {
             throw e;
@@ -177,8 +198,10 @@ public abstract class AbstractWagon implements Wagon {
         }
     }
 
+    @Override
     @SuppressWarnings("rawtypes")
-    public final List getFileList(String destinationDirectory) throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
+    public final List getFileList(final String destinationDirectory) throws TransferFailedException,
+            ResourceDoesNotExistException, AuthorizationException {
         try {
             return listDirectory(destinationDirectory);
         } catch (TransferFailedException e) {
@@ -193,7 +216,9 @@ public abstract class AbstractWagon implements Wagon {
         }
     }
 
-    public final boolean getIfNewer(String resourceName, File destination, long timestamp) throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
+    @Override
+    public final boolean getIfNewer(final String resourceName, final File destination, final long timestamp)
+            throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
         Resource resource = new Resource(resourceName);
         try {
             if (isRemoteResourceNewer(resourceName, timestamp)) {
@@ -214,17 +239,21 @@ public abstract class AbstractWagon implements Wagon {
         }
     }
 
+    @Override
     public final void openConnection() throws ConnectionException, AuthenticationException {
         // Nothing to do here (never called by the wagon manager)
     }
 
-    public final void put(File source, String destination) throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
+    @Override
+    public final void put(final File source, final String destination) throws TransferFailedException,
+            ResourceDoesNotExistException, AuthorizationException {
         Resource resource = new Resource(destination);
         transferListeners.fireTransferInitiated(resource, TransferEvent.REQUEST_PUT);
         transferListeners.fireTransferStarted(resource, TransferEvent.REQUEST_PUT);
 
         try {
-            putResource(source, destination, new TransferProgress(resource, TransferEvent.REQUEST_PUT, transferListeners));
+            putResource(source, destination, new TransferProgress(resource, TransferEvent.REQUEST_PUT,
+                    transferListeners));
             transferListeners.fireTransferCompleted(resource, TransferEvent.REQUEST_PUT);
         } catch (TransferFailedException e) {
             throw e;
@@ -239,11 +268,14 @@ public abstract class AbstractWagon implements Wagon {
     }
 
     /**
-     * On S3 there are no true "directories". An S3 bucket is essentially a Hashtable of files stored by key. The integration
-     * between a traditional file system and an S3 bucket is to use the path of the file on the local file system as the key to
-     * the file in the bucket. The S3 bucket does not contain a separate key for the directory itself.
+     * On S3 there are no true "directories". An S3 bucket is essentially a Hashtable of files stored by key. The
+     * integration between a traditional file system and an S3 bucket is to use the path of the file on the local file
+     * system as the key to the file in the bucket. The S3 bucket does not contain a separate key for the directory
+     * itself.
      */
-    public final void putDirectory(File sourceDirectory, String destinationDirectory) throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
+    @Override
+    public final void putDirectory(final File sourceDirectory, final String destinationDirectory) throws TransferFailedException,
+            ResourceDoesNotExistException, AuthorizationException {
         // Cycle through all the files in this directory
         for (File f : sourceDirectory.listFiles()) {
             // We hit a directory
@@ -257,7 +289,8 @@ public abstract class AbstractWagon implements Wagon {
         }
     }
 
-    public final boolean resourceExists(String resourceName) throws TransferFailedException, AuthorizationException {
+    @Override
+    public final boolean resourceExists(final String resourceName) throws TransferFailedException, AuthorizationException {
         try {
             return doesRemoteResourceExist(resourceName);
         } catch (TransferFailedException e) {
@@ -270,108 +303,117 @@ public abstract class AbstractWagon implements Wagon {
         }
     }
 
+    @Override
     public final boolean supportsDirectoryCopy() {
         return supportsDirectoryCopy;
     }
 
     /**
      * Subclass must implement with specific connection behavior
-     * 
+     *
      * @param source
-     *            The repository connection information
+     * The repository connection information
      * @param authenticationInfo
-     *            Authentication information, if any
+     * Authentication information, if any
      * @param proxyInfo
-     *            Proxy information, if any
+     * Proxy information, if any
      * @throws Exception
-     *             Implementations can throw any exception and it will be handled by the base class
+     * Implementations can throw any exception and it will be handled by the base class
      */
-    protected abstract void connectToRepository(Repository source, AuthenticationInfo authenticationInfo, ProxyInfo proxyInfo) throws Exception;
+    protected abstract void connectToRepository(Repository source, AuthenticationInfo authenticationInfo,
+            ProxyInfo proxyInfo) throws Exception;
 
     /**
      * Subclass must implement with specific detection behavior
-     * 
+     *
      * @param resourceName
-     *            The remote resource to detect
+     * The remote resource to detect
      * @return true if the remote resource exists
      * @throws Exception
-     *             Implementations can throw any exception and it will be handled by the base class
+     * Implementations can throw any exception and it will be handled by the base class
      */
     protected abstract boolean doesRemoteResourceExist(String resourceName) throws Exception;
 
     /**
      * Subclasses must implement with specific disconnection behavior
-     * 
+     *
      * @throws Exception
-     *             Implementations can throw any exception and it will be handled by the base class
+     * Implementations can throw any exception and it will be handled by the base class
      */
     protected abstract void disconnectFromRepository() throws Exception;
 
     /**
      * Subclass must implement with specific get behavior
-     * 
+     *
      * @param resourceName
-     *            The name of the remote resource to read
+     * The name of the remote resource to read
      * @param destination
-     *            The local file to write to
+     * The local file to write to
      * @param progress
-     *            A progress notifier for the upload. It must be used or hashes will not be calculated correctly
+     * A progress notifier for the upload. It must be used or hashes will not be calculated correctly
      * @throws Exception
-     *             Implementations can throw any exception and it will be handled by the base class
+     * Implementations can throw any exception and it will be handled by the base class
      */
-    protected abstract void getResource(String resourceName, File destination, TransferProgress progress) throws Exception;
+    protected abstract void getResource(String resourceName, File destination, TransferProgress progress)
+            throws Exception;
 
     /**
      * Subclass must implement with newer detection behavior
-     * 
+     *
      * @param resourceName
-     *            The name of the resource being compared
+     * The name of the resource being compared
      * @param timestamp
-     *            The timestamp to compare against
+     * The timestamp to compare against
      * @return true if the current version of the resource is newer than the timestamp
      * @throws Exception
-     *             Implementations can throw any exception and it will be handled by the base class
+     * Implementations can throw any exception and it will be handled by the base class
      */
     protected abstract boolean isRemoteResourceNewer(String resourceName, long timestamp) throws Exception;
 
     /**
      * Subclass must implement with specific directory listing behavior
-     * 
+     *
      * @param directory
-     *            The directory to list files in
+     * The directory to list files in
      * @return A collection of file names
      * @throws Exception
-     *             Implementations can throw any exception and it will be handled by the base class
+     * Implementations can throw any exception and it will be handled by the base class
      */
     protected abstract List<String> listDirectory(String directory) throws Exception;
 
     /**
      * Subclasses must implement with specific put behavior
-     * 
+     *
      * @param source
-     *            The local source file to read from
+     * The local source file to read from
      * @param destination
-     *            The name of the remote resource to write to
+     * The name of the remote resource to write to
      * @param progress
-     *            A progress notifier for the upload. It must be used or hashes will not be calculated correctly
+     * A progress notifier for the upload. It must be used or hashes will not be calculated correctly
      * @throws Exception
-     *             Implementations can throw any exception and it will be handled by the base class
+     * Implementations can throw any exception and it will be handled by the base class
      */
     protected abstract void putResource(File source, String destination, TransferProgress progress) throws Exception;
 
-    public void connect(Repository source, AuthenticationInfo authenticationInfo, ProxyInfoProvider proxyInfoProvider) throws ConnectionException, AuthenticationException {
+    @Override
+    public void connect(final Repository source, final AuthenticationInfo authenticationInfo, final ProxyInfoProvider proxyInfoProvider)
+            throws ConnectionException, AuthenticationException {
         doConnect(source, authenticationInfo, null);
     }
 
-    public void connect(Repository source, ProxyInfoProvider proxyInfoProvider) throws ConnectionException, AuthenticationException {
+    @Override
+    public void connect(final Repository source, final ProxyInfoProvider proxyInfoProvider) throws ConnectionException,
+            AuthenticationException {
         doConnect(source, null, null);
     }
 
+    @Override
     public int getTimeout() {
         return this.timeout;
     }
 
-    public void setTimeout(int timeoutValue) {
+    @Override
+    public void setTimeout(final int timeoutValue) {
         this.timeout = timeoutValue;
     }
 
