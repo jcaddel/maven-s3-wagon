@@ -57,7 +57,7 @@ public class S3Listener implements TransferListener, SessionListener {
         TransferTracker tt = sessionTracker.getCurrentTransfer();
         tt.setStarted(System.currentTimeMillis());
         if (transferEvent.getRequestType() == TransferEvent.REQUEST_GET) {
-            log.info("Downloadingg: " + getURI(transferEvent));
+            log.info("Downloading: " + getURI(transferEvent));
         } else {
             log.info("Uploading: " + getURI(transferEvent));
         }
