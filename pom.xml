@@ -15,6 +15,7 @@
     developed by Ben Hale at SpringSource  
   </description>
   <properties>
+    <kuali.site.path>maven-plugins/${project.artifactId}/${project.version}/</kuali.site.path>
     <kuali.site.download.path>org/kuali/maven</kuali.site.download.path>
   </properties>
   <repositories>
