@@ -24,6 +24,8 @@ import org.apache.maven.wagon.authentication.AuthenticationException;
 import org.apache.maven.wagon.authentication.AuthenticationInfo;
 import org.apache.maven.wagon.proxy.ProxyInfo;
 import org.apache.maven.wagon.repository.Repository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.auth.AWSCredentials;
@@ -71,6 +73,8 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
  * @author Jeff Caddel
  */
 public class S3Wagon extends AbstractWagon {
+
+    final Logger log = LoggerFactory.getLogger(S3Listener.class);
 
     private AmazonS3Client client;
 

@@ -3,12 +3,12 @@ package org.kuali.maven.wagon;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.maven.wagon.events.SessionEvent;
 import org.apache.maven.wagon.events.SessionListener;
 import org.apache.maven.wagon.events.TransferEvent;
 import org.apache.maven.wagon.events.TransferListener;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Listen for events about the transfer and record timing and byte count information
@@ -17,7 +17,7 @@ import org.apache.maven.wagon.events.TransferListener;
  * @since May 27, 2010 5:08:12 PM
  */
 public class S3Listener implements TransferListener, SessionListener {
-    private static final Log log = LogFactory.getLog(S3Listener.class);
+    final Logger log = LoggerFactory.getLogger(S3Listener.class);
     SimpleFormatter formatter = new SimpleFormatter();
     SessionTracker sessionTracker = new SessionTracker();
 
@@ -57,7 +57,7 @@ public class S3Listener implements TransferListener, SessionListener {
         TransferTracker tt = sessionTracker.getCurrentTransfer();
         tt.setStarted(System.currentTimeMillis());
         if (transferEvent.getRequestType() == TransferEvent.REQUEST_GET) {
-            log.info("Downloading: " + getURI(transferEvent));
+            log.info("Downloadingg: " + getURI(transferEvent));
         } else {
             log.info("Uploading: " + getURI(transferEvent));
         }
