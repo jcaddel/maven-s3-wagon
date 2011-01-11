@@ -7,7 +7,7 @@
   </parent>
   <groupId>org.kuali.maven</groupId>
   <artifactId>kuali-wagon-s3</artifactId>
-  <version>1.0.14</version>
+  <version>1.0.15-SNAPSHOT</version>
   <name>AWS S3 Wagon</name>
   <description>
     This project is an implementation of Wagon provider for accessing Amazon's Simple Storage Service (S3).
@@ -109,8 +109,8 @@
     </dependency>
   </dependencies>
   <scm>
-    <connection>scm:svn:https://test.kuali.org/svn/student/deploymentlab/tags/kuali-wagon-s3-1.0.14</connection>
-    <developerConnection>scm:svn:https://test.kuali.org/svn/student/deploymentlab/tags/kuali-wagon-s3-1.0.14</developerConnection>
-    <url>https://test.kuali.org/svn/student/deploymentlab/tags/kuali-wagon-s3-1.0.14</url>
+    <connection>scm:svn:https://test.kuali.org/svn/student/deploymentlab/trunk/kuali-wagon-s3</connection>
+    <developerConnection>scm:svn:https://test.kuali.org/svn/student/deploymentlab/trunk/kuali-wagon-s3</developerConnection>
+    <url>https://test.kuali.org/svn/student/deploymentlab/trunk/kuali-wagon-s3</url>
   </scm>
 </project>
