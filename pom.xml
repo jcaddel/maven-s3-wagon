@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.kuali</groupId>
     <artifactId>kuali</artifactId>
-    <version>67</version>
+    <version>68-SNAPSHOT</version>
   </parent>
   <groupId>org.kuali.maven</groupId>
   <artifactId>kuali-wagon-s3</artifactId>
