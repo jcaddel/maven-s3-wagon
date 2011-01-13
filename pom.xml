@@ -38,16 +38,6 @@
       <name>Maven Site</name>
       <url>${kuali.site.publish.url}</url>
     </site>
-    <repository>
-      <id>kuali.release</id>
-      <name>Kuali Release Repository</name>
-      <url>s3://maven.kuali.org/release</url>
-    </repository>
-    <snapshotRepository>
-      <id>kuali.snapshot</id>
-      <name>Kuali Snapshot Repository</name>
-      <url>s3://maven.kuali.org/snapshot</url>
-    </snapshotRepository>
   </distributionManagement>
   <dependencies>
     <dependency>
