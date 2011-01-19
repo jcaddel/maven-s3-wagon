@@ -21,7 +21,6 @@ public class S3Listener implements TransferListener, SessionListener {
     SimpleFormatter formatter = new SimpleFormatter();
     SessionTracker sessionTracker = new SessionTracker();
 
-    @Override
     public void transferCompleted(final TransferEvent transferEvent) {
         TransferTracker tt = sessionTracker.getCurrentTransfer();
         tt.setCompleted(System.currentTimeMillis());
@@ -29,19 +28,16 @@ public class S3Listener implements TransferListener, SessionListener {
         // log(tt.toString());
     }
 
-    @Override
     public void transferError(final TransferEvent transferEvent) {
         log.error("Transfer error: " + transferEvent.getException(), transferEvent.getException());
     }
 
-    @Override
     public void transferInitiated(final TransferEvent transferEvent) {
         sessionTracker.addTransfer(new TransferTracker());
         TransferTracker tt = sessionTracker.getCurrentTransfer();
         tt.setInitiated(System.currentTimeMillis());
     }
 
-    @Override
     public void transferProgress(final TransferEvent transferEvent, final byte[] buffer, final int length) {
         // No bytes were actually read
         if (length == -1) {
@@ -52,7 +48,6 @@ public class S3Listener implements TransferListener, SessionListener {
         tt.setByteCount(byteCount);
     }
 
-    @Override
     public void transferStarted(final TransferEvent transferEvent) {
         TransferTracker tt = sessionTracker.getCurrentTransfer();
         tt.setStarted(System.currentTimeMillis());
@@ -80,7 +75,6 @@ public class S3Listener implements TransferListener, SessionListener {
     /**
      * @see SessionListener#sessionOpening(SessionEvent)
      */
-    @Override
     public void sessionOpening(final SessionEvent sessionEvent) {
         sessionTracker.addSessionEvent(sessionEvent);
     }
@@ -88,7 +82,6 @@ public class S3Listener implements TransferListener, SessionListener {
     /**
      * @see SessionListener#sessionOpened(SessionEvent)
      */
-    @Override
     public void sessionOpened(final SessionEvent sessionEvent) {
         sessionTracker.addSessionEvent(sessionEvent);
         sessionTracker.setOpened(System.currentTimeMillis());
@@ -98,7 +91,6 @@ public class S3Listener implements TransferListener, SessionListener {
     /**
      * @see SessionListener#sessionDisconnecting(SessionEvent)
      */
-    @Override
     public void sessionDisconnecting(final SessionEvent sessionEvent) {
         sessionTracker.addSessionEvent(sessionEvent);
         sessionTracker.setDisconnecting(System.currentTimeMillis());
@@ -108,7 +100,6 @@ public class S3Listener implements TransferListener, SessionListener {
     /**
      * @see SessionListener#sessionDisconnected(SessionEvent)
      */
-    @Override
     public void sessionDisconnected(final SessionEvent sessionEvent) {
         sessionTracker.addSessionEvent(sessionEvent);
         // log(sessionEvent.getWagon().getRepository().getUrl() + " - Disconnected");
@@ -133,7 +124,6 @@ public class S3Listener implements TransferListener, SessionListener {
     /**
      * @see SessionListener#sessionConnectionRefused(SessionEvent)
      */
-    @Override
     public void sessionConnectionRefused(final SessionEvent sessionEvent) {
         sessionTracker.addSessionEvent(sessionEvent);
         log.warn(sessionEvent.getWagon().getRepository().getUrl() + " - Connection refused");
@@ -142,7 +132,6 @@ public class S3Listener implements TransferListener, SessionListener {
     /**
      * @see SessionListener#sessionLoggedIn(SessionEvent)
      */
-    @Override
     public void sessionLoggedIn(final SessionEvent sessionEvent) {
         sessionTracker.addSessionEvent(sessionEvent);
         sessionTracker.setLoggedIn(System.currentTimeMillis());
@@ -152,20 +141,17 @@ public class S3Listener implements TransferListener, SessionListener {
     /**
      * @see SessionListener#sessionLoggedOff(SessionEvent)
      */
-    @Override
     public void sessionLoggedOff(final SessionEvent sessionEvent) {
         sessionTracker.addSessionEvent(sessionEvent);
         sessionTracker.setLoggedOff(System.currentTimeMillis());
         log.info("Logged off - " + sessionEvent.getWagon().getRepository().getHost());
     }
 
-    @Override
     public void sessionError(final SessionEvent sessionEvent) {
         sessionTracker.addSessionEvent(sessionEvent);
         log.error("Session error: " + sessionEvent.getException(), sessionEvent.getException());
     }
 
-    @Override
     public void debug(final String message) {
         log.debug(message);
     }

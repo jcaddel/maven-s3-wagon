@@ -59,7 +59,6 @@ public abstract class AbstractWagon implements Wagon {
         this.supportsDirectoryCopy = supportsDirectoryCopy;
     }
 
-    @Override
     public final void addSessionListener(final SessionListener listener) {
         if (listener.getClass().equals(Debug.class)) {
             // This is a junky listener that spews things to System.out in an ugly way
@@ -72,17 +71,14 @@ public abstract class AbstractWagon implements Wagon {
         return sessionListeners;
     }
 
-    @Override
     public final boolean hasSessionListener(final SessionListener listener) {
         return sessionListeners.hasListener(listener);
     }
 
-    @Override
     public final void removeSessionListener(final SessionListener listener) {
         sessionListeners.removeListener(listener);
     }
 
-    @Override
     public final void addTransferListener(final TransferListener listener) {
         transferListeners.addListener(listener);
     }
@@ -91,50 +87,42 @@ public abstract class AbstractWagon implements Wagon {
         return transferListeners;
     }
 
-    @Override
     public final boolean hasTransferListener(final TransferListener listener) {
         return transferListeners.hasListener(listener);
     }
 
-    @Override
     public final void removeTransferListener(final TransferListener listener) {
         transferListeners.removeListener(listener);
     }
 
-    @Override
     public final Repository getRepository() {
         return repository;
     }
 
-    @Override
     public final boolean isInteractive() {
         return interactive;
     }
 
-    @Override
     public final void setInteractive(final boolean interactive) {
         this.interactive = interactive;
     }
 
-    @Override
     public final void connect(final Repository source) throws ConnectionException, AuthenticationException {
         doConnect(source, null, null);
     }
 
-    @Override
     public final void connect(final Repository source, final ProxyInfo proxyInfo) throws ConnectionException,
             AuthenticationException {
         connect(source, null, proxyInfo);
     }
 
-    @Override
-    public final void connect(final Repository source, final AuthenticationInfo authenticationInfo) throws ConnectionException,
-            AuthenticationException {
+    public final void connect(final Repository source, final AuthenticationInfo authenticationInfo)
+            throws ConnectionException, AuthenticationException {
         doConnect(source, authenticationInfo, null);
     }
 
-    protected void doConnect(final Repository source, final AuthenticationInfo authenticationInfo, final ProxyInfo proxyInfo)
-            throws ConnectionException, AuthenticationException {
+    protected void doConnect(final Repository source, final AuthenticationInfo authenticationInfo,
+            final ProxyInfo proxyInfo) throws ConnectionException, AuthenticationException {
         repository = source;
         sessionListeners.fireSessionOpening();
         try {
@@ -153,13 +141,11 @@ public abstract class AbstractWagon implements Wagon {
         sessionListeners.fireSessionOpened();
     }
 
-    @Override
-    public final void connect(final Repository source, final AuthenticationInfo authenticationInfo, final ProxyInfo proxyInfo)
-            throws ConnectionException, AuthenticationException {
+    public final void connect(final Repository source, final AuthenticationInfo authenticationInfo,
+            final ProxyInfo proxyInfo) throws ConnectionException, AuthenticationException {
         doConnect(source, authenticationInfo, proxyInfo);
     }
 
-    @Override
     public final void disconnect() throws ConnectionException {
         sessionListeners.fireSessionDisconnecting();
         try {
@@ -175,7 +161,6 @@ public abstract class AbstractWagon implements Wagon {
         sessionListeners.fireSessionDisconnected();
     }
 
-    @Override
     public final void get(final String resourceName, final File destination) throws TransferFailedException,
             ResourceDoesNotExistException, AuthorizationException {
         Resource resource = new Resource(resourceName);
@@ -198,7 +183,6 @@ public abstract class AbstractWagon implements Wagon {
         }
     }
 
-    @Override
     @SuppressWarnings("rawtypes")
     public final List getFileList(final String destinationDirectory) throws TransferFailedException,
             ResourceDoesNotExistException, AuthorizationException {
@@ -216,7 +200,6 @@ public abstract class AbstractWagon implements Wagon {
         }
     }
 
-    @Override
     public final boolean getIfNewer(final String resourceName, final File destination, final long timestamp)
             throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
         Resource resource = new Resource(resourceName);
@@ -239,12 +222,10 @@ public abstract class AbstractWagon implements Wagon {
         }
     }
 
-    @Override
     public final void openConnection() throws ConnectionException, AuthenticationException {
         // Nothing to do here (never called by the wagon manager)
     }
 
-    @Override
     public final void put(final File source, final String destination) throws TransferFailedException,
             ResourceDoesNotExistException, AuthorizationException {
         Resource resource = new Resource(destination);
@@ -273,9 +254,8 @@ public abstract class AbstractWagon implements Wagon {
      * system as the key to the file in the bucket. The S3 bucket does not contain a separate key for the directory
      * itself.
      */
-    @Override
-    public final void putDirectory(final File sourceDirectory, final String destinationDirectory) throws TransferFailedException,
-            ResourceDoesNotExistException, AuthorizationException {
+    public final void putDirectory(final File sourceDirectory, final String destinationDirectory)
+            throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
         // Cycle through all the files in this directory
         for (File f : sourceDirectory.listFiles()) {
             // We hit a directory
@@ -289,8 +269,8 @@ public abstract class AbstractWagon implements Wagon {
         }
     }
 
-    @Override
-    public final boolean resourceExists(final String resourceName) throws TransferFailedException, AuthorizationException {
+    public final boolean resourceExists(final String resourceName) throws TransferFailedException,
+            AuthorizationException {
         try {
             return doesRemoteResourceExist(resourceName);
         } catch (TransferFailedException e) {
@@ -303,7 +283,6 @@ public abstract class AbstractWagon implements Wagon {
         }
     }
 
-    @Override
     public final boolean supportsDirectoryCopy() {
         return supportsDirectoryCopy;
     }
@@ -395,24 +374,20 @@ public abstract class AbstractWagon implements Wagon {
      */
     protected abstract void putResource(File source, String destination, TransferProgress progress) throws Exception;
 
-    @Override
-    public void connect(final Repository source, final AuthenticationInfo authenticationInfo, final ProxyInfoProvider proxyInfoProvider)
-            throws ConnectionException, AuthenticationException {
+    public void connect(final Repository source, final AuthenticationInfo authenticationInfo,
+            final ProxyInfoProvider proxyInfoProvider) throws ConnectionException, AuthenticationException {
         doConnect(source, authenticationInfo, null);
     }
 
-    @Override
     public void connect(final Repository source, final ProxyInfoProvider proxyInfoProvider) throws ConnectionException,
             AuthenticationException {
         doConnect(source, null, null);
     }
 
-    @Override
     public int getTimeout() {
         return this.timeout;
     }
 
-    @Override
     public void setTimeout(final int timeoutValue) {
         this.timeout = timeoutValue;
     }
