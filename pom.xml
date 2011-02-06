@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.kuali</groupId>
     <artifactId>kuali</artifactId>
-    <version>72</version>
+    <version>73</version>
   </parent>
   <groupId>org.kuali.maven.wagons</groupId>
   <artifactId>maven-s3-wagon</artifactId>
@@ -15,8 +15,6 @@
     developed by Ben Hale at SpringSource  
   </description>
   <properties>
-    <kuali.site.path>maven/wagons/${project.artifactId}/${project.version}/</kuali.site.path>
-    <kuali.site.download.path>org/kuali/maven/wagons</kuali.site.download.path>
     <kuali.compile.source>1.5</kuali.compile.source>
     <kuali.compile.target>1.5</kuali.compile.target>
   </properties>
@@ -33,14 +31,6 @@
       </releases>
     </repository>
   </repositories>
-  <url>${kuali.site.public.url}</url>
-  <distributionManagement>
-    <site>
-      <id>${kuali.site.server.id}</id>
-      <name>Maven Site</name>
-      <url>${kuali.site.publish.url}</url>
-    </site>
-  </distributionManagement>
   <dependencies>
     <dependency>
       <groupId>commons-codec</groupId>
