@@ -3,10 +3,10 @@
   <parent>
     <groupId>org.kuali</groupId>
     <artifactId>kuali</artifactId>
-    <version>70</version>
+    <version>72</version>
   </parent>
-  <groupId>org.kuali.maven</groupId>
-  <artifactId>kuali-wagon-s3</artifactId>
+  <groupId>org.kuali.maven.wagons</groupId>
+  <artifactId>maven-s3-wagon</artifactId>
   <version>1.0.23-SNAPSHOT</version>
   <name>AWS S3 Wagon</name>
   <description>
@@ -15,8 +15,8 @@
     developed by Ben Hale at SpringSource  
   </description>
   <properties>
-    <kuali.site.path>maven-plugins/${project.artifactId}/${project.version}/</kuali.site.path>
-    <kuali.site.download.path>org/kuali/maven</kuali.site.download.path>
+    <kuali.site.path>maven/wagons/${project.artifactId}/${project.version}/</kuali.site.path>
+    <kuali.site.download.path>org/kuali/maven/wagons</kuali.site.download.path>
     <kuali.compile.source>1.5</kuali.compile.source>
     <kuali.compile.target>1.5</kuali.compile.target>
   </properties>
