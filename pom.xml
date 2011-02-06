@@ -101,8 +101,8 @@
     </dependency>
   </dependencies>
   <scm>
-    <connection>scm:svn:https://test.kuali.org/svn/student/deploymentlab/trunk/kuali-wagon-s3</connection>
-    <developerConnection>scm:svn:https://test.kuali.org/svn/student/deploymentlab/trunk/kuali-wagon-s3</developerConnection>
-    <url>https://test.kuali.org/svn/student/deploymentlab/trunk/kuali-wagon-s3</url>
+    <connection>scm:svn:https://test.kuali.org/svn/student/deploymentlab/trunk/maven-s3-wagon</connection>
+    <developerConnection>scm:svn:https://test.kuali.org/svn/student/deploymentlab/trunk/maven-s3-wagon</developerConnection>
+    <url>https://test.kuali.org/svn/student/deploymentlab/trunk/maven-s3-wagon</url>
   </scm>
 </project>
