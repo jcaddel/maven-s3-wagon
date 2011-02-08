@@ -14,6 +14,7 @@
     It enables Maven to download files from and deploy files to S3.  It draws heavily from code
     developed by Ben Hale at SpringSource  
   </description>
+  <url>http://${kuali.site.hostname}/maven/wagons/${project.artifactId}/${project.version}/</url>
   <properties>
     <kuali.compile.source>1.5</kuali.compile.source>
     <kuali.compile.target>1.5</kuali.compile.target>
