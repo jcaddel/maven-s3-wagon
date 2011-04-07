@@ -1,9 +1,10 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.kuali</groupId>
     <artifactId>kuali</artifactId>
-    <version>75</version>
+    <version>77</version>
   </parent>
   <groupId>org.kuali.maven.wagons</groupId>
   <artifactId>maven-s3-wagon</artifactId>
@@ -12,7 +13,7 @@
   <description>
     This project is an implementation of Wagon provider for accessing Amazon's Simple Storage Service (S3).
     It enables Maven to download files from and deploy files to S3.  It draws heavily from code
-    developed by Ben Hale at SpringSource  
+    developed by Ben Hale at SpringSource
   </description>
   <url>http://${kuali.site.hostname}/maven/wagons/${project.artifactId}/${project.version}/</url>
   <properties>
@@ -52,13 +53,22 @@
     <dependency>
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk</artifactId>
-      <version>1.1.0</version>
+      <version>1.1.9</version>
       <exclusions>
         <exclusion>
           <groupId>commons-logging</groupId>
           <artifactId>commons-logging</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>org.codehaus.jackson</groupId>
+          <artifactId>jackson-core-asl</artifactId>
+        </exclusion>
       </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.jackson</groupId>
+      <artifactId>jackson-core-asl</artifactId>
+      <version>1.7.5</version>
     </dependency>
     <dependency>
       <groupId>org.apache.maven.wagon</groupId>
