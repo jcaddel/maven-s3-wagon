@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.kuali</groupId>
@@ -11,8 +12,9 @@
   <name>AWS S3 Wagon</name>
   <description>
     This project is an implementation of Wagon provider for accessing Amazon's Simple Storage Service (S3).
-    It enables Maven to download files from and deploy files to S3.  It draws heavily from code
-    developed by Ben Hale at SpringSource
+    It enables Maven to download files from and deploy files to S3. It draws heavily from code
+    developed by Ben Hale at
+    SpringSource
   </description>
   <url>http://${kuali.site.hostname}/maven/wagons/${project.artifactId}/${project.version}/</url>
   <properties>
@@ -68,6 +70,10 @@
           <groupId>org.codehaus.jackson</groupId>
           <artifactId>jackson-core-asl</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>javax.mail</groupId>
+          <artifactId>mail</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
@@ -108,7 +114,8 @@
   </dependencies>
   <scm>
     <connection>scm:svn:https://test.kuali.org/svn/student/deploymentlab/trunk/maven-s3-wagon</connection>
-    <developerConnection>scm:svn:https://test.kuali.org/svn/student/deploymentlab/trunk/maven-s3-wagon</developerConnection>
+    <developerConnection>scm:svn:https://test.kuali.org/svn/student/deploymentlab/trunk/maven-s3-wagon
+    </developerConnection>
     <url>https://test.kuali.org/svn/student/deploymentlab/trunk/maven-s3-wagon</url>
   </scm>
 </project>
