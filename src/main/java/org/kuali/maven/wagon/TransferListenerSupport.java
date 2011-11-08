@@ -26,7 +26,7 @@ import org.apache.maven.wagon.resource.Resource;
 /**
  * Support for sending messages to Maven transfer listeners. Automates the collection of listeners and the iteration
  * over that collection when an event is fired.
- * 
+ *
  * @author Ben Hale
  */
 class TransferListenerSupport {
@@ -37,7 +37,7 @@ class TransferListenerSupport {
 
 	/**
 	 * Creates a new instance
-	 * 
+	 *
 	 * @param wagon
 	 *            The wagon that events will come from
 	 */
@@ -47,11 +47,11 @@ class TransferListenerSupport {
 
 	/**
 	 * Adds a listener to the collection
-	 * 
+	 *
 	 * @param listener
 	 *            The listener to add
 	 */
-	public void addListener(TransferListener listener) {
+	public synchronized void addListener(TransferListener listener) {
 		if (listener.getClass().equals(org.apache.maven.wagon.observers.Debug.class)) {
 			// This class clutters up the console with a bunch of incorrect junk about the transfer
 			// Timing information is zero'd out
@@ -62,35 +62,35 @@ class TransferListenerSupport {
 
 	/**
 	 * Removes a listener from the collection
-	 * 
+	 *
 	 * @param listener
 	 *            The listener to remove
 	 */
-	public void removeListener(TransferListener listener) {
+	public synchronized void removeListener(TransferListener listener) {
 		listeners.remove(listener);
 	}
 
 	/**
 	 * Whether the collection already contains a listener
-	 * 
+	 *
 	 * @param listener
 	 *            The listener to check for
 	 * @return whether the collection contains the listener
 	 */
-	public boolean hasListener(TransferListener listener) {
+	public synchronized boolean hasListener(TransferListener listener) {
 		return listeners.contains(listener);
 	}
 
 	/**
 	 * Sends a transfer initated event to all listeners
-	 * 
+	 *
 	 * @param resource
 	 *            The resource being transfered
 	 * @param requestType
 	 *            GET or PUT request
 	 * @see TransferEvent#TRANSFER_INITIATED
 	 */
-	public void fireTransferInitiated(Resource resource, int requestType) {
+	public synchronized void fireTransferInitiated(Resource resource, int requestType) {
 		TransferEvent event = new TransferEvent(wagon, resource, TransferEvent.TRANSFER_INITIATED, requestType);
 		for (TransferListener listener : listeners) {
 			listener.transferInitiated(event);
@@ -99,21 +99,21 @@ class TransferListenerSupport {
 
 	/**
 	 * Sends a transfer started event to all listeners
-	 * 
+	 *
 	 * @param resource
 	 *            The resource being transfered
 	 * @param requestType
 	 *            GET or PUT request
 	 * @see TransferEvent#TRANSFER_STARTED
 	 */
-	public void fireTransferStarted(Resource resource, int requestType) {
+	public synchronized void fireTransferStarted(Resource resource, int requestType) {
 		TransferEvent event = new TransferEvent(wagon, resource, TransferEvent.TRANSFER_STARTED, requestType);
 		for (TransferListener listener : listeners) {
 			listener.transferStarted(event);
 		}
 	}
 
-	public void fireTransferProgress(Resource resource, int requestType, byte[] buffer, int length) {
+	public synchronized void fireTransferProgress(Resource resource, int requestType, byte[] buffer, int length) {
 		TransferEvent event = new TransferEvent(wagon, resource, TransferEvent.TRANSFER_PROGRESS, requestType);
 		for (TransferListener listener : listeners) {
 			listener.transferProgress(event, buffer, length);
@@ -122,14 +122,14 @@ class TransferListenerSupport {
 
 	/**
 	 * Sends a transfer completed event to all listeners
-	 * 
+	 *
 	 * @param resource
 	 *            The resource being transfered
 	 * @param requestType
 	 *            GET or PUT request
 	 * @see TransferEvent#TRANSFER_COMPLETED
 	 */
-	public void fireTransferCompleted(Resource resource, int requestType) {
+	public synchronized void fireTransferCompleted(Resource resource, int requestType) {
 		TransferEvent event = new TransferEvent(wagon, resource, TransferEvent.TRANSFER_COMPLETED, requestType);
 		for (TransferListener listener : listeners) {
 			listener.transferCompleted(event);
@@ -138,7 +138,7 @@ class TransferListenerSupport {
 
 	/**
 	 * Sends a transfer error event to all listeners
-	 * 
+	 *
 	 * @param resource
 	 *            The resource being transfered
 	 * @param requestType
@@ -146,7 +146,7 @@ class TransferListenerSupport {
 	 * @param e
 	 *            The transfer error
 	 */
-	public void fireTransferError(Resource resource, int requestType, Exception e) {
+	public synchronized void fireTransferError(Resource resource, int requestType, Exception e) {
 		TransferEvent event = new TransferEvent(wagon, resource, e, requestType);
 		for (TransferListener listener : listeners) {
 			listener.transferError(event);

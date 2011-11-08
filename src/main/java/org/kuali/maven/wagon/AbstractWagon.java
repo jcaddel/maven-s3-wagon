@@ -247,22 +247,6 @@ public abstract class AbstractWagon implements Wagon {
 		}
 	}
 
-	/**
-	 * On S3 there are no true "directories". An S3 bucket is essentially a Hashtable of files stored by key. The
-	 * integration between a traditional file system and an S3 bucket is to use the path of the file on the local file
-	 * system as the key to the file in the bucket. The S3 bucket does not contain a separate key for the directory
-	 * itself.
-	 */
-	public final void putDirectory(final File sourceDirectory, final String destinationDirectory)
-			throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
-
-		List<PutRequest> requests = getPutRequests(sourceDirectory, destinationDirectory);
-		System.out.println("PutRequests=" + requests.size());
-		for (PutRequest request : requests) {
-			put(request.getSourceDirectory(), request.getDestinationDirectory());
-		}
-	}
-
 	protected List<PutRequest> getPutRequests(File sourceDirectory, String destinationDirectory) {
 		List<PutRequest> requests = new ArrayList<PutRequest>();
 		// Cycle through all the files in this directory

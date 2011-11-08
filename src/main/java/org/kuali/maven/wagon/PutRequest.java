@@ -9,27 +9,27 @@ public class PutRequest {
 
 	public PutRequest(File sourceDirectory, String destinationDirectory) {
 		super();
-		this.sourceDirectory = sourceDirectory;
-		this.destinationDirectory = destinationDirectory;
+		this.source = sourceDirectory;
+		this.destination = destinationDirectory;
 	}
 
-	File sourceDirectory;
-	String destinationDirectory;
+	File source;
+	String destination;
 
-	public File getSourceDirectory() {
-		return sourceDirectory;
+	public File getSource() {
+		return source;
 	}
 
-	public void setSourceDirectory(File sourceDirectory) {
-		this.sourceDirectory = sourceDirectory;
+	public void setSource(File sourceDirectory) {
+		this.source = sourceDirectory;
 	}
 
-	public String getDestinationDirectory() {
-		return destinationDirectory;
+	public String getDestination() {
+		return destination;
 	}
 
-	public void setDestinationDirectory(String destinationDirectory) {
-		this.destinationDirectory = destinationDirectory;
+	public void setDestination(String destinationDirectory) {
+		this.destination = destinationDirectory;
 	}
 
 }
