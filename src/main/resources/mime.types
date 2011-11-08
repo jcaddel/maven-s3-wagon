@@ -1,0 +1,133 @@
+#
+# This file is here to provide "extra" mime type mappings that are convenient for Maven
+#
+# Maven deploys files with the extension .sha1 .md5 and .pom when it uploads artifacts to 
+# the repository, we set those to text/plain
+#
+
+application/java  class
+application/java-archive  jar
+application/mac-binhex40  hqx hqx
+application/mathml+xml  mathml
+application/msword  doc
+application/octet-stream  bin exe
+application/oda oda
+application/ogg ogg
+application/pdf pdf
+application/postscript  ai eps ps
+application/powerpoint  ppt
+application/rdf+xml rdf
+application/rtf rtf
+application/vnd.mozilla.xul+xml xul
+application/vnd.ms-excel  xls
+application/vnd.ms-powerpoint ppt
+application/vnd.ms-word doc
+application/vnd.oasis.opendocument.chart  odc
+application/vnd.oasis.opendocument.database odb
+application/vnd.oasis.opendocument.formula  odf
+application/vnd.oasis.opendocument.graphics odg
+application/vnd.oasis.opendocument.graphics-template  otg 
+application/vnd.oasis.opendocument.image  odi
+application/vnd.oasis.opendocument.presentation odp
+application/vnd.oasis.opendocument.presentation-template  otp
+application/vnd.oasis.opendocument.spreadsheet  ods
+application/vnd.oasis.opendocument.spreadsheet-template   ots
+application/vnd.oasis.opendocument.text odt
+application/vnd.oasis.opendocument.text-master  odm
+application/vnd.oasis.opendocument.text-template  ott
+application/vnd.oasis.opendocument.text-web oth
+application/vnd.rn-realmedia  rm
+application/vnd.wap.wmlc  wmlc
+application/vnd.wap.wmlscriptc  wmlscriptc
+application/voicexml+xml  vxml
+application/wspolicy+xml  wspolicy
+application/x-aim aim
+application/x-bcpio bcpio
+application/x-cdf cdf
+application/x-compress  Z z
+application/x-cpio  cpio
+application/x-csh csh
+application/x-dvi dvi
+application/x-gtar  gtar
+application/x-gzip  gz
+application/x-hdf hdf
+application/x-java-jnlp-file  jnlp
+application/x-latex latex
+application/x-mif mif
+application/x-netcdf  nc
+application/x-sh  sh
+application/x-shar  shar
+application/x-shockwave-flash swf
+application/x-stuffit sit
+application/x-sv4cpio sv4cpio
+application/x-sv4crc  sv4crc
+application/x-tar tar
+application/x-tcl tcl
+application/x-tex tex
+application/x-texinfo texi texinfo
+application/x-troff roff t tr
+application/x-troff-man man
+application/x-troff-me  me
+application/x-ustar ustar
+application/x-visio vsd
+application/x-wais-source ms src
+application/x-x509-ca-cert  cer
+application/xhtml+xml xht xhtml
+application/xml xml xsl
+application/xml-dtd dtd
+application/xslt+xml  xslt
+application/zip zip
+audio/basic au snd ulw
+audio/x-aiff  aif aifc aiff
+audio/x-midi  kar mid midi smf
+audio/x-mpeg  abs mp1 mp2 mp3 mpa mpega
+audio/x-mpegurl m3u
+audio/x-scpls pls
+audio/x-wav wav
+image/bmp bmp dib
+image/gif gif
+image/ief ief
+image/jpeg  jpe jpeg jpg
+image/pict  pct pic pict
+image/png png
+image/svg+xml svg svgz
+image/tiff  tif tiff
+image/vnd.wap.wbmp  wbmp
+image/x-cmu-raster  ras
+image/x-jg  art
+image/x-macpaint  mac pnt
+image/x-photoshop psd
+image/x-portable-anymap pnm
+image/x-portable-bitmap pbm
+image/x-portable-graymap  pgm
+image/x-portable-pixmap ppm
+image/x-quicktime qti qtif
+image/x-rgb rgb
+image/x-xbitmap xbm
+image/x-xpixmap xpm
+image/x-xwindowdump xwd
+text/css  css
+text/html body htm html
+text/javascript js
+# Add some maven friendly mime-type mappings
+# .sha1 and .md5 are hashes Maven uses to verify files have not been tampered with
+# .pom is how Maven renames the pom.xml files when storing them into the repo
+text/plain  java jsf jspf txt pom sha1 md5 xml asc
+text/richtext rtx
+text/tab-separated-values tsv
+text/vnd.sun.j2me.app-descriptor  jad
+text/vnd.wap.wml  wml
+text/vnd.wap.wmlscript  wmls
+text/x-component  htc
+text/x-setext etx
+video/mp4 mp4
+video/mpeg  mpe mpeg mpg
+video/mpeg2 mpv2
+video/quicktime mov qt
+video/x-dv  dv
+video/x-ms-asf  asf asx
+video/x-ms-wmv  wmv
+video/x-msvideo avi
+video/x-rad-screenplay  avx
+video/x-sgi-movie movie
+x-world/x-vrml  wrl
