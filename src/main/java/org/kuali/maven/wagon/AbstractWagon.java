@@ -225,30 +225,47 @@ public abstract class AbstractWagon implements Wagon {
 		// Nothing to do here (never called by the wagon manager)
 	}
 
+	protected PutContext getPutContext(File source, String destination) {
+		Resource resource = new Resource(destination);
+		PutContext context = new PutContext();
+		context.setResource(resource);
+		context.setProgress(new TransferProgress(resource, TransferEvent.REQUEST_PUT, transferListeners));
+		context.setListeners(transferListeners);
+		context.setDestination(destination);
+		context.setSource(source);
+		return context;
+	}
+
 	public final void put(final File source, final String destination) throws TransferFailedException,
 			ResourceDoesNotExistException, AuthorizationException {
-		Resource resource = new Resource(destination);
-		TransferProgress progress = new TransferProgress(resource, TransferEvent.REQUEST_PUT, transferListeners);
+		PutContext context = getPutContext(source, destination);
 
 		try {
-			transferListeners.fireTransferInitiated(resource, TransferEvent.REQUEST_PUT);
-			transferListeners.fireTransferStarted(resource, TransferEvent.REQUEST_PUT);
-			putResource(source, destination, progress);
-			transferListeners.fireTransferCompleted(resource, TransferEvent.REQUEST_PUT);
-		} catch (TransferFailedException e) {
-			throw e;
-		} catch (ResourceDoesNotExistException e) {
-			throw e;
-		} catch (AuthorizationException e) {
-			throw e;
+			context.fireStart();
+			putResource(source, destination, context.getProgress());
+			context.fireComplete();
 		} catch (Exception e) {
-			transferListeners.fireTransferError(resource, TransferEvent.REQUEST_PUT, e);
-			throw new TransferFailedException("Transfer of resource " + destination + "failed", e);
+			handleException(e, context);
 		}
 	}
 
-	protected List<PutRequest> getPutRequests(File sourceDirectory, String destinationDirectory) {
-		List<PutRequest> requests = new ArrayList<PutRequest>();
+	protected void handleException(Exception e, PutContext context) throws TransferFailedException,
+			ResourceDoesNotExistException, AuthorizationException {
+		if (e instanceof TransferFailedException) {
+			throw (TransferFailedException) e;
+		}
+		if (e instanceof ResourceDoesNotExistException) {
+			throw (ResourceDoesNotExistException) e;
+		}
+		if (e instanceof TransferFailedException) {
+			throw (AuthorizationException) e;
+		}
+		transferListeners.fireTransferError(context.getResource(), TransferEvent.REQUEST_PUT, e);
+		throw new TransferFailedException("Transfer of resource " + context.getDestination() + "failed", e);
+	}
+
+	protected List<PutContext> getPutContexts(File sourceDirectory, String destinationDirectory) {
+		List<PutContext> contexts = new ArrayList<PutContext>();
 		// Cycle through all the files in this directory
 		for (File f : sourceDirectory.listFiles()) {
 
@@ -261,14 +278,14 @@ public abstract class AbstractWagon implements Wagon {
 			// We hit a directory
 			if (f.isDirectory()) {
 				// Recurse into the sub-directory and create put requests for any files we find
-				requests.addAll(getPutRequests(f, destinationDirectory + "/" + filename));
+				contexts.addAll(getPutContexts(f, destinationDirectory + "/" + filename));
 			} else {
-				PutRequest request = new PutRequest(f, destinationDirectory + "/" + filename);
-				requests.add(request);
+				PutContext context = getPutContext(f, destinationDirectory + "/" + filename);
+				contexts.add(context);
 
 			}
 		}
-		return requests;
+		return contexts;
 	}
 
 	protected String encodeUTF8(String s) {

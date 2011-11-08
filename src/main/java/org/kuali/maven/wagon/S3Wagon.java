@@ -227,10 +227,6 @@ public class S3Wagon extends AbstractWagon {
 		}
 	}
 
-	protected PutObjectRequest getPutObjectRequest(File source, String destination) throws FileNotFoundException {
-		return getPutObjectRequest(source, destination, null);
-	}
-
 	/**
 	 * Create a PutObjectRequest based on the source file and destination passed in
 	 */
@@ -256,38 +252,32 @@ public class S3Wagon extends AbstractWagon {
 
 		try {
 			log.info("Uploading: '" + sourceDirectory.getAbsolutePath() + "'");
-			List<PutRequest> requests = getPutRequests(sourceDirectory, destinationDirectory);
-			long bytes = sum(requests);
-			List<PutObjectRequest> putObjectRequests = getPutObjectRequests(requests);
-			log.info("Files: " + putObjectRequests.size());
+			List<PutContext> contexts = getPutContexts(sourceDirectory, destinationDirectory);
+			long bytes = sum(contexts);
+			log.info("Files: " + contexts.size());
 			log.info("Size: " + formatter.getSize(bytes));
-			for (PutObjectRequest request : putObjectRequests) {
+			for (PutContext context : contexts) {
+				File source = context.getSource();
+				String destination = context.getDestination();
+				TransferProgress progress = context.getProgress();
+				PutObjectRequest request = getPutObjectRequest(source, destination, progress);
+				context.fireStart();
 				client.putObject(request);
+				context.fireComplete();
 			}
 		} catch (FileNotFoundException e) {
-			throw new ResourceDoesNotExistException("", e);
+			throw new ResourceDoesNotExistException("Could not locate", e);
 		}
 	}
 
-	protected long sum(List<PutRequest> requests) {
+	protected long sum(List<PutContext> contexts) {
 		long sum = 0;
-		for (PutRequest request : requests) {
-			File file = request.getSource();
+		for (PutContext context : contexts) {
+			File file = context.getSource();
 			long length = file.length();
 			sum += length;
 		}
 		return sum;
-	}
-
-	protected List<PutObjectRequest> getPutObjectRequests(List<PutRequest> requests) throws FileNotFoundException {
-		List<PutObjectRequest> putObjectRequests = new ArrayList<PutObjectRequest>();
-		for (PutRequest request : requests) {
-			File source = request.getSource();
-			String destination = request.getDestination();
-			PutObjectRequest putObjectRequest = getPutObjectRequest(source, destination);
-			putObjectRequests.add(putObjectRequest);
-		}
-		return putObjectRequests;
 	}
 
 	/**
