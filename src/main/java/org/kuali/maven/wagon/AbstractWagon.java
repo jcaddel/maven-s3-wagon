@@ -15,6 +15,7 @@ package org.kuali.maven.wagon;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.maven.wagon.ConnectionException;
@@ -37,370 +38,384 @@ import org.apache.maven.wagon.resource.Resource;
  * An abstract implementation of the Wagon interface. This implementation manages listener and other common behaviors.
  *
  * @author Ben Hale
- * @author Jeff Caddel - Updates for version 1.0-beta-6 of the Wagon interface
+ * @author Jeff Caddel - Updates for version 2.0 of the Wagon interface
  * @since 1.1
  */
 public abstract class AbstractWagon implements Wagon {
 
-    private int timeout;
+	private int timeout;
 
-    private boolean interactive;
+	private boolean interactive;
 
-    private Repository repository;
+	private Repository repository;
 
-    private final boolean supportsDirectoryCopy;
+	private final boolean supportsDirectoryCopy;
 
-    private final SessionListenerSupport sessionListeners = new SessionListenerSupport(this);
+	private final SessionListenerSupport sessionListeners = new SessionListenerSupport(this);
 
-    private final TransferListenerSupport transferListeners = new TransferListenerSupport(this);
+	private final TransferListenerSupport transferListeners = new TransferListenerSupport(this);
 
-    protected AbstractWagon(final boolean supportsDirectoryCopy) {
-        this.supportsDirectoryCopy = supportsDirectoryCopy;
-    }
+	protected AbstractWagon(final boolean supportsDirectoryCopy) {
+		this.supportsDirectoryCopy = supportsDirectoryCopy;
+	}
 
-    public final void addSessionListener(final SessionListener listener) {
-        if (listener.getClass().equals(Debug.class)) {
-            // This is a junky listener that spews things to System.out in an ugly way
-            return;
-        }
-        sessionListeners.addListener(listener);
-    }
+	public final void addSessionListener(final SessionListener listener) {
+		if (listener.getClass().equals(Debug.class)) {
+			// This is a junky listener that spews things to System.out in an ugly way
+			return;
+		}
+		sessionListeners.addListener(listener);
+	}
 
-    protected final SessionListenerSupport getSessionListeners() {
-        return sessionListeners;
-    }
+	protected final SessionListenerSupport getSessionListeners() {
+		return sessionListeners;
+	}
 
-    public final boolean hasSessionListener(final SessionListener listener) {
-        return sessionListeners.hasListener(listener);
-    }
+	public final boolean hasSessionListener(final SessionListener listener) {
+		return sessionListeners.hasListener(listener);
+	}
 
-    public final void removeSessionListener(final SessionListener listener) {
-        sessionListeners.removeListener(listener);
-    }
+	public final void removeSessionListener(final SessionListener listener) {
+		sessionListeners.removeListener(listener);
+	}
 
-    public final void addTransferListener(final TransferListener listener) {
-        transferListeners.addListener(listener);
-    }
+	public final void addTransferListener(final TransferListener listener) {
+		transferListeners.addListener(listener);
+	}
 
-    protected final TransferListenerSupport getTransferListeners() {
-        return transferListeners;
-    }
+	protected final TransferListenerSupport getTransferListeners() {
+		return transferListeners;
+	}
 
-    public final boolean hasTransferListener(final TransferListener listener) {
-        return transferListeners.hasListener(listener);
-    }
+	public final boolean hasTransferListener(final TransferListener listener) {
+		return transferListeners.hasListener(listener);
+	}
 
-    public final void removeTransferListener(final TransferListener listener) {
-        transferListeners.removeListener(listener);
-    }
+	public final void removeTransferListener(final TransferListener listener) {
+		transferListeners.removeListener(listener);
+	}
 
-    public final Repository getRepository() {
-        return repository;
-    }
+	public final Repository getRepository() {
+		return repository;
+	}
 
-    public final boolean isInteractive() {
-        return interactive;
-    }
+	public final boolean isInteractive() {
+		return interactive;
+	}
 
-    public final void setInteractive(final boolean interactive) {
-        this.interactive = interactive;
-    }
+	public final void setInteractive(final boolean interactive) {
+		this.interactive = interactive;
+	}
 
-    public final void connect(final Repository source) throws ConnectionException, AuthenticationException {
-        doConnect(source, null, null);
-    }
+	public final void connect(final Repository source) throws ConnectionException, AuthenticationException {
+		doConnect(source, null, null);
+	}
 
-    public final void connect(final Repository source, final ProxyInfo proxyInfo) throws ConnectionException,
-            AuthenticationException {
-        connect(source, null, proxyInfo);
-    }
+	public final void connect(final Repository source, final ProxyInfo proxyInfo) throws ConnectionException,
+			AuthenticationException {
+		connect(source, null, proxyInfo);
+	}
 
-    public final void connect(final Repository source, final AuthenticationInfo authenticationInfo)
-            throws ConnectionException, AuthenticationException {
-        doConnect(source, authenticationInfo, null);
-    }
+	public final void connect(final Repository source, final AuthenticationInfo authenticationInfo)
+			throws ConnectionException, AuthenticationException {
+		doConnect(source, authenticationInfo, null);
+	}
 
-    protected void doConnect(final Repository source, final AuthenticationInfo authenticationInfo,
-            final ProxyInfo proxyInfo) throws ConnectionException, AuthenticationException {
-        repository = source;
-        sessionListeners.fireSessionOpening();
-        try {
-            connectToRepository(source, authenticationInfo, proxyInfo);
-        } catch (ConnectionException e) {
-            sessionListeners.fireSessionConnectionRefused();
-            throw e;
-        } catch (AuthenticationException e) {
-            sessionListeners.fireSessionConnectionRefused();
-            throw e;
-        } catch (Exception e) {
-            sessionListeners.fireSessionConnectionRefused();
-            throw new ConnectionException("Could not connect to repository", e);
-        }
-        sessionListeners.fireSessionLoggedIn();
-        sessionListeners.fireSessionOpened();
-    }
+	protected void doConnect(final Repository source, final AuthenticationInfo authenticationInfo,
+			final ProxyInfo proxyInfo) throws ConnectionException, AuthenticationException {
+		repository = source;
+		sessionListeners.fireSessionOpening();
+		try {
+			connectToRepository(source, authenticationInfo, proxyInfo);
+		} catch (ConnectionException e) {
+			sessionListeners.fireSessionConnectionRefused();
+			throw e;
+		} catch (AuthenticationException e) {
+			sessionListeners.fireSessionConnectionRefused();
+			throw e;
+		} catch (Exception e) {
+			sessionListeners.fireSessionConnectionRefused();
+			throw new ConnectionException("Could not connect to repository", e);
+		}
+		sessionListeners.fireSessionLoggedIn();
+		sessionListeners.fireSessionOpened();
+	}
 
-    public final void connect(final Repository source, final AuthenticationInfo authenticationInfo,
-            final ProxyInfo proxyInfo) throws ConnectionException, AuthenticationException {
-        doConnect(source, authenticationInfo, proxyInfo);
-    }
+	public final void connect(final Repository source, final AuthenticationInfo authenticationInfo,
+			final ProxyInfo proxyInfo) throws ConnectionException, AuthenticationException {
+		doConnect(source, authenticationInfo, proxyInfo);
+	}
 
-    public final void disconnect() throws ConnectionException {
-        sessionListeners.fireSessionDisconnecting();
-        try {
-            disconnectFromRepository();
-        } catch (ConnectionException e) {
-            sessionListeners.fireSessionConnectionRefused();
-            throw e;
-        } catch (Exception e) {
-            sessionListeners.fireSessionConnectionRefused();
-            throw new ConnectionException("Could not disconnect from repository", e);
-        }
-        sessionListeners.fireSessionLoggedOff();
-        sessionListeners.fireSessionDisconnected();
-    }
+	public final void disconnect() throws ConnectionException {
+		sessionListeners.fireSessionDisconnecting();
+		try {
+			disconnectFromRepository();
+		} catch (ConnectionException e) {
+			sessionListeners.fireSessionConnectionRefused();
+			throw e;
+		} catch (Exception e) {
+			sessionListeners.fireSessionConnectionRefused();
+			throw new ConnectionException("Could not disconnect from repository", e);
+		}
+		sessionListeners.fireSessionLoggedOff();
+		sessionListeners.fireSessionDisconnected();
+	}
 
-    public final void get(final String resourceName, final File destination) throws TransferFailedException,
-            ResourceDoesNotExistException, AuthorizationException {
-        Resource resource = new Resource(resourceName);
-        transferListeners.fireTransferInitiated(resource, TransferEvent.REQUEST_GET);
-        transferListeners.fireTransferStarted(resource, TransferEvent.REQUEST_GET);
+	public final void get(final String resourceName, final File destination) throws TransferFailedException,
+			ResourceDoesNotExistException, AuthorizationException {
+		Resource resource = new Resource(resourceName);
+		transferListeners.fireTransferInitiated(resource, TransferEvent.REQUEST_GET);
+		transferListeners.fireTransferStarted(resource, TransferEvent.REQUEST_GET);
 
-        try {
-            getResource(resourceName, destination, new TransferProgress(resource, TransferEvent.REQUEST_GET,
-                    transferListeners));
-            transferListeners.fireTransferCompleted(resource, TransferEvent.REQUEST_GET);
-        } catch (TransferFailedException e) {
-            throw e;
-        } catch (ResourceDoesNotExistException e) {
-            throw e;
-        } catch (AuthorizationException e) {
-            throw e;
-        } catch (Exception e) {
-            transferListeners.fireTransferError(resource, TransferEvent.REQUEST_GET, e);
-            throw new TransferFailedException("Transfer of resource " + destination + "failed", e);
-        }
-    }
+		try {
+			getResource(resourceName, destination, new TransferProgress(resource, TransferEvent.REQUEST_GET,
+					transferListeners));
+			transferListeners.fireTransferCompleted(resource, TransferEvent.REQUEST_GET);
+		} catch (TransferFailedException e) {
+			throw e;
+		} catch (ResourceDoesNotExistException e) {
+			throw e;
+		} catch (AuthorizationException e) {
+			throw e;
+		} catch (Exception e) {
+			transferListeners.fireTransferError(resource, TransferEvent.REQUEST_GET, e);
+			throw new TransferFailedException("Transfer of resource " + destination + "failed", e);
+		}
+	}
 
-    @SuppressWarnings("rawtypes")
-    public final List getFileList(final String destinationDirectory) throws TransferFailedException,
-            ResourceDoesNotExistException, AuthorizationException {
-        try {
-            return listDirectory(destinationDirectory);
-        } catch (TransferFailedException e) {
-            throw e;
-        } catch (ResourceDoesNotExistException e) {
-            throw e;
-        } catch (AuthorizationException e) {
-            throw e;
-        } catch (Exception e) {
-            sessionListeners.fireSessionError(e);
-            throw new TransferFailedException("Listing of directory " + destinationDirectory + "failed", e);
-        }
-    }
+	public final List<String> getFileList(final String destinationDirectory) throws TransferFailedException,
+			ResourceDoesNotExistException, AuthorizationException {
+		try {
+			return listDirectory(destinationDirectory);
+		} catch (TransferFailedException e) {
+			throw e;
+		} catch (ResourceDoesNotExistException e) {
+			throw e;
+		} catch (AuthorizationException e) {
+			throw e;
+		} catch (Exception e) {
+			sessionListeners.fireSessionError(e);
+			throw new TransferFailedException("Listing of directory " + destinationDirectory + "failed", e);
+		}
+	}
 
-    public final boolean getIfNewer(final String resourceName, final File destination, final long timestamp)
-            throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
-        Resource resource = new Resource(resourceName);
-        try {
-            if (isRemoteResourceNewer(resourceName, timestamp)) {
-                get(resourceName, destination);
-                return true;
-            } else {
-                return false;
-            }
-        } catch (TransferFailedException e) {
-            throw e;
-        } catch (ResourceDoesNotExistException e) {
-            throw e;
-        } catch (AuthorizationException e) {
-            throw e;
-        } catch (Exception e) {
-            transferListeners.fireTransferError(resource, TransferEvent.REQUEST_GET, e);
-            throw new TransferFailedException("Transfer of resource " + destination + "failed", e);
-        }
-    }
+	public final boolean getIfNewer(final String resourceName, final File destination, final long timestamp)
+			throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
+		Resource resource = new Resource(resourceName);
+		try {
+			if (isRemoteResourceNewer(resourceName, timestamp)) {
+				get(resourceName, destination);
+				return true;
+			} else {
+				return false;
+			}
+		} catch (TransferFailedException e) {
+			throw e;
+		} catch (ResourceDoesNotExistException e) {
+			throw e;
+		} catch (AuthorizationException e) {
+			throw e;
+		} catch (Exception e) {
+			transferListeners.fireTransferError(resource, TransferEvent.REQUEST_GET, e);
+			throw new TransferFailedException("Transfer of resource " + destination + "failed", e);
+		}
+	}
 
-    public final void openConnection() throws ConnectionException, AuthenticationException {
-        // Nothing to do here (never called by the wagon manager)
-    }
+	public final void openConnection() throws ConnectionException, AuthenticationException {
+		// Nothing to do here (never called by the wagon manager)
+	}
 
-    public final void put(final File source, final String destination) throws TransferFailedException,
-            ResourceDoesNotExistException, AuthorizationException {
-        Resource resource = new Resource(destination);
-        transferListeners.fireTransferInitiated(resource, TransferEvent.REQUEST_PUT);
-        transferListeners.fireTransferStarted(resource, TransferEvent.REQUEST_PUT);
+	public final void put(final File source, final String destination) throws TransferFailedException,
+			ResourceDoesNotExistException, AuthorizationException {
+		Resource resource = new Resource(destination);
+		TransferProgress progress = new TransferProgress(resource, TransferEvent.REQUEST_PUT, transferListeners);
 
-        try {
-            putResource(source, destination, new TransferProgress(resource, TransferEvent.REQUEST_PUT,
-                    transferListeners));
-            transferListeners.fireTransferCompleted(resource, TransferEvent.REQUEST_PUT);
-        } catch (TransferFailedException e) {
-            throw e;
-        } catch (ResourceDoesNotExistException e) {
-            throw e;
-        } catch (AuthorizationException e) {
-            throw e;
-        } catch (Exception e) {
-            transferListeners.fireTransferError(resource, TransferEvent.REQUEST_PUT, e);
-            throw new TransferFailedException("Transfer of resource " + destination + "failed", e);
-        }
-    }
+		try {
+			transferListeners.fireTransferInitiated(resource, TransferEvent.REQUEST_PUT);
+			transferListeners.fireTransferStarted(resource, TransferEvent.REQUEST_PUT);
+			putResource(source, destination, progress);
+			transferListeners.fireTransferCompleted(resource, TransferEvent.REQUEST_PUT);
+		} catch (TransferFailedException e) {
+			throw e;
+		} catch (ResourceDoesNotExistException e) {
+			throw e;
+		} catch (AuthorizationException e) {
+			throw e;
+		} catch (Exception e) {
+			transferListeners.fireTransferError(resource, TransferEvent.REQUEST_PUT, e);
+			throw new TransferFailedException("Transfer of resource " + destination + "failed", e);
+		}
+	}
 
-    /**
-     * On S3 there are no true "directories". An S3 bucket is essentially a Hashtable of files stored by key. The
-     * integration between a traditional file system and an S3 bucket is to use the path of the file on the local file
-     * system as the key to the file in the bucket. The S3 bucket does not contain a separate key for the directory
-     * itself.
-     */
-    public final void putDirectory(final File sourceDirectory, final String destinationDirectory)
-            throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
-        // Cycle through all the files in this directory
-        for (File f : sourceDirectory.listFiles()) {
+	/**
+	 * On S3 there are no true "directories". An S3 bucket is essentially a Hashtable of files stored by key. The
+	 * integration between a traditional file system and an S3 bucket is to use the path of the file on the local file
+	 * system as the key to the file in the bucket. The S3 bucket does not contain a separate key for the directory
+	 * itself.
+	 */
+	public final void putDirectory(final File sourceDirectory, final String destinationDirectory)
+			throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
 
-            // Encode the filename for safety
-            String filename = encodeUTF8(f.getName());
+		List<PutRequest> requests = getPutRequests(sourceDirectory, destinationDirectory);
+		System.out.println("PutRequests=" + requests.size());
+		for (PutRequest request : requests) {
+			put(request.getSourceDirectory(), request.getDestinationDirectory());
+		}
+	}
 
-            // We hit a directory
-            if (f.isDirectory()) {
-                // Recurse into the sub-directory and store any files we find
-                putDirectory(f, destinationDirectory + "/" + filename);
-            } else {
-                // Normal file, store it into S3
-                put(f, destinationDirectory + "/" + filename);
-            }
-        }
-    }
+	protected List<PutRequest> getPutRequests(File sourceDirectory, String destinationDirectory) {
+		List<PutRequest> requests = new ArrayList<PutRequest>();
+		// Cycle through all the files in this directory
+		for (File f : sourceDirectory.listFiles()) {
 
-    protected String encodeUTF8(String s) {
-        try {
-            return URLEncoder.encode(s, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
-    }
+			// The filename is used 2 ways
+			// 1 - as a "key" into the bucket
+			// 2 - In the http url itself when accessed
+			// We url encode it here so the key matches a valid url
+			String filename = encodeUTF8(f.getName());
 
-    public final boolean resourceExists(final String resourceName) throws TransferFailedException,
-            AuthorizationException {
-        try {
-            return doesRemoteResourceExist(resourceName);
-        } catch (TransferFailedException e) {
-            throw e;
-        } catch (AuthorizationException e) {
-            throw e;
-        } catch (Exception e) {
-            sessionListeners.fireSessionError(e);
-            throw new TransferFailedException("Listing of resource " + resourceName + "failed", e);
-        }
-    }
+			// We hit a directory
+			if (f.isDirectory()) {
+				// Recurse into the sub-directory and create put requests for any files we find
+				requests.addAll(getPutRequests(f, destinationDirectory + "/" + filename));
+			} else {
+				PutRequest request = new PutRequest(f, destinationDirectory + "/" + filename);
+				requests.add(request);
 
-    public final boolean supportsDirectoryCopy() {
-        return supportsDirectoryCopy;
-    }
+			}
+		}
+		return requests;
+	}
 
-    /**
-     * Subclass must implement with specific connection behavior
-     *
-     * @param source
-     *            The repository connection information
-     * @param authenticationInfo
-     *            Authentication information, if any
-     * @param proxyInfo
-     *            Proxy information, if any
-     * @throws Exception
-     *             Implementations can throw any exception and it will be handled by the base class
-     */
-    protected abstract void connectToRepository(Repository source, AuthenticationInfo authenticationInfo,
-            ProxyInfo proxyInfo) throws Exception;
+	protected String encodeUTF8(String s) {
+		try {
+			return URLEncoder.encode(s, "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
-    /**
-     * Subclass must implement with specific detection behavior
-     *
-     * @param resourceName
-     *            The remote resource to detect
-     * @return true if the remote resource exists
-     * @throws Exception
-     *             Implementations can throw any exception and it will be handled by the base class
-     */
-    protected abstract boolean doesRemoteResourceExist(String resourceName) throws Exception;
+	public final boolean resourceExists(final String resourceName) throws TransferFailedException,
+			AuthorizationException {
+		try {
+			return doesRemoteResourceExist(resourceName);
+		} catch (TransferFailedException e) {
+			throw e;
+		} catch (AuthorizationException e) {
+			throw e;
+		} catch (Exception e) {
+			sessionListeners.fireSessionError(e);
+			throw new TransferFailedException("Listing of resource " + resourceName + "failed", e);
+		}
+	}
 
-    /**
-     * Subclasses must implement with specific disconnection behavior
-     *
-     * @throws Exception
-     *             Implementations can throw any exception and it will be handled by the base class
-     */
-    protected abstract void disconnectFromRepository() throws Exception;
+	public final boolean supportsDirectoryCopy() {
+		return supportsDirectoryCopy;
+	}
 
-    /**
-     * Subclass must implement with specific get behavior
-     *
-     * @param resourceName
-     *            The name of the remote resource to read
-     * @param destination
-     *            The local file to write to
-     * @param progress
-     *            A progress notifier for the upload. It must be used or hashes will not be calculated correctly
-     * @throws Exception
-     *             Implementations can throw any exception and it will be handled by the base class
-     */
-    protected abstract void getResource(String resourceName, File destination, TransferProgress progress)
-            throws Exception;
+	/**
+	 * Subclass must implement with specific connection behavior
+	 *
+	 * @param source
+	 *            The repository connection information
+	 * @param authenticationInfo
+	 *            Authentication information, if any
+	 * @param proxyInfo
+	 *            Proxy information, if any
+	 * @throws Exception
+	 *             Implementations can throw any exception and it will be handled by the base class
+	 */
+	protected abstract void connectToRepository(Repository source, AuthenticationInfo authenticationInfo,
+			ProxyInfo proxyInfo) throws Exception;
 
-    /**
-     * Subclass must implement with newer detection behavior
-     *
-     * @param resourceName
-     *            The name of the resource being compared
-     * @param timestamp
-     *            The timestamp to compare against
-     * @return true if the current version of the resource is newer than the timestamp
-     * @throws Exception
-     *             Implementations can throw any exception and it will be handled by the base class
-     */
-    protected abstract boolean isRemoteResourceNewer(String resourceName, long timestamp) throws Exception;
+	/**
+	 * Subclass must implement with specific detection behavior
+	 *
+	 * @param resourceName
+	 *            The remote resource to detect
+	 * @return true if the remote resource exists
+	 * @throws Exception
+	 *             Implementations can throw any exception and it will be handled by the base class
+	 */
+	protected abstract boolean doesRemoteResourceExist(String resourceName) throws Exception;
 
-    /**
-     * Subclass must implement with specific directory listing behavior
-     *
-     * @param directory
-     *            The directory to list files in
-     * @return A collection of file names
-     * @throws Exception
-     *             Implementations can throw any exception and it will be handled by the base class
-     */
-    protected abstract List<String> listDirectory(String directory) throws Exception;
+	/**
+	 * Subclasses must implement with specific disconnection behavior
+	 *
+	 * @throws Exception
+	 *             Implementations can throw any exception and it will be handled by the base class
+	 */
+	protected abstract void disconnectFromRepository() throws Exception;
 
-    /**
-     * Subclasses must implement with specific put behavior
-     *
-     * @param source
-     *            The local source file to read from
-     * @param destination
-     *            The name of the remote resource to write to
-     * @param progress
-     *            A progress notifier for the upload. It must be used or hashes will not be calculated correctly
-     * @throws Exception
-     *             Implementations can throw any exception and it will be handled by the base class
-     */
-    protected abstract void putResource(File source, String destination, TransferProgress progress) throws Exception;
+	/**
+	 * Subclass must implement with specific get behavior
+	 *
+	 * @param resourceName
+	 *            The name of the remote resource to read
+	 * @param destination
+	 *            The local file to write to
+	 * @param progress
+	 *            A progress notifier for the upload. It must be used or hashes will not be calculated correctly
+	 * @throws Exception
+	 *             Implementations can throw any exception and it will be handled by the base class
+	 */
+	protected abstract void getResource(String resourceName, File destination, TransferProgress progress)
+			throws Exception;
 
-    public void connect(final Repository source, final AuthenticationInfo authenticationInfo,
-            final ProxyInfoProvider proxyInfoProvider) throws ConnectionException, AuthenticationException {
-        doConnect(source, authenticationInfo, null);
-    }
+	/**
+	 * Subclass must implement with newer detection behavior
+	 *
+	 * @param resourceName
+	 *            The name of the resource being compared
+	 * @param timestamp
+	 *            The timestamp to compare against
+	 * @return true if the current version of the resource is newer than the timestamp
+	 * @throws Exception
+	 *             Implementations can throw any exception and it will be handled by the base class
+	 */
+	protected abstract boolean isRemoteResourceNewer(String resourceName, long timestamp) throws Exception;
 
-    public void connect(final Repository source, final ProxyInfoProvider proxyInfoProvider) throws ConnectionException,
-            AuthenticationException {
-        doConnect(source, null, null);
-    }
+	/**
+	 * Subclass must implement with specific directory listing behavior
+	 *
+	 * @param directory
+	 *            The directory to list files in
+	 * @return A collection of file names
+	 * @throws Exception
+	 *             Implementations can throw any exception and it will be handled by the base class
+	 */
+	protected abstract List<String> listDirectory(String directory) throws Exception;
 
-    public int getTimeout() {
-        return this.timeout;
-    }
+	/**
+	 * Subclasses must implement with specific put behavior
+	 *
+	 * @param source
+	 *            The local source file to read from
+	 * @param destination
+	 *            The name of the remote resource to write to
+	 * @param progress
+	 *            A progress notifier for the upload. It must be used or hashes will not be calculated correctly
+	 * @throws Exception
+	 *             Implementations can throw any exception and it will be handled by the base class
+	 */
+	protected abstract void putResource(File source, String destination, TransferProgress progress) throws Exception;
 
-    public void setTimeout(final int timeoutValue) {
-        this.timeout = timeoutValue;
-    }
+	public void connect(final Repository source, final AuthenticationInfo authenticationInfo,
+			final ProxyInfoProvider proxyInfoProvider) throws ConnectionException, AuthenticationException {
+		doConnect(source, authenticationInfo, null);
+	}
+
+	public void connect(final Repository source, final ProxyInfoProvider proxyInfoProvider) throws ConnectionException,
+			AuthenticationException {
+		doConnect(source, null, null);
+	}
+
+	public int getTimeout() {
+		return this.timeout;
+	}
+
+	public void setTimeout(final int timeoutValue) {
+		this.timeout = timeoutValue;
+	}
 
 }
