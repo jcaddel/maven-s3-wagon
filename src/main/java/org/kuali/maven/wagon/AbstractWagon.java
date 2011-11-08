@@ -1,17 +1,14 @@
 /*
  * Copyright 2004-2007 the original author or authors.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on
+ * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the
+ * specific language governing permissions and limitations under the License.
  */
 package org.kuali.maven.wagon;
 
@@ -291,13 +288,13 @@ public abstract class AbstractWagon implements Wagon {
      * Subclass must implement with specific connection behavior
      *
      * @param source
-     * The repository connection information
+     *            The repository connection information
      * @param authenticationInfo
-     * Authentication information, if any
+     *            Authentication information, if any
      * @param proxyInfo
-     * Proxy information, if any
+     *            Proxy information, if any
      * @throws Exception
-     * Implementations can throw any exception and it will be handled by the base class
+     *             Implementations can throw any exception and it will be handled by the base class
      */
     protected abstract void connectToRepository(Repository source, AuthenticationInfo authenticationInfo,
             ProxyInfo proxyInfo) throws Exception;
@@ -306,10 +303,10 @@ public abstract class AbstractWagon implements Wagon {
      * Subclass must implement with specific detection behavior
      *
      * @param resourceName
-     * The remote resource to detect
+     *            The remote resource to detect
      * @return true if the remote resource exists
      * @throws Exception
-     * Implementations can throw any exception and it will be handled by the base class
+     *             Implementations can throw any exception and it will be handled by the base class
      */
     protected abstract boolean doesRemoteResourceExist(String resourceName) throws Exception;
 
@@ -317,7 +314,7 @@ public abstract class AbstractWagon implements Wagon {
      * Subclasses must implement with specific disconnection behavior
      *
      * @throws Exception
-     * Implementations can throw any exception and it will be handled by the base class
+     *             Implementations can throw any exception and it will be handled by the base class
      */
     protected abstract void disconnectFromRepository() throws Exception;
 
@@ -325,13 +322,13 @@ public abstract class AbstractWagon implements Wagon {
      * Subclass must implement with specific get behavior
      *
      * @param resourceName
-     * The name of the remote resource to read
+     *            The name of the remote resource to read
      * @param destination
-     * The local file to write to
+     *            The local file to write to
      * @param progress
-     * A progress notifier for the upload. It must be used or hashes will not be calculated correctly
+     *            A progress notifier for the upload. It must be used or hashes will not be calculated correctly
      * @throws Exception
-     * Implementations can throw any exception and it will be handled by the base class
+     *             Implementations can throw any exception and it will be handled by the base class
      */
     protected abstract void getResource(String resourceName, File destination, TransferProgress progress)
             throws Exception;
@@ -340,12 +337,12 @@ public abstract class AbstractWagon implements Wagon {
      * Subclass must implement with newer detection behavior
      *
      * @param resourceName
-     * The name of the resource being compared
+     *            The name of the resource being compared
      * @param timestamp
-     * The timestamp to compare against
+     *            The timestamp to compare against
      * @return true if the current version of the resource is newer than the timestamp
      * @throws Exception
-     * Implementations can throw any exception and it will be handled by the base class
+     *             Implementations can throw any exception and it will be handled by the base class
      */
     protected abstract boolean isRemoteResourceNewer(String resourceName, long timestamp) throws Exception;
 
@@ -353,10 +350,10 @@ public abstract class AbstractWagon implements Wagon {
      * Subclass must implement with specific directory listing behavior
      *
      * @param directory
-     * The directory to list files in
+     *            The directory to list files in
      * @return A collection of file names
      * @throws Exception
-     * Implementations can throw any exception and it will be handled by the base class
+     *             Implementations can throw any exception and it will be handled by the base class
      */
     protected abstract List<String> listDirectory(String directory) throws Exception;
 
@@ -364,13 +361,13 @@ public abstract class AbstractWagon implements Wagon {
      * Subclasses must implement with specific put behavior
      *
      * @param source
-     * The local source file to read from
+     *            The local source file to read from
      * @param destination
-     * The name of the remote resource to write to
+     *            The name of the remote resource to write to
      * @param progress
-     * A progress notifier for the upload. It must be used or hashes will not be calculated correctly
+     *            A progress notifier for the upload. It must be used or hashes will not be calculated correctly
      * @throws Exception
-     * Implementations can throw any exception and it will be handled by the base class
+     *             Implementations can throw any exception and it will be handled by the base class
      */
     protected abstract void putResource(File source, String destination, TransferProgress progress) throws Exception;
 
