@@ -13,6 +13,8 @@
 package org.kuali.maven.wagon;
 
 import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.List;
 
 import org.apache.maven.wagon.ConnectionException;
@@ -255,14 +257,26 @@ public abstract class AbstractWagon implements Wagon {
             throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
         // Cycle through all the files in this directory
         for (File f : sourceDirectory.listFiles()) {
+
+            // Encode the filename for safety
+            String filename = encodeUTF8(f.getName());
+
             // We hit a directory
             if (f.isDirectory()) {
                 // Recurse into the sub-directory and store any files we find
-                putDirectory(f, destinationDirectory + "/" + f.getName());
+                putDirectory(f, destinationDirectory + "/" + filename);
             } else {
                 // Normal file, store it into S3
-                put(f, destinationDirectory + "/" + f.getName());
+                put(f, destinationDirectory + "/" + filename);
             }
+        }
+    }
+
+    protected String encodeUTF8(String s) {
+        try {
+            return URLEncoder.encode(s, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
         }
     }
 
