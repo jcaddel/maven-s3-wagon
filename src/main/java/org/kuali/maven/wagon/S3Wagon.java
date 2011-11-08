@@ -9,7 +9,6 @@
 package org.kuali.maven.wagon;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,16 +20,15 @@ import java.util.List;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.maven.wagon.ResourceDoesNotExistException;
-import org.apache.maven.wagon.TransferFailedException;
 import org.apache.maven.wagon.authentication.AuthenticationException;
 import org.apache.maven.wagon.authentication.AuthenticationInfo;
-import org.apache.maven.wagon.authorization.AuthorizationException;
 import org.apache.maven.wagon.proxy.ProxyInfo;
 import org.apache.maven.wagon.repository.Repository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -219,26 +217,31 @@ public class S3Wagon extends AbstractWagon {
 		return omd;
 	}
 
-	protected InputStream getInputStream(File source, TransferProgress progress) throws FileNotFoundException {
-		if (progress == null) {
-			return new FileInputStream(source);
-		} else {
-			return new TransferProgressFileInputStream(source, progress);
-		}
+	/**
+	 * Create a PutObjectRequest based on the PutContext
+	 */
+	public PutObjectRequest getPutObjectRequest(PutContext context) {
+		File source = context.getSource();
+		String destination = context.getDestination();
+		TransferProgress progress = context.getProgress();
+		return getPutObjectRequest(source, destination, progress);
 	}
 
 	/**
 	 * Create a PutObjectRequest based on the source file and destination passed in
 	 */
-	protected PutObjectRequest getPutObjectRequest(File source, String destination, TransferProgress progress)
-			throws FileNotFoundException {
-		String key = getNormalizedKey(source, destination);
-		String bucketName = bucket.getName();
-		InputStream input = getInputStream(source, progress);
-		ObjectMetadata metadata = getObjectMetadata(source, destination);
-		PutObjectRequest request = new PutObjectRequest(bucketName, key, input, metadata);
-		request.setCannedAcl(CannedAccessControlList.PublicRead);
-		return request;
+	protected PutObjectRequest getPutObjectRequest(File source, String destination, TransferProgress progress) {
+		try {
+			String key = getNormalizedKey(source, destination);
+			String bucketName = bucket.getName();
+			InputStream input = new TransferProgressFileInputStream(source, progress);
+			ObjectMetadata metadata = getObjectMetadata(source, destination);
+			PutObjectRequest request = new PutObjectRequest(bucketName, key, input, metadata);
+			request.setCannedAcl(CannedAccessControlList.PublicRead);
+			return request;
+		} catch (FileNotFoundException e) {
+			throw new AmazonServiceException("File not found", e);
+		}
 	}
 
 	/**
@@ -247,26 +250,21 @@ public class S3Wagon extends AbstractWagon {
 	 * system as the key to the file in the bucket. The S3 bucket does not contain a separate key for the directory
 	 * itself.
 	 */
-	public final void putDirectory(final File sourceDirectory, final String destinationDirectory)
-			throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
+	public final void putDirectory(File sourceDir, String destinationDir) {
+		log.info("Uploading: '" + sourceDir.getAbsolutePath() + "'");
+		List<PutContext> contexts = getPutContexts(sourceDir, destinationDir);
+		long bytes = sum(contexts);
+		log.info("Files: " + contexts.size());
+		log.info("Size: " + formatter.getSize(bytes));
+		put(contexts);
+	}
 
-		try {
-			log.info("Uploading: '" + sourceDirectory.getAbsolutePath() + "'");
-			List<PutContext> contexts = getPutContexts(sourceDirectory, destinationDirectory);
-			long bytes = sum(contexts);
-			log.info("Files: " + contexts.size());
-			log.info("Size: " + formatter.getSize(bytes));
-			for (PutContext context : contexts) {
-				File source = context.getSource();
-				String destination = context.getDestination();
-				TransferProgress progress = context.getProgress();
-				PutObjectRequest request = getPutObjectRequest(source, destination, progress);
-				context.fireStart();
-				client.putObject(request);
-				context.fireComplete();
-			}
-		} catch (FileNotFoundException e) {
-			throw new ResourceDoesNotExistException("Could not locate", e);
+	protected void put(List<PutContext> contexts) {
+		for (PutContext context : contexts) {
+			PutObjectRequest request = getPutObjectRequest(context);
+			context.fireStart();
+			client.putObject(request);
+			context.fireComplete();
 		}
 	}
 
