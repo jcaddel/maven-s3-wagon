@@ -116,7 +116,7 @@
   </dependencies>
   <scm>
     <connection>scm:git:git@github.com:jcaddel/maven-s3-wagon.git</connection>
-    <url>scm:git:git@github.com:jcaddel/maven-s3-wagon.git</url>
+    <url>https://github.com/jcaddel/maven-s3-wagon</url>
     <developerConnection>scm:git:git@github.com:jcaddel/maven-s3-wagon.git</developerConnection>
   </scm>
 </project>
