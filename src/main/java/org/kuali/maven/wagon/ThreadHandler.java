@@ -8,6 +8,7 @@ public class ThreadHandler implements UncaughtExceptionHandler {
     Thread[] threads;
     Throwable exception;
     boolean stopThreads;
+    int requestsPerThread;
 
     public ThreadGroup getGroup() {
         return group;
@@ -57,5 +58,13 @@ public class ThreadHandler implements UncaughtExceptionHandler {
 
     public synchronized boolean isStopThreads() {
         return stopThreads;
+    }
+
+    public int getRequestsPerThread() {
+        return requestsPerThread;
+    }
+
+    public void setRequestsPerThread(int requestsPerThread) {
+        this.requestsPerThread = requestsPerThread;
     }
 }

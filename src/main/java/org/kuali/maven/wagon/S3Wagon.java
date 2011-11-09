@@ -9,6 +9,7 @@
 package org.kuali.maven.wagon;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -233,6 +234,14 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
         return getPutObjectRequest(source, destination, progress);
     }
 
+    protected InputStream getInputStream(File source, TransferProgress progress) throws FileNotFoundException {
+        if (progress == null) {
+            return new FileInputStream(source);
+        } else {
+            return new TransferProgressFileInputStream(source, progress);
+        }
+    }
+
     /**
      * Create a PutObjectRequest based on the source file and destination passed in
      */
@@ -240,7 +249,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
         try {
             String key = getNormalizedKey(source, destination);
             String bucketName = bucket.getName();
-            InputStream input = new TransferProgressFileInputStream(source, progress);
+            InputStream input = getInputStream(source, progress);
             ObjectMetadata metadata = getObjectMetadata(source, destination);
             PutObjectRequest request = new PutObjectRequest(bucketName, key, input, metadata);
             request.setCannedAcl(CannedAccessControlList.PublicRead);
@@ -259,19 +268,21 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
     public final void putDirectory(File sourceDir, String destinationDir) throws TransferFailedException {
         List<PutFileContext> contexts = getPutFileContexts(sourceDir, destinationDir);
         long bytes = sum(contexts);
-        log.info(getPutDirMsg(sourceDir, contexts.size(), bytes));
         ThreadHandler handler = getThreadHandler(contexts);
+        log.info(getPutDirMsg(sourceDir, contexts.size(), bytes, handler));
         handler.executeThreads();
         if (handler.getException() != null) {
             throw new TransferFailedException("Unexpected error", handler.getException());
         }
     }
 
-    protected String getPutDirMsg(File sourceDir, int fileCount, long bytes) {
+    protected String getPutDirMsg(File sourceDir, int fileCount, long bytes, ThreadHandler handler) {
         StringBuilder sb = new StringBuilder();
         sb.append("Uploading: '" + sourceDir.getAbsolutePath() + "'");
         sb.append(" Files: " + fileCount);
         sb.append(" Size: " + formatter.getSize(bytes));
+        sb.append(" Threads: " + handler.getThreads().length);
+        sb.append(" Requests Per Thread: " + handler.getRequestsPerThread());
         return sb.toString();
     }
 
@@ -285,19 +296,20 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 
     protected ThreadHandler getThreadHandler(List<PutFileContext> contexts) {
         int requestsPerThread = getRequestsPerThread(threadCount, contexts.size());
-        log.info("Thread Count: " + threadCount);
-        log.info("Requests Per Thread: " + requestsPerThread);
         ThreadHandler handler = new ThreadHandler();
+        handler.setRequestsPerThread(requestsPerThread);
         ThreadGroup group = new ThreadGroup("S3 Uploaders");
         group.setDaemon(true);
         Thread[] threads = new Thread[threadCount];
         for (int i = 0; i < threads.length; i++) {
             int offset = i * requestsPerThread;
             int length = requestsPerThread;
-            PutThreadContext context = getPutThreadContext(handler, length, offset);
+            PutThreadContext context = getPutThreadContext(handler, offset, length);
             context.setContexts(contexts);
-            PutThread runnable = new PutThread(context);
-            threads[i] = new Thread(group, runnable, "S3 Uploader " + i);
+            int id = i + 1;
+            context.setId(id);
+            Runnable runnable = new PutThread(context);
+            threads[i] = new Thread(group, runnable, "S3-" + id);
             threads[i].setUncaughtExceptionHandler(handler);
             threads[i].setDaemon(true);
         }
@@ -306,13 +318,13 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
         return handler;
     }
 
-    protected PutThreadContext getPutThreadContext(ThreadHandler handler, int length, int offset) {
+    protected PutThreadContext getPutThreadContext(ThreadHandler handler, int offset, int length) {
         PutThreadContext context = new PutThreadContext();
         context.setClient(client);
         context.setFactory(this);
         context.setHandler(handler);
-        context.setLength(length);
         context.setOffset(offset);
+        context.setLength(length);
         return context;
     }
 
