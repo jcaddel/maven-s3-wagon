@@ -283,6 +283,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
         String rate = formatter.getRate(millis, bytes);
         String time = formatter.getTime(millis);
         log.info("Total Time: " + time);
+        log.info("Files Transferred: " + handler.getTracker().getCount());
         log.info("Transfer Rate: " + rate);
     }
 
@@ -299,33 +300,34 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
         int actualThreadCount = threadCount > fileCount ? fileCount : threadCount;
         int requestsPerThread = getRequestsPerThread(actualThreadCount, contexts.size());
         ThreadHandler handler = new ThreadHandler();
+        handler.setThreadCount(actualThreadCount);
         handler.setRequestsPerThread(requestsPerThread);
+        ProgressTracker tracker = new PercentCompleteTracker();
+        tracker.setTotal(contexts.size());
+        handler.setTracker(tracker);
         ThreadGroup group = new ThreadGroup("S3 Uploaders");
         group.setDaemon(true);
-        Thread[] threads = getThreads(actualThreadCount, requestsPerThread, handler, group, contexts);
         handler.setGroup(group);
+        Thread[] threads = getThreads(handler, contexts);
         handler.setThreads(threads);
         return handler;
     }
 
-    protected Thread[] getThreads(int actualThreadCount, int requestsPerThread, ThreadHandler handler,
-            ThreadGroup group, List<PutFileContext> contexts) {
-        ProgressTracker tracker = new PercentCompleteTracker();
-        tracker.setTotal(contexts.size());
-        Thread[] threads = new Thread[actualThreadCount];
+    protected Thread[] getThreads(ThreadHandler handler, List<PutFileContext> contexts) {
+        Thread[] threads = new Thread[handler.getThreadCount()];
         for (int i = 0; i < threads.length; i++) {
-            int offset = i * requestsPerThread;
-            int length = requestsPerThread;
+            int offset = i * handler.getRequestsPerThread();
+            int length = handler.getRequestsPerThread();
             if (offset + length > contexts.size()) {
                 length = contexts.size() - offset;
             }
             PutThreadContext context = getPutThreadContext(handler, offset, length);
             context.setContexts(contexts);
-            context.setTracker(tracker);
+            context.setTracker(handler.getTracker());
             int id = i + 1;
             context.setId(id);
             Runnable runnable = new PutThread(context);
-            threads[i] = new Thread(group, runnable, "S3-" + id);
+            threads[i] = new Thread(handler.getGroup(), runnable, "S3-" + id);
             threads[i].setUncaughtExceptionHandler(handler);
             threads[i].setDaemon(true);
         }

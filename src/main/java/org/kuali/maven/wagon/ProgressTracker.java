@@ -11,6 +11,10 @@ public class ProgressTracker {
     String completeToken = "\n";
     String progressToken = ".";
 
+    public synchronized int getCount() {
+        return count;
+    }
+
     public synchronized void increment() {
         if (count == 0) {
             showProgressStart();
