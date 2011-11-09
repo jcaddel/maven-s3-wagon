@@ -4,59 +4,62 @@ import java.util.List;
 
 import com.amazonaws.services.s3.AmazonS3Client;
 
+/**
+ * This is the context needed by a PutThread to successfully upload a list of files to S3
+ */
 public class PutThreadContext {
-	ThreadHandler handler;
-	List<PutContext> contexts;
-	AmazonS3Client client;
-	RequestFactory factory;
-	int length;
-	int offset;
+    ThreadHandler handler;
+    List<PutContext> contexts;
+    AmazonS3Client client;
+    RequestFactory factory;
+    int length;
+    int offset;
 
-	public ThreadHandler getHandler() {
-		return handler;
-	}
+    public ThreadHandler getHandler() {
+        return handler;
+    }
 
-	public void setHandler(ThreadHandler handler) {
-		this.handler = handler;
-	}
+    public void setHandler(ThreadHandler handler) {
+        this.handler = handler;
+    }
 
-	public List<PutContext> getContexts() {
-		return contexts;
-	}
+    public List<PutContext> getContexts() {
+        return contexts;
+    }
 
-	public void setContexts(List<PutContext> contexts) {
-		this.contexts = contexts;
-	}
+    public void setContexts(List<PutContext> contexts) {
+        this.contexts = contexts;
+    }
 
-	public AmazonS3Client getClient() {
-		return client;
-	}
+    public AmazonS3Client getClient() {
+        return client;
+    }
 
-	public void setClient(AmazonS3Client client) {
-		this.client = client;
-	}
+    public void setClient(AmazonS3Client client) {
+        this.client = client;
+    }
 
-	public RequestFactory getFactory() {
-		return factory;
-	}
+    public RequestFactory getFactory() {
+        return factory;
+    }
 
-	public void setFactory(RequestFactory factory) {
-		this.factory = factory;
-	}
+    public void setFactory(RequestFactory factory) {
+        this.factory = factory;
+    }
 
-	public int getLength() {
-		return length;
-	}
+    public int getLength() {
+        return length;
+    }
 
-	public void setLength(int length) {
-		this.length = length;
-	}
+    public void setLength(int length) {
+        this.length = length;
+    }
 
-	public int getOffset() {
-		return offset;
-	}
+    public int getOffset() {
+        return offset;
+    }
 
-	public void setOffset(int offset) {
-		this.offset = offset;
-	}
+    public void setOffset(int offset) {
+        this.offset = offset;
+    }
 }

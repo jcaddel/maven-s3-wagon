@@ -5,6 +5,9 @@ import java.util.List;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 
+/**
+ * Thread implementation for uploading a list of files to S3
+ */
 public class PutThread implements Runnable {
 
 	PutThreadContext context;
