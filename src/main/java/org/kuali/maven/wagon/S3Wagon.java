@@ -19,7 +19,9 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.maven.wagon.ResourceDoesNotExistException;
+import org.apache.maven.wagon.TransferFailedException;
 import org.apache.maven.wagon.authentication.AuthenticationException;
 import org.apache.maven.wagon.authentication.AuthenticationInfo;
 import org.apache.maven.wagon.proxy.ProxyInfo;
@@ -73,8 +75,17 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
  * @author Ben Hale
  * @author Jeff Caddel
  */
-public class S3Wagon extends AbstractWagon {
+public class S3Wagon extends AbstractWagon implements RequestFactory {
+	public static final String THREADS_KEY = "maven.wagon.threads";
+	public static final int DEFAULT_THREAD_COUNT = 10;
+
+	public static final String TIMEOUT_KEY = "maven.wagon.thread.timeout";
+	public static final int FOUR_HOURS = 60 * 60 * 4;
+	public static final int DEFAULT_THREAD_TIMEOUT_SECONDS = FOUR_HOURS;
+
 	SimpleFormatter formatter = new SimpleFormatter();
+	int threadCount = getThreadCount();
+	int threadTimeout = getThreadTimeout();
 
 	final Logger log = LoggerFactory.getLogger(S3Listener.class);
 
@@ -250,22 +261,58 @@ public class S3Wagon extends AbstractWagon {
 	 * system as the key to the file in the bucket. The S3 bucket does not contain a separate key for the directory
 	 * itself.
 	 */
-	public final void putDirectory(File sourceDir, String destinationDir) {
+	public final void putDirectory(File sourceDir, String destinationDir) throws TransferFailedException {
 		log.info("Uploading: '" + sourceDir.getAbsolutePath() + "'");
 		List<PutContext> contexts = getPutContexts(sourceDir, destinationDir);
 		long bytes = sum(contexts);
 		log.info("Files: " + contexts.size());
 		log.info("Size: " + formatter.getSize(bytes));
-		put(contexts);
+		ThreadHandler handler = getThreadHandler(contexts);
+		handler.executeThreads();
+		if (handler.getException() != null) {
+			throw new TransferFailedException("Unexpected error", handler.getException());
+		}
 	}
 
-	protected void put(List<PutContext> contexts) {
-		for (PutContext context : contexts) {
-			PutObjectRequest request = getPutObjectRequest(context);
-			context.fireStart();
-			client.putObject(request);
-			context.fireComplete();
+	protected int getRequestsPerThread(int threads, int requests) {
+		int requestsPerThread = requests / threads;
+		while (requestsPerThread * threads < requests) {
+			requestsPerThread++;
 		}
+		return requestsPerThread;
+	}
+
+	protected ThreadHandler getThreadHandler(List<PutContext> contexts) {
+		int requestsPerThread = getRequestsPerThread(threadCount, contexts.size());
+		log.info("Thread Count: " + threadCount);
+		log.info("Requests Per Thread: " + requestsPerThread);
+		ThreadHandler handler = new ThreadHandler();
+		ThreadGroup group = new ThreadGroup("S3 Uploaders");
+		group.setDaemon(true);
+		Thread[] threads = new Thread[threadCount];
+		for (int i = 0; i < threads.length; i++) {
+			int offset = i * requestsPerThread;
+			int length = requestsPerThread;
+			PutThreadContext context = getPutThreadContext(handler, length, offset);
+			context.setContexts(contexts);
+			PutThread runnable = new PutThread(context);
+			threads[i] = new Thread(group, runnable, "S3 Uploader " + i);
+			threads[i].setUncaughtExceptionHandler(handler);
+			threads[i].setDaemon(true);
+		}
+		handler.setGroup(group);
+		handler.setThreads(threads);
+		return handler;
+	}
+
+	protected PutThreadContext getPutThreadContext(ThreadHandler handler, int length, int offset) {
+		PutThreadContext context = new PutThreadContext();
+		context.setClient(client);
+		context.setFactory(this);
+		context.setHandler(handler);
+		context.setLength(length);
+		context.setOffset(offset);
+		return context;
 	}
 
 	protected long sum(List<PutContext> contexts) {
@@ -338,4 +385,23 @@ public class S3Wagon extends AbstractWagon {
 		}
 		return new BasicAWSCredentials(accessKey, secretKey);
 	}
+
+	protected int getThreadTimeout() {
+		String threadTimeout = System.getProperty(TIMEOUT_KEY);
+		if (StringUtils.isEmpty(threadTimeout)) {
+			return DEFAULT_THREAD_TIMEOUT_SECONDS;
+		} else {
+			return new Integer(threadTimeout);
+		}
+	}
+
+	protected int getThreadCount() {
+		String threadCount = System.getProperty(THREADS_KEY);
+		if (StringUtils.isEmpty(threadCount)) {
+			return DEFAULT_THREAD_COUNT;
+		} else {
+			return new Integer(threadCount);
+		}
+	}
+
 }

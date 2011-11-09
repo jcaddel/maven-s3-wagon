@@ -257,7 +257,7 @@ public abstract class AbstractWagon implements Wagon {
 		if (e instanceof ResourceDoesNotExistException) {
 			throw (ResourceDoesNotExistException) e;
 		}
-		if (e instanceof TransferFailedException) {
+		if (e instanceof AuthorizationException) {
 			throw (AuthorizationException) e;
 		}
 		transferListeners.fireTransferError(context.getResource(), TransferEvent.REQUEST_PUT, e);
@@ -269,10 +269,15 @@ public abstract class AbstractWagon implements Wagon {
 		// Cycle through all the files in this directory
 		for (File f : sourceDirectory.listFiles()) {
 
-			// The filename is used 2 ways
-			// 1 - as a "key" into the bucket
-			// 2 - In the http url itself when accessed
-			// We url encode it here so the key matches a valid url
+			/**
+			 * The filename is used 2 ways:<br>
+			 *
+			 * 1 - as a "key" into the bucket<br>
+			 * 2 - In the http url itself<br>
+			 *
+			 * We encode it here so the key matches the url AND to guarantee that the url is valid even in cases where
+			 * filenames contain characters (eg spaces) that are not allowed in urls
+			 */
 			String filename = encodeUTF8(f.getName());
 
 			// We hit a directory
@@ -282,7 +287,6 @@ public abstract class AbstractWagon implements Wagon {
 			} else {
 				PutContext context = getPutContext(f, destinationDirectory + "/" + filename);
 				contexts.add(context);
-
 			}
 		}
 		return contexts;
