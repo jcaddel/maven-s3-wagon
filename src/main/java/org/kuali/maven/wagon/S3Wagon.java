@@ -269,21 +269,21 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
         List<PutFileContext> contexts = getPutFileContexts(sourceDir, destinationDir);
         long bytes = sum(contexts);
         ThreadHandler handler = getThreadHandler(contexts);
-        log.info(getPutDirMsg(sourceDir, contexts.size(), bytes, handler));
+        log.info("Uploading - " + sourceDir.getAbsolutePath());
+        log.info("Files: " + contexts.size());
+        log.info("Size: " + formatter.getSize(bytes));
+        log.info("Threads: " + handler.getThreads().length);
+        log.info("Files Per Thread: " + handler.getRequestsPerThread());
+        long start = System.currentTimeMillis();
         handler.executeThreads();
+        long millis = System.currentTimeMillis() - start;
         if (handler.getException() != null) {
             throw new TransferFailedException("Unexpected error", handler.getException());
         }
-    }
-
-    protected String getPutDirMsg(File sourceDir, int fileCount, long bytes, ThreadHandler handler) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Uploading: '" + sourceDir.getAbsolutePath() + "'");
-        sb.append(" Files: " + fileCount);
-        sb.append(" Size: " + formatter.getSize(bytes));
-        sb.append(" Threads: " + handler.getThreads().length);
-        sb.append(" Requests Per Thread: " + handler.getRequestsPerThread());
-        return sb.toString();
+        String rate = formatter.getRate(millis, bytes);
+        String time = formatter.getTime(millis);
+        log.info("Total Time: " + time);
+        log.info("Transfer Rate: " + rate);
     }
 
     protected int getRequestsPerThread(int threads, int requests) {
@@ -295,17 +295,33 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
     }
 
     protected ThreadHandler getThreadHandler(List<PutFileContext> contexts) {
-        int requestsPerThread = getRequestsPerThread(threadCount, contexts.size());
+        int fileCount = contexts.size();
+        int actualThreadCount = threadCount > fileCount ? fileCount : threadCount;
+        int requestsPerThread = getRequestsPerThread(actualThreadCount, contexts.size());
         ThreadHandler handler = new ThreadHandler();
         handler.setRequestsPerThread(requestsPerThread);
         ThreadGroup group = new ThreadGroup("S3 Uploaders");
         group.setDaemon(true);
-        Thread[] threads = new Thread[threadCount];
+        Thread[] threads = getThreads(actualThreadCount, requestsPerThread, handler, group, contexts);
+        handler.setGroup(group);
+        handler.setThreads(threads);
+        return handler;
+    }
+
+    protected Thread[] getThreads(int actualThreadCount, int requestsPerThread, ThreadHandler handler,
+            ThreadGroup group, List<PutFileContext> contexts) {
+        ProgressTracker tracker = new PercentCompleteTracker();
+        tracker.setTotal(contexts.size());
+        Thread[] threads = new Thread[actualThreadCount];
         for (int i = 0; i < threads.length; i++) {
             int offset = i * requestsPerThread;
             int length = requestsPerThread;
+            if (offset + length > contexts.size()) {
+                length = contexts.size() - offset;
+            }
             PutThreadContext context = getPutThreadContext(handler, offset, length);
             context.setContexts(contexts);
+            context.setTracker(tracker);
             int id = i + 1;
             context.setId(id);
             Runnable runnable = new PutThread(context);
@@ -313,9 +329,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
             threads[i].setUncaughtExceptionHandler(handler);
             threads[i].setDaemon(true);
         }
-        handler.setGroup(group);
-        handler.setThreads(threads);
-        return handler;
+        return threads;
     }
 
     protected PutThreadContext getPutThreadContext(ThreadHandler handler, int offset, int length) {

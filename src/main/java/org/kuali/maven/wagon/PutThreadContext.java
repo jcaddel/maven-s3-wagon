@@ -16,6 +16,7 @@ public class PutThreadContext {
     RequestFactory factory;
     int length;
     int offset;
+    ProgressTracker tracker;
 
     public ThreadHandler getHandler() {
         return handler;
@@ -71,5 +72,13 @@ public class PutThreadContext {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public ProgressTracker getTracker() {
+        return tracker;
+    }
+
+    public void setTracker(ProgressTracker tracker) {
+        this.tracker = tracker;
     }
 }
