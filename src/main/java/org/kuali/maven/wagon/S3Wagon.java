@@ -270,21 +270,33 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
         long bytes = sum(contexts);
         ThreadHandler handler = getThreadHandler(contexts);
         log.info("Uploading - " + sourceDir.getAbsolutePath());
-        log.info("Files: " + contexts.size());
-        log.info("Size: " + formatter.getSize(bytes));
-        log.info("Threads: " + handler.getThreads().length);
-        log.info("Files Per Thread: " + handler.getRequestsPerThread());
+        log.info(getUploadStartMsg(contexts.size(), bytes, handler.getThreadCount(), handler.getRequestsPerThread()));
         long start = System.currentTimeMillis();
         handler.executeThreads();
         long millis = System.currentTimeMillis() - start;
         if (handler.getException() != null) {
             throw new TransferFailedException("Unexpected error", handler.getException());
         }
+        log.info(getUploadCompleteMsg(millis, bytes, handler.getTracker().getCount()));
+    }
+
+    protected String getUploadCompleteMsg(long millis, long bytes, int count) {
         String rate = formatter.getRate(millis, bytes);
         String time = formatter.getTime(millis);
-        log.info("Total Time: " + time);
-        log.info("Files Transferred: " + handler.getTracker().getCount());
-        log.info("Transfer Rate: " + rate);
+        StringBuilder sb = new StringBuilder();
+        sb.append("Files: " + count);
+        sb.append("  Time: " + time);
+        sb.append("  Rate: " + rate);
+        return sb.toString();
+    }
+
+    protected String getUploadStartMsg(int fileCount, long bytes, int threadCount, int filesPerThread) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Files: " + fileCount);
+        sb.append("  Bytes: " + formatter.getSize(bytes));
+        sb.append("  Threads: " + threadCount);
+        sb.append("  Files Per Thread: " + filesPerThread);
+        return sb.toString();
     }
 
     protected int getRequestsPerThread(int threads, int requests) {
