@@ -115,8 +115,8 @@
     </dependency>
   </dependencies>
   <scm>
-    <connection>scm:svn:https://test.kuali.org/svn/student/deploymentlab/trunk/maven-s3-wagon</connection>
-    <developerConnection>scm:svn:https://test.kuali.org/svn/student/deploymentlab/trunk/maven-s3-wagon</developerConnection>
-    <url>https://test.kuali.org/svn/student/deploymentlab/trunk/maven-s3-wagon</url>
+    <connection>scm:git:git@github.com:jcaddel/maven-s3-wagon.git</connection>
+    <url>scm:git:git@github.com:jcaddel/maven-s3-wagon.git</url>
+    <developerConnection>scm:git:git@github.com:jcaddel/maven-s3-wagon.git</developerConnection>
   </scm>
 </project>
