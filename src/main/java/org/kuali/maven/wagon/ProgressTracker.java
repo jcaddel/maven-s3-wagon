@@ -15,8 +15,7 @@ public class ProgressTracker {
         if (count == 0) {
             showProgressStart();
         }
-        count++;
-        showProgress(count, total);
+        showProgress(++count, total);
         if (count == total) {
             showProgressComplete();
         }
