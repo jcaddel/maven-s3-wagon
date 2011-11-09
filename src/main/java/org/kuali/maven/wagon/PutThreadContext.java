@@ -8,8 +8,10 @@ import com.amazonaws.services.s3.AmazonS3Client;
  * This is the context needed by a PutThread to successfully upload a list of files to S3
  */
 public class PutThreadContext {
+
+    int id;
     ThreadHandler handler;
-    List<PutContext> contexts;
+    List<PutFileContext> contexts;
     AmazonS3Client client;
     RequestFactory factory;
     int length;
@@ -23,11 +25,11 @@ public class PutThreadContext {
         this.handler = handler;
     }
 
-    public List<PutContext> getContexts() {
+    public List<PutFileContext> getContexts() {
         return contexts;
     }
 
-    public void setContexts(List<PutContext> contexts) {
+    public void setContexts(List<PutFileContext> contexts) {
         this.contexts = contexts;
     }
 
@@ -61,5 +63,13 @@ public class PutThreadContext {
 
     public void setOffset(int offset) {
         this.offset = offset;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 }

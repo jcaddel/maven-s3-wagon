@@ -231,7 +231,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 	/**
 	 * Create a PutObjectRequest based on the PutContext
 	 */
-	public PutObjectRequest getPutObjectRequest(PutContext context) {
+	public PutObjectRequest getPutObjectRequest(PutFileContext context) {
 		File source = context.getSource();
 		String destination = context.getDestination();
 		TransferProgress progress = context.getProgress();
@@ -263,7 +263,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 	 */
 	public final void putDirectory(File sourceDir, String destinationDir) throws TransferFailedException {
 		log.info("Uploading: '" + sourceDir.getAbsolutePath() + "'");
-		List<PutContext> contexts = getPutContexts(sourceDir, destinationDir);
+		List<PutFileContext> contexts = getPutContexts(sourceDir, destinationDir);
 		long bytes = sum(contexts);
 		log.info("Files: " + contexts.size());
 		log.info("Size: " + formatter.getSize(bytes));
@@ -282,7 +282,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 		return requestsPerThread;
 	}
 
-	protected ThreadHandler getThreadHandler(List<PutContext> contexts) {
+	protected ThreadHandler getThreadHandler(List<PutFileContext> contexts) {
 		int requestsPerThread = getRequestsPerThread(threadCount, contexts.size());
 		log.info("Thread Count: " + threadCount);
 		log.info("Requests Per Thread: " + requestsPerThread);
@@ -315,9 +315,9 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 		return context;
 	}
 
-	protected long sum(List<PutContext> contexts) {
+	protected long sum(List<PutFileContext> contexts) {
 		long sum = 0;
-		for (PutContext context : contexts) {
+		for (PutFileContext context : contexts) {
 			File file = context.getSource();
 			long length = file.length();
 			sum += length;

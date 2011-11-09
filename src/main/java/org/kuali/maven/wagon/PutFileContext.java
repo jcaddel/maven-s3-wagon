@@ -8,7 +8,7 @@ import org.apache.maven.wagon.resource.Resource;
 /**
  * This is the context needed by the Wagon for uploading a file and tracking its progress as it goes
  */
-public class PutContext {
+public class PutFileContext {
     File source;
     String destination;
     Resource resource;

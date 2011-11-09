@@ -24,7 +24,7 @@ public class PutThread implements Runnable {
 	public void run() {
 		int offset = context.getOffset();
 		int length = context.getLength();
-		List<PutContext> list = context.getContexts();
+		List<PutFileContext> list = context.getContexts();
 		RequestFactory factory = context.getFactory();
 		AmazonS3Client client = context.getClient();
 		for (int i = offset; i < offset + length; i++) {
@@ -34,7 +34,7 @@ public class PutThread implements Runnable {
 			if (context.getHandler().isStopThreads()) {
 				break;
 			}
-			PutContext pc = list.get(i);
+			PutFileContext pc = list.get(i);
 			PutObjectRequest request = factory.getPutObjectRequest(pc);
 			pc.fireStart();
 			client.putObject(request);
