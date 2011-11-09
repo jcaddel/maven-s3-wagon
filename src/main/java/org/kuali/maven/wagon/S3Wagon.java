@@ -266,17 +266,31 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
      * itself.
      */
     public final void putDirectory(File sourceDir, String destinationDir) throws TransferFailedException {
+
+        // Examine the contents of the directory
         List<PutFileContext> contexts = getPutFileContexts(sourceDir, destinationDir);
+
+        // Sum the total bytes in the directory
         long bytes = sum(contexts);
+
+        // Get a ThreadHandler that will upload everything
         ThreadHandler handler = getThreadHandler(contexts);
+
+        // Show what we are up to
         log.info("Uploading - " + sourceDir.getAbsolutePath());
         log.info(getUploadStartMsg(contexts.size(), bytes, handler.getThreadCount(), handler.getRequestsPerThread()));
+
+        // Upload the files
         long start = System.currentTimeMillis();
         handler.executeThreads();
         long millis = System.currentTimeMillis() - start;
+
+        // One (or more) of the threads had an issue
         if (handler.getException() != null) {
             throw new TransferFailedException("Unexpected error", handler.getException());
         }
+
+        // Show some stats
         log.info(getUploadCompleteMsg(millis, bytes, handler.getTracker().getCount()));
     }
 
