@@ -46,25 +46,16 @@ public class ThreadHandler implements UncaughtExceptionHandler {
         }
     }
 
-    public void uncaughtException(Thread t, Throwable e) {
-        setStopThreads(true);
-        setException(new RuntimeException("Unexpected issue in thread [" + t.getId() + ":" + t.getName() + "]", e));
+    public synchronized void uncaughtException(Thread t, Throwable e) {
+        this.stopThreads = true;
+        this.exception = new RuntimeException("Unexpected issue in thread [" + t.getId() + ":" + t.getName() + "]", e);
     }
 
     public Throwable getException() {
         return exception;
     }
 
-    public void setException(Throwable exception) {
-        this.exception = exception;
-    }
-
     public synchronized boolean isStopThreads() {
         return stopThreads;
     }
-
-    private synchronized void setStopThreads(boolean stopThreads) {
-        this.stopThreads = stopThreads;
-    }
-
 }
