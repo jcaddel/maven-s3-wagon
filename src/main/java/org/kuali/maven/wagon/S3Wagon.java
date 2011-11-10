@@ -83,7 +83,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
     SimpleFormatter formatter = new SimpleFormatter();
     int threadCount = getThreadCount();
 
-    final Logger log = LoggerFactory.getLogger(S3Listener.class);
+    final Logger log = LoggerFactory.getLogger(S3Wagon.class);
 
     private AmazonS3Client client;
 
