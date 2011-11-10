@@ -1,12 +1,11 @@
-Wagon for connecting maven builds with Amazon S3.  This wagon enables communication between
-Maven and Amazon S3.
+This wagon enables communication between Maven and Amazon S3.
 
-A pom with this wagon can publish a Maven site to S3 as well as deploy artifacts.
+A pom containing a reference to this wagon can publish a Maven site to S3 as well as deploy artifacts.
 
 When uploading the contents of a directory the system property "maven.wagon.threads" 
 controls the number of simultaneous uploads the wagon will use (default is 10)
 
-Add this to the build section of a pom.xml
+Add this to the build section of a pom:
 
   <build>
     <extensions>
@@ -18,7 +17,8 @@ Add this to the build section of a pom.xml
     </extensions>
   </build>
 
-Add this to the distribution management section of a pom.xml:   
+Add this to the distribution management section of a pom:
+
   <distributionManagement>
     <site>
       <id>site</id>
@@ -35,7 +35,8 @@ Add this to the distribution management section of a pom.xml:
   </distributionManagement>
   
 
-Add this to settings.xml   
+Add this to settings.xml
+
   <servers>
     <server>
       <id>server.id</id>
