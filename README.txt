@@ -5,6 +5,7 @@ A pom containing a reference to this wagon can publish a Maven site to S3 as wel
 When uploading the contents of a directory the system property "maven.wagon.threads" 
 controls the number of simultaneous uploads the wagon will use (default is 10)
 
+
 Add this to the build section of a pom:
 
   <build>
