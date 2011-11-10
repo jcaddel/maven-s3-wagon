@@ -17,6 +17,7 @@ Add this to the build section of a pom:
     </extensions>
   </build>
 
+
 Add this to the distribution management section of a pom:
 
   <distributionManagement>
