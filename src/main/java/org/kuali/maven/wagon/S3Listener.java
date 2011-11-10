@@ -116,9 +116,11 @@ public class S3Listener implements TransferListener, SessionListener {
         sb.append("Transfers: " + transferCount);
         sb.append(" Time: " + formatter.getTime(elapsed));
         sb.append(" Amount: " + formatter.getSize(byteCount));
-        sb.append(" Rate: " + formatter.getRate(transferElapsed, byteCount));
+        // sb.append(" Rate: " + formatter.getRate(transferElapsed, byteCount));
         sb.append(" Throughput: " + formatter.getRate(elapsed, byteCount));
-        log.info(sb.toString());
+        if (transferCount > 0) {
+            log.info(sb.toString());
+        }
     }
 
     /**

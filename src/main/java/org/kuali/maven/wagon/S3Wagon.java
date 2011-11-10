@@ -9,6 +9,7 @@
 package org.kuali.maven.wagon;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -76,332 +77,377 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
  * @author Jeff Caddel
  */
 public class S3Wagon extends AbstractWagon implements RequestFactory {
-	public static final String THREADS_KEY = "maven.wagon.threads";
-	public static final int DEFAULT_THREAD_COUNT = 10;
+    public static final String THREADS_KEY = "maven.wagon.threads";
+    public static final int DEFAULT_THREAD_COUNT = 10;
 
-	public static final String TIMEOUT_KEY = "maven.wagon.thread.timeout";
-	public static final int FOUR_HOURS = 60 * 60 * 4;
-	public static final int DEFAULT_THREAD_TIMEOUT_SECONDS = FOUR_HOURS;
+    SimpleFormatter formatter = new SimpleFormatter();
+    int threadCount = getThreadCount();
 
-	SimpleFormatter formatter = new SimpleFormatter();
-	int threadCount = getThreadCount();
-	int threadTimeout = getThreadTimeout();
+    final Logger log = LoggerFactory.getLogger(S3Wagon.class);
 
-	final Logger log = LoggerFactory.getLogger(S3Listener.class);
+    private AmazonS3Client client;
 
-	private AmazonS3Client client;
+    private Bucket bucket;
 
-	private Bucket bucket;
+    private String basedir;
 
-	private String basedir;
+    private final Mimetypes mimeTypes = Mimetypes.getInstance();
 
-	private final Mimetypes mimeTypes = Mimetypes.getInstance();
+    public S3Wagon() {
+        super(true);
+        S3Listener listener = new S3Listener();
+        super.addSessionListener(listener);
+        super.addTransferListener(listener);
+    }
 
-	public S3Wagon() {
-		super(true);
-		S3Listener listener = new S3Listener();
-		super.addSessionListener(listener);
-		super.addTransferListener(listener);
-	}
+    protected Bucket getOrCreateBucket(final AmazonS3Client client, final String bucketName) {
+        List<Bucket> buckets = client.listBuckets();
+        for (Bucket bucket : buckets) {
+            if (bucket.getName().equals(bucketName)) {
+                return bucket;
+            }
+        }
+        return client.createBucket(bucketName);
+    }
 
-	protected Bucket getOrCreateBucket(final AmazonS3Client client, final String bucketName) {
-		List<Bucket> buckets = client.listBuckets();
-		for (Bucket bucket : buckets) {
-			if (bucket.getName().equals(bucketName)) {
-				return bucket;
-			}
-		}
-		return client.createBucket(bucketName);
-	}
+    @Override
+    protected void connectToRepository(final Repository source, final AuthenticationInfo authenticationInfo,
+            final ProxyInfo proxyInfo) throws AuthenticationException {
 
-	@Override
-	protected void connectToRepository(final Repository source, final AuthenticationInfo authenticationInfo,
-			final ProxyInfo proxyInfo) throws AuthenticationException {
+        AWSCredentials credentials = getCredentials(authenticationInfo);
+        client = new AmazonS3Client(credentials);
+        bucket = getOrCreateBucket(client, source.getHost());
+        basedir = getBaseDir(source);
+    }
 
-		AWSCredentials credentials = getCredentials(authenticationInfo);
-		client = new AmazonS3Client(credentials);
-		bucket = getOrCreateBucket(client, source.getHost());
-		basedir = getBaseDir(source);
-	}
+    @Override
+    protected boolean doesRemoteResourceExist(final String resourceName) {
+        try {
+            client.getObjectMetadata(bucket.getName(), basedir + resourceName);
+        } catch (AmazonClientException e1) {
+            return false;
+        }
+        return true;
+    }
 
-	@Override
-	protected boolean doesRemoteResourceExist(final String resourceName) {
-		try {
-			client.getObjectMetadata(bucket.getName(), basedir + resourceName);
-		} catch (AmazonClientException e1) {
-			return false;
-		}
-		return true;
-	}
+    @Override
+    protected void disconnectFromRepository() {
+        // Nothing to do for S3
+    }
 
-	@Override
-	protected void disconnectFromRepository() {
-		// Nothing to do for S3
-	}
+    /**
+     * Pull an object out of an S3 bucket and write it to a file
+     */
+    @Override
+    protected void getResource(final String resourceName, final File destination, final TransferProgress progress)
+            throws ResourceDoesNotExistException, IOException {
+        // Obtain the object from S3
+        S3Object object = null;
+        try {
+            String key = basedir + resourceName;
+            object = client.getObject(bucket.getName(), key);
+        } catch (Exception e) {
+            throw new ResourceDoesNotExistException("Resource " + resourceName + " does not exist in the repository", e);
+        }
 
-	/**
-	 * Pull an object out of an S3 bucket and write it to a file
-	 */
-	@Override
-	protected void getResource(final String resourceName, final File destination, final TransferProgress progress)
-			throws ResourceDoesNotExistException, IOException {
-		// Obtain the object from S3
-		S3Object object = null;
-		try {
-			String key = basedir + resourceName;
-			object = client.getObject(bucket.getName(), key);
-		} catch (Exception e) {
-			throw new ResourceDoesNotExistException("Resource " + resourceName + " does not exist in the repository", e);
-		}
+        //
+        InputStream in = null;
+        OutputStream out = null;
+        try {
+            in = object.getObjectContent();
+            out = new TransferProgressFileOutputStream(destination, progress);
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = in.read(buffer)) != -1) {
+                out.write(buffer, 0, length);
+            }
+        } finally {
+            IOUtils.closeQuietly(in);
+            IOUtils.closeQuietly(out);
+        }
+    }
 
-		//
-		InputStream in = null;
-		OutputStream out = null;
-		try {
-			in = object.getObjectContent();
-			out = new TransferProgressFileOutputStream(destination, progress);
-			byte[] buffer = new byte[1024];
-			int length;
-			while ((length = in.read(buffer)) != -1) {
-				out.write(buffer, 0, length);
-			}
-		} finally {
-			IOUtils.closeQuietly(in);
-			IOUtils.closeQuietly(out);
-		}
-	}
+    /**
+     * Is the S3 object newer than the timestamp passed in?
+     */
+    @Override
+    protected boolean isRemoteResourceNewer(final String resourceName, final long timestamp) {
+        ObjectMetadata metadata = client.getObjectMetadata(bucket.getName(), basedir + resourceName);
+        return metadata.getLastModified().compareTo(new Date(timestamp)) < 0;
+    }
 
-	/**
-	 * Is the S3 object newer than the timestamp passed in?
-	 */
-	@Override
-	protected boolean isRemoteResourceNewer(final String resourceName, final long timestamp) {
-		ObjectMetadata metadata = client.getObjectMetadata(bucket.getName(), basedir + resourceName);
-		return metadata.getLastModified().compareTo(new Date(timestamp)) < 0;
-	}
+    /**
+     * List all of the objects in a given directory
+     */
+    @Override
+    protected List<String> listDirectory(final String directory) throws Exception {
+        ObjectListing objectListing = client.listObjects(bucket.getName(), basedir + directory);
+        List<String> fileNames = new ArrayList<String>();
+        for (S3ObjectSummary summary : objectListing.getObjectSummaries()) {
+            fileNames.add(summary.getKey());
+        }
+        return fileNames;
+    }
 
-	/**
-	 * List all of the objects in a given directory
-	 */
-	@Override
-	protected List<String> listDirectory(final String directory) throws Exception {
-		ObjectListing objectListing = client.listObjects(bucket.getName(), basedir + directory);
-		List<String> fileNames = new ArrayList<String>();
-		for (S3ObjectSummary summary : objectListing.getObjectSummaries()) {
-			fileNames.add(summary.getKey());
-		}
-		return fileNames;
-	}
+    /**
+     * Normalize the key to our S3 object<br>
+     * 1. Convert "./css/style.css" into "/css/style.css"<br>
+     * 2. Convert "/foo/bar/../../css/style.css" into "/css/style.css"
+     *
+     * @see java.net.URI.normalize()
+     */
+    protected String getNormalizedKey(final File source, final String destination) {
+        // Generate our bucket key for this file
+        String key = basedir + destination;
+        try {
+            String prefix = "http://s3.amazonaws.com/" + bucket.getName() + "/";
+            String urlString = prefix + key;
+            URI rawURI = new URI(urlString);
+            URI normalizedURI = rawURI.normalize();
+            String normalized = normalizedURI.toString();
+            int pos = normalized.indexOf(prefix) + prefix.length();
+            String normalizedKey = normalized.substring(pos);
+            return normalizedKey;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-	/**
-	 * Normalize the key to our S3 object<br>
-	 * 1. Convert "./css/style.css" into "/css/style.css"<br>
-	 * 2. Convert "/foo/bar/../../css/style.css" into "/css/style.css"
-	 *
-	 * @see java.net.URI.normalize()
-	 */
-	protected String getNormalizedKey(final File source, final String destination) {
-		// Generate our bucket key for this file
-		String key = basedir + destination;
-		try {
-			String prefix = "http://s3.amazonaws.com/" + bucket.getName() + "/";
-			String urlString = prefix + key;
-			URI rawURI = new URI(urlString);
-			URI normalizedURI = rawURI.normalize();
-			String normalized = normalizedURI.toString();
-			int pos = normalized.indexOf(prefix) + prefix.length();
-			String normalizedKey = normalized.substring(pos);
-			return normalizedKey;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
+    protected ObjectMetadata getObjectMetadata(final File source, final String destination) {
+        // Set the mime type according to the extension of the destination file
+        String contentType = mimeTypes.getMimetype(destination);
+        long contentLength = source.length();
 
-	protected ObjectMetadata getObjectMetadata(final File source, final String destination) {
-		// Set the mime type according to the extension of the destination file
-		String contentType = mimeTypes.getMimetype(destination);
-		long contentLength = source.length();
+        ObjectMetadata omd = new ObjectMetadata();
+        omd.setContentLength(contentLength);
+        omd.setContentType(contentType);
+        return omd;
+    }
 
-		ObjectMetadata omd = new ObjectMetadata();
-		omd.setContentLength(contentLength);
-		omd.setContentType(contentType);
-		return omd;
-	}
+    /**
+     * Create a PutObjectRequest based on the PutContext
+     */
+    public PutObjectRequest getPutObjectRequest(PutFileContext context) {
+        File source = context.getSource();
+        String destination = context.getDestination();
+        TransferProgress progress = context.getProgress();
+        return getPutObjectRequest(source, destination, progress);
+    }
 
-	/**
-	 * Create a PutObjectRequest based on the PutContext
-	 */
-	public PutObjectRequest getPutObjectRequest(PutContext context) {
-		File source = context.getSource();
-		String destination = context.getDestination();
-		TransferProgress progress = context.getProgress();
-		return getPutObjectRequest(source, destination, progress);
-	}
+    protected InputStream getInputStream(File source, TransferProgress progress) throws FileNotFoundException {
+        if (progress == null) {
+            return new FileInputStream(source);
+        } else {
+            return new TransferProgressFileInputStream(source, progress);
+        }
+    }
 
-	/**
-	 * Create a PutObjectRequest based on the source file and destination passed in
-	 */
-	protected PutObjectRequest getPutObjectRequest(File source, String destination, TransferProgress progress) {
-		try {
-			String key = getNormalizedKey(source, destination);
-			String bucketName = bucket.getName();
-			InputStream input = new TransferProgressFileInputStream(source, progress);
-			ObjectMetadata metadata = getObjectMetadata(source, destination);
-			PutObjectRequest request = new PutObjectRequest(bucketName, key, input, metadata);
-			request.setCannedAcl(CannedAccessControlList.PublicRead);
-			return request;
-		} catch (FileNotFoundException e) {
-			throw new AmazonServiceException("File not found", e);
-		}
-	}
+    /**
+     * Create a PutObjectRequest based on the source file and destination passed in
+     */
+    protected PutObjectRequest getPutObjectRequest(File source, String destination, TransferProgress progress) {
+        try {
+            String key = getNormalizedKey(source, destination);
+            String bucketName = bucket.getName();
+            InputStream input = getInputStream(source, progress);
+            ObjectMetadata metadata = getObjectMetadata(source, destination);
+            PutObjectRequest request = new PutObjectRequest(bucketName, key, input, metadata);
+            request.setCannedAcl(CannedAccessControlList.PublicRead);
+            return request;
+        } catch (FileNotFoundException e) {
+            throw new AmazonServiceException("File not found", e);
+        }
+    }
 
-	/**
-	 * On S3 there are no true "directories". An S3 bucket is essentially a Hashtable of files stored by key. The
-	 * integration between a traditional file system and an S3 bucket is to use the path of the file on the local file
-	 * system as the key to the file in the bucket. The S3 bucket does not contain a separate key for the directory
-	 * itself.
-	 */
-	public final void putDirectory(File sourceDir, String destinationDir) throws TransferFailedException {
-		log.info("Uploading: '" + sourceDir.getAbsolutePath() + "'");
-		List<PutContext> contexts = getPutContexts(sourceDir, destinationDir);
-		long bytes = sum(contexts);
-		log.info("Files: " + contexts.size());
-		log.info("Size: " + formatter.getSize(bytes));
-		ThreadHandler handler = getThreadHandler(contexts);
-		handler.executeThreads();
-		if (handler.getException() != null) {
-			throw new TransferFailedException("Unexpected error", handler.getException());
-		}
-	}
+    /**
+     * On S3 there are no true "directories". An S3 bucket is essentially a Hashtable of files stored by key. The
+     * integration between a traditional file system and an S3 bucket is to use the path of the file on the local file
+     * system as the key to the file in the bucket. The S3 bucket does not contain a separate key for the directory
+     * itself.
+     */
+    public final void putDirectory(File sourceDir, String destinationDir) throws TransferFailedException {
 
-	protected int getRequestsPerThread(int threads, int requests) {
-		int requestsPerThread = requests / threads;
-		while (requestsPerThread * threads < requests) {
-			requestsPerThread++;
-		}
-		return requestsPerThread;
-	}
+        // Examine the contents of the directory
+        List<PutFileContext> contexts = getPutFileContexts(sourceDir, destinationDir);
 
-	protected ThreadHandler getThreadHandler(List<PutContext> contexts) {
-		int requestsPerThread = getRequestsPerThread(threadCount, contexts.size());
-		log.info("Thread Count: " + threadCount);
-		log.info("Requests Per Thread: " + requestsPerThread);
-		ThreadHandler handler = new ThreadHandler();
-		ThreadGroup group = new ThreadGroup("S3 Uploaders");
-		group.setDaemon(true);
-		Thread[] threads = new Thread[threadCount];
-		for (int i = 0; i < threads.length; i++) {
-			int offset = i * requestsPerThread;
-			int length = requestsPerThread;
-			PutThreadContext context = getPutThreadContext(handler, length, offset);
-			context.setContexts(contexts);
-			PutThread runnable = new PutThread(context);
-			threads[i] = new Thread(group, runnable, "S3 Uploader " + i);
-			threads[i].setUncaughtExceptionHandler(handler);
-			threads[i].setDaemon(true);
-		}
-		handler.setGroup(group);
-		handler.setThreads(threads);
-		return handler;
-	}
+        // Sum the total bytes in the directory
+        long bytes = sum(contexts);
 
-	protected PutThreadContext getPutThreadContext(ThreadHandler handler, int length, int offset) {
-		PutThreadContext context = new PutThreadContext();
-		context.setClient(client);
-		context.setFactory(this);
-		context.setHandler(handler);
-		context.setLength(length);
-		context.setOffset(offset);
-		return context;
-	}
+        // Get a ThreadHandler that will upload everything
+        ThreadHandler handler = getThreadHandler(contexts);
 
-	protected long sum(List<PutContext> contexts) {
-		long sum = 0;
-		for (PutContext context : contexts) {
-			File file = context.getSource();
-			long length = file.length();
-			sum += length;
-		}
-		return sum;
-	}
+        // Show what we are up to
+        log.info("Uploading - " + sourceDir.getAbsolutePath());
+        log.info(getUploadStartMsg(contexts.size(), bytes, handler.getThreadCount(), handler.getRequestsPerThread()));
 
-	/**
-	 * Store a resource into S3
-	 */
-	@Override
-	protected void putResource(final File source, final String destination, final TransferProgress progress)
-			throws IOException {
+        // Upload the files
+        long start = System.currentTimeMillis();
+        handler.executeThreads();
+        long millis = System.currentTimeMillis() - start;
 
-		// Create a new S3Object
-		PutObjectRequest request = getPutObjectRequest(source, destination, progress);
+        // One (or more) of the threads had an issue
+        if (handler.getException() != null) {
+            throw new TransferFailedException("Unexpected error", handler.getException());
+        }
 
-		// Store the file on S3
-		client.putObject(request);
-	}
+        // Show some stats
+        log.info(getUploadCompleteMsg(millis, bytes, handler.getTracker().getCount()));
+    }
 
-	protected String getDestinationPath(final String destination) {
-		return destination.substring(0, destination.lastIndexOf('/'));
-	}
+    protected String getUploadCompleteMsg(long millis, long bytes, int count) {
+        String rate = formatter.getRate(millis, bytes);
+        String time = formatter.getTime(millis);
+        StringBuilder sb = new StringBuilder();
+        sb.append("Files: " + count);
+        sb.append("  Time: " + time);
+        sb.append("  Rate: " + rate);
+        return sb.toString();
+    }
 
-	/**
-	 * Convert "/" -> ""<br>
-	 * Convert "/snapshot/" -> "snapshot/"<br>
-	 * Convert "/snapshot" -> "snapshot/"<br>
-	 */
-	protected String getBaseDir(final Repository source) {
-		StringBuilder sb = new StringBuilder(source.getBasedir());
-		sb.deleteCharAt(0);
-		if (sb.length() == 0) {
-			return "";
-		}
-		if (sb.charAt(sb.length() - 1) != '/') {
-			sb.append('/');
-		}
-		return sb.toString();
-	}
+    protected String getUploadStartMsg(int fileCount, long bytes, int threadCount, int filesPerThread) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Files: " + fileCount);
+        sb.append("  Bytes: " + formatter.getSize(bytes));
+        sb.append("  Threads: " + threadCount);
+        sb.append("  Files Per Thread: " + filesPerThread);
+        return sb.toString();
+    }
 
-	protected String getAuthenticationErrorMessage() {
-		StringBuffer sb = new StringBuffer();
-		sb.append("The S3 wagon needs AWS Access Key set as the username and AWS Secret Key set as the password. eg:\n");
-		sb.append("<server>\n");
-		sb.append("  <id>my.server</id>\n");
-		sb.append("  <username>[AWS Access Key ID]</username>\n");
-		sb.append("  <password>[AWS Secret Access Key]</password>\n");
-		sb.append("</server>\n");
-		return sb.toString();
-	}
+    protected int getRequestsPerThread(int threads, int requests) {
+        int requestsPerThread = requests / threads;
+        while (requestsPerThread * threads < requests) {
+            requestsPerThread++;
+        }
+        return requestsPerThread;
+    }
 
-	/**
-	 * Create AWSCredentionals from the information in settings.xml
-	 */
-	protected AWSCredentials getCredentials(final AuthenticationInfo authenticationInfo) throws AuthenticationException {
-		if (authenticationInfo == null) {
-			throw new AuthenticationException(getAuthenticationErrorMessage());
-		}
-		String accessKey = authenticationInfo.getUserName();
-		String secretKey = authenticationInfo.getPassword();
-		if (accessKey == null || secretKey == null) {
-			throw new AuthenticationException(getAuthenticationErrorMessage());
-		}
-		return new BasicAWSCredentials(accessKey, secretKey);
-	}
+    protected ThreadHandler getThreadHandler(List<PutFileContext> contexts) {
+        int fileCount = contexts.size();
+        int actualThreadCount = threadCount > fileCount ? fileCount : threadCount;
+        int requestsPerThread = getRequestsPerThread(actualThreadCount, contexts.size());
+        ThreadHandler handler = new ThreadHandler();
+        handler.setThreadCount(actualThreadCount);
+        handler.setRequestsPerThread(requestsPerThread);
+        ProgressTracker tracker = new PercentCompleteTracker();
+        tracker.setTotal(contexts.size());
+        handler.setTracker(tracker);
+        ThreadGroup group = new ThreadGroup("S3 Uploaders");
+        group.setDaemon(true);
+        handler.setGroup(group);
+        Thread[] threads = getThreads(handler, contexts);
+        handler.setThreads(threads);
+        return handler;
+    }
 
-	protected int getThreadTimeout() {
-		String threadTimeout = System.getProperty(TIMEOUT_KEY);
-		if (StringUtils.isEmpty(threadTimeout)) {
-			return DEFAULT_THREAD_TIMEOUT_SECONDS;
-		} else {
-			return new Integer(threadTimeout);
-		}
-	}
+    protected Thread[] getThreads(ThreadHandler handler, List<PutFileContext> contexts) {
+        Thread[] threads = new Thread[handler.getThreadCount()];
+        for (int i = 0; i < threads.length; i++) {
+            int offset = i * handler.getRequestsPerThread();
+            int length = handler.getRequestsPerThread();
+            if (offset + length > contexts.size()) {
+                length = contexts.size() - offset;
+            }
+            PutThreadContext context = getPutThreadContext(handler, offset, length);
+            context.setContexts(contexts);
+            context.setTracker(handler.getTracker());
+            int id = i + 1;
+            context.setId(id);
+            Runnable runnable = new PutThread(context);
+            threads[i] = new Thread(handler.getGroup(), runnable, "S3-" + id);
+            threads[i].setUncaughtExceptionHandler(handler);
+            threads[i].setDaemon(true);
+        }
+        return threads;
+    }
 
-	protected int getThreadCount() {
-		String threadCount = System.getProperty(THREADS_KEY);
-		if (StringUtils.isEmpty(threadCount)) {
-			return DEFAULT_THREAD_COUNT;
-		} else {
-			return new Integer(threadCount);
-		}
-	}
+    protected PutThreadContext getPutThreadContext(ThreadHandler handler, int offset, int length) {
+        PutThreadContext context = new PutThreadContext();
+        context.setClient(client);
+        context.setFactory(this);
+        context.setHandler(handler);
+        context.setOffset(offset);
+        context.setLength(length);
+        return context;
+    }
+
+    protected long sum(List<PutFileContext> contexts) {
+        long sum = 0;
+        for (PutFileContext context : contexts) {
+            File file = context.getSource();
+            long length = file.length();
+            sum += length;
+        }
+        return sum;
+    }
+
+    /**
+     * Store a resource into S3
+     */
+    @Override
+    protected void putResource(final File source, final String destination, final TransferProgress progress)
+            throws IOException {
+
+        // Create a new S3Object
+        PutObjectRequest request = getPutObjectRequest(source, destination, progress);
+
+        // Store the file on S3
+        client.putObject(request);
+    }
+
+    protected String getDestinationPath(final String destination) {
+        return destination.substring(0, destination.lastIndexOf('/'));
+    }
+
+    /**
+     * Convert "/" -> ""<br>
+     * Convert "/snapshot/" -> "snapshot/"<br>
+     * Convert "/snapshot" -> "snapshot/"<br>
+     */
+    protected String getBaseDir(final Repository source) {
+        StringBuilder sb = new StringBuilder(source.getBasedir());
+        sb.deleteCharAt(0);
+        if (sb.length() == 0) {
+            return "";
+        }
+        if (sb.charAt(sb.length() - 1) != '/') {
+            sb.append('/');
+        }
+        return sb.toString();
+    }
+
+    protected String getAuthenticationErrorMessage() {
+        StringBuffer sb = new StringBuffer();
+        sb.append("The S3 wagon needs AWS Access Key set as the username and AWS Secret Key set as the password. eg:\n");
+        sb.append("<server>\n");
+        sb.append("  <id>my.server</id>\n");
+        sb.append("  <username>[AWS Access Key ID]</username>\n");
+        sb.append("  <password>[AWS Secret Access Key]</password>\n");
+        sb.append("</server>\n");
+        return sb.toString();
+    }
+
+    /**
+     * Create AWSCredentionals from the information in settings.xml
+     */
+    protected AWSCredentials getCredentials(final AuthenticationInfo authenticationInfo) throws AuthenticationException {
+        if (authenticationInfo == null) {
+            throw new AuthenticationException(getAuthenticationErrorMessage());
+        }
+        String accessKey = authenticationInfo.getUserName();
+        String secretKey = authenticationInfo.getPassword();
+        if (accessKey == null || secretKey == null) {
+            throw new AuthenticationException(getAuthenticationErrorMessage());
+        }
+        return new BasicAWSCredentials(accessKey, secretKey);
+    }
+
+    protected int getThreadCount() {
+        String threadCount = System.getProperty(THREADS_KEY);
+        if (StringUtils.isEmpty(threadCount)) {
+            return DEFAULT_THREAD_COUNT;
+        } else {
+            return new Integer(threadCount);
+        }
+    }
 
 }

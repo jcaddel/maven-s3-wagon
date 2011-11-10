@@ -4,59 +4,81 @@ import java.util.List;
 
 import com.amazonaws.services.s3.AmazonS3Client;
 
+/**
+ * This is the context needed by a PutThread to successfully upload a list of files to S3
+ */
 public class PutThreadContext {
-	ThreadHandler handler;
-	List<PutContext> contexts;
-	AmazonS3Client client;
-	RequestFactory factory;
-	int length;
-	int offset;
 
-	public ThreadHandler getHandler() {
-		return handler;
-	}
+    int id;
+    ThreadHandler handler;
+    List<PutFileContext> contexts;
+    AmazonS3Client client;
+    RequestFactory factory;
+    int length;
+    int offset;
+    ProgressTracker tracker;
 
-	public void setHandler(ThreadHandler handler) {
-		this.handler = handler;
-	}
+    public ThreadHandler getHandler() {
+        return handler;
+    }
 
-	public List<PutContext> getContexts() {
-		return contexts;
-	}
+    public void setHandler(ThreadHandler handler) {
+        this.handler = handler;
+    }
 
-	public void setContexts(List<PutContext> contexts) {
-		this.contexts = contexts;
-	}
+    public List<PutFileContext> getContexts() {
+        return contexts;
+    }
 
-	public AmazonS3Client getClient() {
-		return client;
-	}
+    public void setContexts(List<PutFileContext> contexts) {
+        this.contexts = contexts;
+    }
 
-	public void setClient(AmazonS3Client client) {
-		this.client = client;
-	}
+    public AmazonS3Client getClient() {
+        return client;
+    }
 
-	public RequestFactory getFactory() {
-		return factory;
-	}
+    public void setClient(AmazonS3Client client) {
+        this.client = client;
+    }
 
-	public void setFactory(RequestFactory factory) {
-		this.factory = factory;
-	}
+    public RequestFactory getFactory() {
+        return factory;
+    }
 
-	public int getLength() {
-		return length;
-	}
+    public void setFactory(RequestFactory factory) {
+        this.factory = factory;
+    }
 
-	public void setLength(int length) {
-		this.length = length;
-	}
+    public int getLength() {
+        return length;
+    }
 
-	public int getOffset() {
-		return offset;
-	}
+    public void setLength(int length) {
+        this.length = length;
+    }
 
-	public void setOffset(int offset) {
-		this.offset = offset;
-	}
+    public int getOffset() {
+        return offset;
+    }
+
+    public void setOffset(int offset) {
+        this.offset = offset;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public ProgressTracker getTracker() {
+        return tracker;
+    }
+
+    public void setTracker(ProgressTracker tracker) {
+        this.tracker = tracker;
+    }
 }

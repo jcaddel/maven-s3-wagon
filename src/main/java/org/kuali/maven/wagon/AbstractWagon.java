@@ -225,9 +225,9 @@ public abstract class AbstractWagon implements Wagon {
 		// Nothing to do here (never called by the wagon manager)
 	}
 
-	protected PutContext getPutContext(File source, String destination) {
+	protected PutFileContext getPutFileContext(File source, String destination) {
 		Resource resource = new Resource(destination);
-		PutContext context = new PutContext();
+		PutFileContext context = new PutFileContext();
 		context.setResource(resource);
 		context.setProgress(new TransferProgress(resource, TransferEvent.REQUEST_PUT, transferListeners));
 		context.setListeners(transferListeners);
@@ -238,7 +238,7 @@ public abstract class AbstractWagon implements Wagon {
 
 	public final void put(final File source, final String destination) throws TransferFailedException,
 			ResourceDoesNotExistException, AuthorizationException {
-		PutContext context = getPutContext(source, destination);
+		PutFileContext context = getPutFileContext(source, destination);
 
 		try {
 			context.fireStart();
@@ -249,7 +249,7 @@ public abstract class AbstractWagon implements Wagon {
 		}
 	}
 
-	protected void handleException(Exception e, PutContext context) throws TransferFailedException,
+	protected void handleException(Exception e, PutFileContext context) throws TransferFailedException,
 			ResourceDoesNotExistException, AuthorizationException {
 		if (e instanceof TransferFailedException) {
 			throw (TransferFailedException) e;
@@ -264,8 +264,8 @@ public abstract class AbstractWagon implements Wagon {
 		throw new TransferFailedException("Transfer of resource " + context.getDestination() + "failed", e);
 	}
 
-	protected List<PutContext> getPutContexts(File sourceDirectory, String destinationDirectory) {
-		List<PutContext> contexts = new ArrayList<PutContext>();
+	protected List<PutFileContext> getPutFileContexts(File sourceDirectory, String destinationDirectory) {
+		List<PutFileContext> contexts = new ArrayList<PutFileContext>();
 		// Cycle through all the files in this directory
 		for (File f : sourceDirectory.listFiles()) {
 
@@ -283,9 +283,9 @@ public abstract class AbstractWagon implements Wagon {
 			// We hit a directory
 			if (f.isDirectory()) {
 				// Recurse into the sub-directory and create put requests for any files we find
-				contexts.addAll(getPutContexts(f, destinationDirectory + "/" + filename));
+				contexts.addAll(getPutFileContexts(f, destinationDirectory + "/" + filename));
 			} else {
-				PutContext context = getPutContext(f, destinationDirectory + "/" + filename);
+				PutFileContext context = getPutFileContext(f, destinationDirectory + "/" + filename);
 				contexts.add(context);
 			}
 		}
