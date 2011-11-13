@@ -1,10 +1,10 @@
 This wagon enables communication between Maven and Amazon S3.
 
-A pom containing a reference to this wagon can publish a Maven site to S3 as well as deploy artifacts.
+pom's with a reference to this wagon can publish build artifacts to S3 as well as Maven generated web sites.
 
-When uploading the contents of a directory the system property "maven.wagon.threads" 
-controls the number of simultaneous uploads the wagon will attempt to use (default is 50)
+When uploading the contents of a directory, API calls to S3 are multi-threaded.
 
+This allows directories with a lot of content (eg when invoking mvn site-deploy) to be published very quickly
 
 Add this to the build section of a pom:
 
@@ -13,13 +13,13 @@ Add this to the build section of a pom:
       <extension>
         <groupId>org.kuali.maven.wagons</groupId>
         <artifactId>maven-s3-wagon</artifactId>
-        <version>1.0.33</version>
+        <version>1.1.0</version>
       </extension>
     </extensions>
   </build>
 
 
-Add this to the distribution management section of a pom:
+Add this to the distribution management section:
 
   <distributionManagement>
     <site>
