@@ -30,7 +30,7 @@ import org.apache.maven.wagon.repository.Repository;
 import org.kuali.common.threads.ExecutionStatistics;
 import org.kuali.common.threads.ThreadHandlerContext;
 import org.kuali.common.threads.ThreadInvoker;
-import org.kuali.common.threads.listener.MavenConsoleListener;
+import org.kuali.common.threads.listener.PercentCompleteListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -299,7 +299,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
         thc.setMax(maxThreads);
         thc.setMin(minThreads);
         thc.setDivisor(divisor);
-        thc.setListener(new MavenConsoleListener<PutFileContext>());
+        thc.setListener(new PercentCompleteListener<PutFileContext>());
 
         // Invoke the threads
         ExecutionStatistics stats = invoker.invokeThreads(thc);
