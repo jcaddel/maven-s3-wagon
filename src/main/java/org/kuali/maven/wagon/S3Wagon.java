@@ -27,7 +27,9 @@ import org.apache.maven.wagon.authentication.AuthenticationException;
 import org.apache.maven.wagon.authentication.AuthenticationInfo;
 import org.apache.maven.wagon.proxy.ProxyInfo;
 import org.apache.maven.wagon.repository.Repository;
+import org.kuali.common.threads.ExecutionStatistics;
 import org.kuali.common.threads.ThreadHandlerContext;
+import org.kuali.common.threads.ThreadInvoker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,6 +87,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
     public static final int DEFAULT_MAX_THREAD_COUNT = 50;
     public static final int DEFAULT_DIVISOR = 50;
 
+    ThreadInvoker invoker = new ThreadInvoker();
     SimpleFormatter formatter = new SimpleFormatter();
     int minThreads = getMinThreads();
     int maxThreads = getMaxThreads();
@@ -280,32 +283,28 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
         // Sum the total bytes in the directory
         long bytes = sum(contexts);
 
-        ThreadHandlerContext<PutFileContext> thc = new ThreadHandlerContext<PutFileContext>();
-        thc.setList(contexts);
-        thc.setHandler(null);
-
-        // Get a ThreadHandler that will upload everything
-        ThreadHandler handler = getThreadHandler(contexts);
-
         // Show what we are up to
         log.info("Uploading - " + sourceDir.getAbsolutePath());
-        log.info(getUploadStartMsg(contexts.size(), bytes, handler.getThreadCount(), handler.getRequestsPerThread()));
+        log.info(getUploadStartMsg(contexts.size(), bytes));
 
-        // Upload the files
-        long start = System.currentTimeMillis();
-        handler.executeThreads();
-        long millis = System.currentTimeMillis() - start;
+        // Store some context for the thread handler
+        ThreadHandlerContext<PutFileContext> thc = new ThreadHandlerContext<PutFileContext>();
+        thc.setList(contexts);
+        thc.setHandler(new FileHandler());
+        thc.setMax(maxThreads);
+        thc.setMin(minThreads);
+        thc.setDivisor(divisor);
 
-        // One (or more) of the threads had an issue
-        if (handler.getException() != null) {
-            throw new TransferFailedException("Unexpected error", handler.getException());
-        }
+        // Invoke the threads
+        ExecutionStatistics stats = invoker.invokeThreads(thc);
 
         // Show some stats
-        log.info(getUploadCompleteMsg(millis, bytes, handler.getTracker().getCount()));
+        long millis = stats.getExecutionTime();
+        long count = stats.getIterationCount();
+        log.info(getUploadCompleteMsg(millis, bytes, count));
     }
 
-    protected String getUploadCompleteMsg(long millis, long bytes, int count) {
+    protected String getUploadCompleteMsg(long millis, long bytes, long count) {
         String rate = formatter.getRate(millis, bytes);
         String time = formatter.getTime(millis);
         StringBuilder sb = new StringBuilder();
@@ -315,12 +314,10 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
         return sb.toString();
     }
 
-    protected String getUploadStartMsg(int fileCount, long bytes, int threadCount, int filesPerThread) {
+    protected String getUploadStartMsg(int fileCount, long bytes) {
         StringBuilder sb = new StringBuilder();
         sb.append("Files: " + fileCount);
         sb.append("  Bytes: " + formatter.getSize(bytes));
-        sb.append("  Threads: " + threadCount);
-        sb.append("  Files Per Thread: " + filesPerThread);
         return sb.toString();
     }
 
@@ -450,6 +447,14 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
             throw new AuthenticationException(getAuthenticationErrorMessage());
         }
         return new BasicAWSCredentials(accessKey, secretKey);
+    }
+
+    @Override
+    protected PutFileContext getPutFileContext(File source, String destination) {
+        PutFileContext context = super.getPutFileContext(source, destination);
+        context.setClient(client);
+        context.setFactory(this);
+        return context;
     }
 
     protected int getMinThreads() {
