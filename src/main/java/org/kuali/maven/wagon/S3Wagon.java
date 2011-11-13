@@ -77,11 +77,15 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
  * @author Jeff Caddel
  */
 public class S3Wagon extends AbstractWagon implements RequestFactory {
-    public static final String THREADS_KEY = "maven.wagon.threads";
-    public static final int DEFAULT_THREAD_COUNT = 10;
+    public static final String MIN_THREADS_KEY = "maven.wagon.threads.min";
+    public static final String MAX_THREADS_KEY = "maven.wagon.threads.max";
+    public static final String DIVISOR_KEY = "maven.wagon.threads.divisor";
+    public static final int DEFAULT_MIN_THREAD_COUNT = 10;
+    public static final int DEFAULT_MAX_THREAD_COUNT = 50;
+    public static final int DEFAULT_DIVISOR = 50;
 
     SimpleFormatter formatter = new SimpleFormatter();
-    int threadCount = getThreadCount();
+    int minThreads = getMinThreads();
 
     final Logger log = LoggerFactory.getLogger(S3Wagon.class);
 
@@ -323,7 +327,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 
     protected ThreadHandler getThreadHandler(List<PutFileContext> contexts) {
         int fileCount = contexts.size();
-        int actualThreadCount = threadCount > fileCount ? fileCount : threadCount;
+        int actualThreadCount = minThreads > fileCount ? fileCount : minThreads;
         int requestsPerThread = getRequestsPerThread(actualThreadCount, contexts.size());
         ThreadHandler handler = new ThreadHandler();
         handler.setThreadCount(actualThreadCount);
@@ -441,12 +445,24 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
         return new BasicAWSCredentials(accessKey, secretKey);
     }
 
-    protected int getThreadCount() {
-        String threadCount = System.getProperty(THREADS_KEY);
-        if (StringUtils.isEmpty(threadCount)) {
-            return DEFAULT_THREAD_COUNT;
+    protected int getMinThreads() {
+        return getValue(MIN_THREADS_KEY, DEFAULT_MIN_THREAD_COUNT);
+    }
+
+    protected int getMaxThreads() {
+        return getValue(MAX_THREADS_KEY, DEFAULT_MAX_THREAD_COUNT);
+    }
+
+    protected int getDivisor() {
+        return getValue(MAX_THREADS_KEY, DEFAULT_MAX_THREAD_COUNT);
+    }
+
+    protected int getValue(String key, int defaultValue) {
+        String value = System.getProperty(key);
+        if (StringUtils.isEmpty(value)) {
+            return defaultValue;
         } else {
-            return new Integer(threadCount);
+            return new Integer(value);
         }
     }
 
