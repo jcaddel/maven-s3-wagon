@@ -27,6 +27,7 @@ import org.apache.maven.wagon.authentication.AuthenticationException;
 import org.apache.maven.wagon.authentication.AuthenticationInfo;
 import org.apache.maven.wagon.proxy.ProxyInfo;
 import org.apache.maven.wagon.repository.Repository;
+import org.kuali.common.threads.ThreadHandlerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,6 +87,8 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 
     SimpleFormatter formatter = new SimpleFormatter();
     int minThreads = getMinThreads();
+    int maxThreads = getMaxThreads();
+    int divisor = getDivisor();
 
     final Logger log = LoggerFactory.getLogger(S3Wagon.class);
 
@@ -276,6 +279,10 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 
         // Sum the total bytes in the directory
         long bytes = sum(contexts);
+
+        ThreadHandlerContext<PutFileContext> thc = new ThreadHandlerContext<PutFileContext>();
+        thc.setList(contexts);
+        thc.setHandler(null);
 
         // Get a ThreadHandler that will upload everything
         ThreadHandler handler = getThreadHandler(contexts);

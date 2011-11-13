@@ -5,6 +5,8 @@ import java.io.File;
 import org.apache.maven.wagon.events.TransferEvent;
 import org.apache.maven.wagon.resource.Resource;
 
+import com.amazonaws.services.s3.AmazonS3Client;
+
 /**
  * This is the context needed by the Wagon for uploading a file and tracking its progress as it goes
  */
@@ -14,6 +16,8 @@ public class PutFileContext {
     Resource resource;
     TransferProgress progress;
     TransferListenerSupport listeners;
+    AmazonS3Client client;
+    RequestFactory factory;
 
     public void fireStart() {
         listeners.fireTransferInitiated(getResource(), TransferEvent.REQUEST_PUT);
@@ -62,6 +66,22 @@ public class PutFileContext {
 
     public void setSource(File source) {
         this.source = source;
+    }
+
+    public AmazonS3Client getClient() {
+        return client;
+    }
+
+    public void setClient(AmazonS3Client client) {
+        this.client = client;
+    }
+
+    public RequestFactory getFactory() {
+        return factory;
+    }
+
+    public void setFactory(RequestFactory factory) {
+        this.factory = factory;
     }
 
 }
