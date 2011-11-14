@@ -1,6 +1,6 @@
 This wagon enables communication between Maven and Amazon S3.
 
-pom's with a reference to this wagon can publish build artifacts to S3 as well as Maven web sites.
+pom's with a reference to this wagon can publish build artifacts (.jar's, .war's, etc) and Maven generated web sites to S3.
 
 When uploading the contents of a directory, API calls to S3 are multi-threaded.
 
