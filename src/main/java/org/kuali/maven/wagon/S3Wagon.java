@@ -289,7 +289,6 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
         long bytes = sum(contexts);
 
         // Show what we are up to
-        log.info("Uploading - " + sourceDir.getAbsolutePath());
         log.info(getUploadStartMsg(contexts.size(), bytes));
 
         // Store some context for the thread handler
