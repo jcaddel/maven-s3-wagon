@@ -18,7 +18,7 @@ Add this to the build section of a pom:
     </extensions>
   </build>
 
-Check here for the latest released version:
+Check here for the latest version:
 http://s3browse.springsource.com/browse/maven.kuali.org/release/org/kuali/maven/wagons/maven-s3-wagon/
 
 
