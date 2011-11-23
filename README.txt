@@ -13,7 +13,7 @@ Add this to the build section of a pom:
       <extension>
         <groupId>org.kuali.maven.wagons</groupId>
         <artifactId>maven-s3-wagon</artifactId>
-        <version>${project.version}</version>
+        <version>[S3 Wagon Version]</version>
       </extension>
     </extensions>
   </build>
