@@ -109,5 +109,6 @@
   <scm>
     <connection>scm:git:git@github.com:jcaddel/maven-s3-wagon.git</connection>
     <developerConnection>scm:git:git@github.com:jcaddel/maven-s3-wagon.git</developerConnection>
+    <url>https://jcaddel@github.com/jcaddel/maven-s3-wagon.git</url>
   </scm>
 </project>
