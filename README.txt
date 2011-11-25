@@ -6,6 +6,10 @@ When uploading the contents of a directory, API calls to S3 are multi-threaded.
 
 This allows directories with a lot of content (eg when invoking mvn site-deploy) to be published very quickly
 
+Check here for the latest version:
+http://s3browse.springsource.com/browse/maven.kuali.org/release/org/kuali/maven/wagons/maven-s3-wagon/
+
+
 Add this to the build section of a pom:
 
   <build>
@@ -17,10 +21,6 @@ Add this to the build section of a pom:
       </extension>
     </extensions>
   </build>
-
-Check here for the latest version:
-http://s3browse.springsource.com/browse/maven.kuali.org/release/org/kuali/maven/wagons/maven-s3-wagon/
-
 
 
 Add this to the distribution management section:
