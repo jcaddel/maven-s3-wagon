@@ -18,6 +18,7 @@
   <properties>
     <kuali.compile.source>1.5</kuali.compile.source>
     <kuali.compile.target>1.5</kuali.compile.target>
+    <slf4j.version>1.6.4</slf4j.version>
   </properties>
   <dependencies>
     <dependency>
@@ -83,22 +84,22 @@
     <dependency>
       <groupId>commons-lang</groupId>
       <artifactId>commons-lang</artifactId>
-      <version>2.5</version>
+      <version>2.6</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>1.6.1</version>
+      <version>${slf4j.version}</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
-      <version>1.6.1</version>
+      <version>${slf4j.version}</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>jcl-over-slf4j</artifactId>
-      <version>1.6.1</version>
+      <version>${slf4j.version}</version>
     </dependency>
     <dependency>
       <groupId>org.kuali.common.threads</groupId>
