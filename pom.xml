@@ -103,7 +103,7 @@
     <dependency>
       <groupId>org.kuali.common.threads</groupId>
       <artifactId>kuali-threads</artifactId>
-      <version>1.0.0</version>
+      <version>1.0.6</version>
     </dependency>
   </dependencies>
   <scm>
