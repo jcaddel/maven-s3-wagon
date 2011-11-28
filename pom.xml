@@ -1,37 +1,42 @@
+<!--
+
+    Copyright 2004-2011 The Kuali Foundation
+
+    Licensed under the Educational Community License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+    http://www.opensource.org/licenses/ecl2.php
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.kuali</groupId>
+    <groupId>org.kuali.pom</groupId>
     <artifactId>kuali-common</artifactId>
-    <version>27</version>
+    <version>1.0.4</version>
   </parent>
   <groupId>org.kuali.maven.wagons</groupId>
   <artifactId>maven-s3-wagon</artifactId>
-  <version>1.1.3-SNAPSHOT</version>
+  <version>1.1.8-SNAPSHOT</version>
   <name>AWS S3 Wagon</name>
   <description>
     This project is an implementation of a multi-threaded Wagon provider for accessing Amazon's Simple Storage Service (S3).
-    It enables Maven to download files from and deploy files to S3. It draws heavily from code
-    developed by Ben Hale at SpringSource
+    It enables Maven to download files from and deploy files to S3. 
+    It draws heavily from code developed by Ben Hale at SpringSource
   </description>
   <url>http://${kuali.site.hostname}/maven/wagons/${project.artifactId}/${project.version}/</url>
   <properties>
     <kuali.compile.source>1.5</kuali.compile.source>
     <kuali.compile.target>1.5</kuali.compile.target>
+    <slf4j.version>1.6.4</slf4j.version>
   </properties>
-  <repositories>
-    <repository>
-      <id>kuali.nexus</id>
-      <name>Kuali Nexus Repository Manager</name>
-      <url>http://nexus.kuali.org/content/groups/public</url>
-      <snapshots>
-        <enabled>true</enabled>
-      </snapshots>
-      <releases>
-        <enabled>true</enabled>
-      </releases>
-    </repository>
-  </repositories>
   <dependencies>
     <dependency>
       <groupId>junit</groupId>
@@ -58,7 +63,7 @@
     <dependency>
       <groupId>com.amazonaws</groupId>
       <artifactId>aws-java-sdk</artifactId>
-      <version>1.2.11</version>
+      <version>1.2.12</version>
       <exclusions>
         <exclusion>
           <groupId>org.apache.httpcomponents</groupId>
@@ -96,31 +101,32 @@
     <dependency>
       <groupId>commons-lang</groupId>
       <artifactId>commons-lang</artifactId>
-      <version>2.5</version>
+      <version>2.6</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
-      <version>1.6.1</version>
+      <version>${slf4j.version}</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
-      <version>1.6.1</version>
+      <version>${slf4j.version}</version>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>jcl-over-slf4j</artifactId>
-      <version>1.6.1</version>
+      <version>${slf4j.version}</version>
     </dependency>
     <dependency>
       <groupId>org.kuali.common.threads</groupId>
       <artifactId>kuali-threads</artifactId>
-      <version>1.0.0</version>
+      <version>1.0.6</version>
     </dependency>
   </dependencies>
   <scm>
     <connection>scm:git:git@github.com:jcaddel/maven-s3-wagon.git</connection>
     <developerConnection>scm:git:git@github.com:jcaddel/maven-s3-wagon.git</developerConnection>
+    <url>https://github.com/jcaddel/maven-s3-wagon</url>
   </scm>
 </project>
