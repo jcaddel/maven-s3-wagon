@@ -121,10 +121,10 @@ public class S3Listener implements TransferListener, SessionListener {
         sessionTracker.setDisconnected(System.currentTimeMillis());
         int transferCount = sessionTracker.getTransfers().size();
         long byteCount = 0;
-        long transferElapsed = 0;
+        // long transferElapsed = 0;
         for (TransferTracker tt : sessionTracker.getTransfers()) {
             byteCount += tt.getByteCount();
-            transferElapsed += tt.getCompleted() - tt.getStarted();
+            // transferElapsed += tt.getCompleted() - tt.getStarted();
         }
         long elapsed = sessionTracker.getDisconnected() - sessionTracker.getOpened();
         StringBuilder sb = new StringBuilder();
