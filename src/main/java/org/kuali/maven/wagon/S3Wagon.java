@@ -94,12 +94,14 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
     public static final int DEFAULT_MIN_THREAD_COUNT = 10;
     public static final int DEFAULT_MAX_THREAD_COUNT = 50;
     public static final int DEFAULT_DIVISOR = 50;
+    public static final int DEFAULT_READ_TIMEOUT = 60 * 1000;
 
     ThreadInvoker invoker = new ThreadInvoker();
     SimpleFormatter formatter = new SimpleFormatter();
     int minThreads = getMinThreads();
     int maxThreads = getMaxThreads();
     int divisor = getDivisor();
+    int readTimeout = DEFAULT_READ_TIMEOUT;
 
     final Logger log = LoggerFactory.getLogger(S3Wagon.class);
 
@@ -412,6 +414,11 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
         return new BasicAWSCredentials(accessKey, secretKey);
     }
 
+    /*
+     * (non-Javadoc)
+     *
+     * @see org.kuali.maven.wagon.AbstractWagon#getPutFileContext(java.io.File, java.lang.String)
+     */
     @Override
     protected PutFileContext getPutFileContext(File source, String destination) {
         PutFileContext context = super.getPutFileContext(source, destination);
@@ -439,6 +446,14 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
         } else {
             return new Integer(value);
         }
+    }
+
+    public int getReadTimeout() {
+        return readTimeout;
+    }
+
+    public void setReadTimeout(int readTimeout) {
+        this.readTimeout = readTimeout;
     }
 
 }
