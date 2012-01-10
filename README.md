@@ -15,7 +15,7 @@ http://s3browse.springsource.com/browse/maven.kuali.org/release/org/kuali/maven/
 
 Add this to the build section of a pom:
 
-  <build>
+    <build>
     <extensions>
       <extension>
         <groupId>org.kuali.maven.wagons</groupId>
