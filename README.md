@@ -9,8 +9,7 @@ When uploading the contents of a directory, API calls to S3 are multi-threaded.
 
 This allows directories with a lot of content (eg when invoking mvn site-deploy) to be published very quickly
 
-Check here for the latest version:
-http://s3browse.springsource.com/browse/maven.kuali.org/release/org/kuali/maven/wagons/maven-s3-wagon/
+Check [Maven Central](http://search.maven.org/#search|ga|1|maven-s3-wagon) or the [Kuali Repository](http://s3browse.springsource.com/browse/maven.kuali.org/release/org/kuali/maven/wagons/maven-s3-wagon/) for the latest version
 
 
 Add this to the build section of a pom:
