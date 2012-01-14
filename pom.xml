@@ -24,7 +24,7 @@
   </parent>
   <groupId>org.kuali.maven.wagons</groupId>
   <artifactId>maven-s3-wagon</artifactId>
-  <version>1.1.9</version>
+  <version>1.1.10-SNAPSHOT</version>
   <name>AWS S3 Wagon</name>
   <inceptionYear>2010</inceptionYear>
   <description>
