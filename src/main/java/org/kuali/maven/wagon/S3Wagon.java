@@ -84,10 +84,13 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
  * Bucket Explorer and https://s3browse.springsource.com/browse/maven.kuali.org/snapshot to correctly display the
  * contents of the bucket
  *
+ * @plexus.component role="org.apache.maven.wagon.Wagon" role-hint="http" instantiation-strategy="per-lookup"
+ *
  * @author Ben Hale
  * @author Jeff Caddel
  */
 public class S3Wagon extends AbstractWagon implements RequestFactory {
+    private static final Logger logger = LoggerFactory.getLogger(AbstractWagon.class);
     public static final String MIN_THREADS_KEY = "maven.wagon.threads.min";
     public static final String MAX_THREADS_KEY = "maven.wagon.threads.max";
     public static final String DIVISOR_KEY = "maven.wagon.threads.divisor";
@@ -95,6 +98,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
     public static final int DEFAULT_MAX_THREAD_COUNT = 50;
     public static final int DEFAULT_DIVISOR = 50;
     public static final int DEFAULT_READ_TIMEOUT = 60 * 1000;
+    public static final CannedAccessControlList DEFAULT_ACL = CannedAccessControlList.PublicRead;
 
     ThreadInvoker invoker = new ThreadInvoker();
     SimpleFormatter formatter = new SimpleFormatter();
@@ -102,6 +106,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
     int maxThreads = getMaxThreads();
     int divisor = getDivisor();
     int readTimeout = DEFAULT_READ_TIMEOUT;
+    CannedAccessControlList acl = CannedAccessControlList.PublicRead;
 
     final Logger log = LoggerFactory.getLogger(S3Wagon.class);
 
@@ -133,6 +138,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
     @Override
     protected void connectToRepository(final Repository source, final AuthenticationInfo authenticationInfo,
             final ProxyInfo proxyInfo) throws AuthenticationException {
+        logger.debug("acl=" + acl);
 
         AWSCredentials credentials = getCredentials(authenticationInfo);
         client = new AmazonS3Client(credentials);
@@ -272,7 +278,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
             InputStream input = getInputStream(source, progress);
             ObjectMetadata metadata = getObjectMetadata(source, destination);
             PutObjectRequest request = new PutObjectRequest(bucketName, key, input, metadata);
-            request.setCannedAcl(CannedAccessControlList.PublicRead);
+            request.setCannedAcl(acl);
             return request;
         } catch (FileNotFoundException e) {
             throw new AmazonServiceException("File not found", e);
