@@ -16,7 +16,6 @@
 package org.kuali.maven.wagon;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,6 +46,7 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.internal.Mimetypes;
+import com.amazonaws.services.s3.internal.RepeatableFileInputStream;
 import com.amazonaws.services.s3.model.Bucket;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectListing;
@@ -262,7 +262,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 
     protected InputStream getInputStream(File source, TransferProgress progress) throws FileNotFoundException {
         if (progress == null) {
-            return new FileInputStream(source);
+            return new RepeatableFileInputStream(source);
         } else {
             return new TransferProgressFileInputStream(source, progress);
         }
