@@ -71,4 +71,4 @@ Documentation
 
 [Maven generated docs](http://site.origin.kuali.org/maven/wagons/maven-s3-wagon/)
 
-[GitHub Wiki](wiki)  
+[GitHub Wiki](maven-s3-wagon/wiki)  
