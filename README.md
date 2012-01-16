@@ -65,4 +65,10 @@ Add this to settings.xml
       <password>[AWS Secret Access Key]</password>
      </server>
     </server>
-  
+    
+Documentation
+-------
+
+![Maven generated docs](http://site.origin.kuali.org/maven/wagons/maven-s3-wagon/)
+
+![GitHub Wiki](wiki)  
