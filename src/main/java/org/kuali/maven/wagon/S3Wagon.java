@@ -56,33 +56,19 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 /**
- * An implementation of the Maven Wagon interface that is integrated with the Amazon S3 service. URLs that reference the
- * S3 service should be in the form of <code>s3://bucket.name</code>. As an example <code>s3://maven.kuali.org</code>
- * puts files into the <code>maven.kuali.org</code> bucket on the S3 service.
- * <p/>
+ * <p>
+ * An implementation of the Maven Wagon interface that is integrated with the Amazon S3 service.
+ * </p>
+ *
+ * <p>
+ * URLs that reference the S3 service should be in the form of <code>s3://bucket.name</code>. As an example
+ * <code>s3://maven.kuali.org</code> puts files into the <code>maven.kuali.org</code> bucket on the S3 service.
+ * </p>
+ *
+ * <p>
  * This implementation uses the <code>username</code> and <code>password</code> portions of the server authentication
- * metadata for credentials. <code>
- *
- * pom.xml
- * <snapshotRepository>
- *   <id>kuali.snapshot</id>
- *   <name>Kuali Snapshot Repository</name>
- *   <url>s3://maven.kuali.org/snapshot</url>
- * </snapshotRepository>
- *
- * settings.xml
- * <server>
- *   <id>kuali.snapshot</id>
- *   <username>[AWS Access Key ID]</username>
- *   <password>[AWS Secret Access Key]</password>
- * </server>
- *
- * </code> Kuali Updates -------------<br>
- * 1) Use username/password instead of passphrase/privatekey for AWS credentials (Maven 3.0 is ignoring passphrase)<br>
- * 2) Fixed a bug in getBaseDir() if it was passed a one character string<br>
- * 3) Removed directory creation. The concept of a "directory" inside an AWS bucket is not needed for tools like S3Fox,
- * Bucket Explorer and https://s3browse.springsource.com/browse/maven.kuali.org/snapshot to correctly display the
- * contents of the bucket
+ * metadata for credentials.
+ * </p>
  *
  * @plexus.component role="org.apache.maven.wagon.Wagon" role-hint="http" instantiation-strategy="per-lookup"
  *
