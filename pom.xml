@@ -24,8 +24,8 @@
   </parent>
   <groupId>org.kuali.maven.wagons</groupId>
   <artifactId>maven-s3-wagon</artifactId>
-  <version>1.1.10-SNAPSHOT</version>
-  <name>Maven S3 Wagon</name>
+  <version>1.1.11-SNAPSHOT</version>
+  <name>AWS S3 Wagon</name>
   <inceptionYear>2010</inceptionYear>
   <description>
     This project is an implementation of a multi-threaded Wagon provider for accessing Amazon's Simple Storage Service (S3).
