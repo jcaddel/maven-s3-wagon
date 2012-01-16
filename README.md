@@ -69,6 +69,6 @@ Add this to settings.xml
 Documentation
 -------
 
-[Maven generated docs](http://site.origin.kuali.org/maven/wagons/maven-s3-wagon/)
+[Maven generated site](http://site.origin.kuali.org/maven/wagons/maven-s3-wagon/)
 
 [GitHub Wiki](maven-s3-wagon/wiki)  
