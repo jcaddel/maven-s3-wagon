@@ -71,4 +71,4 @@ Documentation
 
 [Maven generated site](http://site.origin.kuali.org/maven/wagons/maven-s3-wagon/)
 
-[Permissions](maven-s3-wagon/wiki/Permissions)  
+[Configurable Permissions](maven-s3-wagon/wiki/Permissions)  
