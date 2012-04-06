@@ -92,7 +92,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
     int maxThreads = getMaxThreads();
     int divisor = getDivisor();
     int readTimeout = DEFAULT_READ_TIMEOUT;
-    CannedAccessControlList acl = CannedAccessControlList.PublicRead;
+    CannedAccessControlList acl;
 
     final Logger log = LoggerFactory.getLogger(S3Wagon.class);
 
@@ -127,6 +127,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
         logger.debug("acl=" + acl);
 
         AWSCredentials credentials = getCredentials(authenticationInfo);
+        acl = getAcl(authenticationInfo);
         client = new AmazonS3Client(credentials);
         bucket = getOrCreateBucket(client, source.getHost());
         basedir = getBaseDir(source);
@@ -387,6 +388,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
         sb.append("  <id>my.server</id>\n");
         sb.append("  <username>[AWS Access Key ID]</username>\n");
         sb.append("  <password>[AWS Secret Access Key]</password>\n");
+        sb.append("  <privateKey>[AWS CannedAccessControlList]</privateKey>\n");
         sb.append("</server>\n");
         return sb.toString();
     }
@@ -404,6 +406,35 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
             throw new AuthenticationException(getAuthenticationErrorMessage());
         }
         return new BasicAWSCredentials(accessKey, secretKey);
+    }
+    
+    /**
+     * Get ACL from the informaion in settings.xml, use the server privateKey value
+     */
+    protected CannedAccessControlList getAcl(final AuthenticationInfo authenticationInfo) throws AuthenticationException{
+        if (authenticationInfo == null) {
+            throw new AuthenticationException(getAuthenticationErrorMessage());
+        }
+        String privateKey = authenticationInfo.getPrivateKey();
+        if(privateKey == null || privateKey.length() == 0) {
+        	return DEFAULT_ACL;
+        } else if(privateKey.equals("Private")) {
+            return CannedAccessControlList.Private;
+        } else if(privateKey.equals("PublicRead")) {
+            return CannedAccessControlList.PublicRead;
+        } else if(privateKey.equals("PublicReadWrite")) {
+            return CannedAccessControlList.PublicReadWrite;
+        } else if(privateKey.equals("AuthenticatedRead")) {
+            return CannedAccessControlList.AuthenticatedRead;
+        } else if(privateKey.equals("LogDeliveryWrite")) {
+            return CannedAccessControlList.LogDeliveryWrite;
+        } else if(privateKey.equals("BucketOwnerRead")) {
+            return CannedAccessControlList.BucketOwnerRead;
+        } else if(privateKey.equals("BucketOwnerFullControl")) {
+            return CannedAccessControlList.BucketOwnerFullControl;
+        }
+        
+        return DEFAULT_ACL;
     }
 
     /*
