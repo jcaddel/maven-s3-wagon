@@ -61,6 +61,10 @@
         </exclusion>
         <exclusion>
           <groupId>org.codehaus.jackson</groupId>
+          <artifactId>jackson-mapper-asl</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.codehaus.jackson</groupId>
           <artifactId>jackson-core-asl</artifactId>
         </exclusion>
         <exclusion>
@@ -71,13 +75,13 @@
     </dependency>
     <dependency>
       <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-core-asl</artifactId>
-      <version>1.9.3</version>
+      <artifactId>jackson-mapper-asl</artifactId>
+      <version>1.9.6</version>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
-      <version>4.1.2</version>
+      <version>4.2-beta1</version>
       <exclusions>
         <exclusion>
           <groupId>commons-logging</groupId>
