@@ -76,7 +76,6 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
  * @author Jeff Caddel
  */
 public class S3Wagon extends AbstractWagon implements RequestFactory {
-    private static final Logger logger = LoggerFactory.getLogger(AbstractWagon.class);
     public static final String MIN_THREADS_KEY = "maven.wagon.threads.min";
     public static final String MAX_THREADS_KEY = "maven.wagon.threads.max";
     public static final String DIVISOR_KEY = "maven.wagon.threads.divisor";
@@ -124,7 +123,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
     @Override
     protected void connectToRepository(final Repository source, final AuthenticationInfo authenticationInfo,
             final ProxyInfo proxyInfo) throws AuthenticationException {
-        logger.debug("acl=" + acl);
+        log.debug("acl=" + acl);
 
         AWSCredentials credentials = getCredentials(authenticationInfo);
         client = new AmazonS3Client(credentials);
