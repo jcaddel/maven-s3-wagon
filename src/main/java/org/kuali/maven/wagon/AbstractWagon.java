@@ -36,6 +36,8 @@ import org.apache.maven.wagon.proxy.ProxyInfo;
 import org.apache.maven.wagon.proxy.ProxyInfoProvider;
 import org.apache.maven.wagon.repository.Repository;
 import org.apache.maven.wagon.resource.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * An abstract implementation of the Wagon interface. This implementation manages listener and other common behaviors.
@@ -45,6 +47,7 @@ import org.apache.maven.wagon.resource.Resource;
  * @since 1.1
  */
 public abstract class AbstractWagon implements Wagon {
+    private final static Logger log = LoggerFactory.getLogger(AbstractWagon.class);
 
     private int timeout;
 
@@ -127,6 +130,7 @@ public abstract class AbstractWagon implements Wagon {
     protected void doConnect(final Repository source, final AuthenticationInfo authenticationInfo,
             final ProxyInfo proxyInfo) throws ConnectionException, AuthenticationException {
         repository = source;
+        log.debug("Connecting to " + repository.getUrl());
         sessionListeners.fireSessionOpening();
         try {
             connectToRepository(source, authenticationInfo, proxyInfo);
