@@ -33,6 +33,7 @@ import org.apache.maven.wagon.authentication.AuthenticationException;
 import org.apache.maven.wagon.authentication.AuthenticationInfo;
 import org.apache.maven.wagon.proxy.ProxyInfo;
 import org.apache.maven.wagon.repository.Repository;
+import org.apache.maven.wagon.repository.RepositoryPermissions;
 import org.kuali.common.threads.ExecutionStatistics;
 import org.kuali.common.threads.ThreadHandlerContext;
 import org.kuali.common.threads.ThreadInvoker;
@@ -91,7 +92,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
     int maxThreads = getMaxThreads();
     int divisor = getDivisor();
     int readTimeout = DEFAULT_READ_TIMEOUT;
-    CannedAccessControlList acl = CannedAccessControlList.PublicRead;
+    CannedAccessControlList acl = DEFAULT_ACL;
 
     final Logger log = LoggerFactory.getLogger(S3Wagon.class);
 
@@ -110,7 +111,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
         super.addTransferListener(listener);
     }
 
-    protected Bucket getOrCreateBucket(final AmazonS3Client client, final String bucketName) {
+    protected Bucket getOrCreateBucket(AmazonS3Client client, String bucketName) {
         List<Bucket> buckets = client.listBuckets();
         for (Bucket bucket : buckets) {
             if (bucket.getName().equals(bucketName)) {
@@ -120,22 +121,40 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
         return client.createBucket(bucketName);
     }
 
-    @Override
-    protected void connectToRepository(final Repository source, final AuthenticationInfo authenticationInfo,
-            final ProxyInfo proxyInfo) throws AuthenticationException {
-        log.debug("acl=" + acl);
+    protected CannedAccessControlList getAclFromRepository(Repository repository) {
+        RepositoryPermissions permissions = repository.getPermissions();
+        if (permissions == null) {
+            return null;
+        }
+        String filePermissions = permissions.getFileMode();
+        if (StringUtils.isBlank(filePermissions)) {
+            return null;
+        }
+        return CannedAccessControlList.valueOf(filePermissions.trim());
+    }
 
-        AWSCredentials credentials = getCredentials(authenticationInfo);
+    @Override
+    protected void connectToRepository(Repository source, AuthenticationInfo auth, ProxyInfo proxy)
+            throws AuthenticationException {
+
+        AWSCredentials credentials = getCredentials(auth);
         client = new AmazonS3Client(credentials);
         bucket = getOrCreateBucket(client, source.getHost());
         basedir = getBaseDir(source);
+
+        // If they've specified <filePermissions> in settings.xml, that always wins
+        CannedAccessControlList repoAcl = getAclFromRepository(source);
+        if (repoAcl != null) {
+            log.info("File permissions: " + acl.name());
+            acl = repoAcl;
+        }
     }
 
     @Override
     protected boolean doesRemoteResourceExist(final String resourceName) {
         try {
             client.getObjectMetadata(bucket.getName(), basedir + resourceName);
-        } catch (AmazonClientException e1) {
+        } catch (AmazonClientException e) {
             return false;
         }
         return true;
