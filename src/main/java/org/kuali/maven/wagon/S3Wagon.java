@@ -145,7 +145,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
         // If they've specified <filePermissions> in settings.xml, that always wins
         CannedAccessControlList repoAcl = getAclFromRepository(source);
         if (repoAcl != null) {
-            log.info("File permissions: " + acl.name());
+            log.info("File permissions: " + repoAcl.name());
             acl = repoAcl;
         }
     }
