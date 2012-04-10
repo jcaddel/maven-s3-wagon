@@ -72,14 +72,3 @@ Documentation
 [Maven generated site](http://site.origin.kuali.org/maven/wagons/maven-s3-wagon/1.1.11/)
 
 [Permissions](maven-s3-wagon/wiki/Permissions)
-
-
-    Private("private"),
-    PublicRead("public-read"),
-    PublicReadWrite("public-read-write"),
-    AuthenticatedRead("authenticated-read"),
-    LogDeliveryWrite("log-delivery-write"),
-    BucketOwnerRead("bucket-owner-read"),
-    BucketOwnerFullControl("bucket-owner-full-control");
-
-  
