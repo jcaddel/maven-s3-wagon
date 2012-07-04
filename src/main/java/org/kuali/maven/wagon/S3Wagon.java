@@ -234,17 +234,26 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
         for (S3ObjectSummary summary : objectListing.getObjectSummaries()) {
             // info("summary.getKey()=" + summary.getKey());
             String key = summary.getKey();
-            String relativeKey = key.replace(basedir, "");
-            if (!StringUtils.isBlank(relativeKey)) {
+            String relativeKey = key.startsWith(basedir) ? key.substring(basedir.length()) : key;
+            boolean add = !StringUtils.isBlank(relativeKey) && !relativeKey.equals(directory);
+            if (add) {
+                // info("Adding key - " + relativeKey);
                 fileNames.add(relativeKey);
             }
         }
         for (String commonPrefix : objectListing.getCommonPrefixes()) {
-            String relativeValue = commonPrefix.replace(basedir, "");
+            String value = commonPrefix.startsWith(basedir) ? commonPrefix.substring(basedir.length()) : commonPrefix;
             // info("commonPrefix=" + commonPrefix);
             // info("relativeValue=" + relativeValue);
-            fileNames.add(relativeValue);
+            // info("Adding common prefix - " + value);
+            fileNames.add(value);
         }
+        // StringBuilder sb = new StringBuilder();
+        // sb.append("\n");
+        // for (String fileName : fileNames) {
+        // sb.append(fileName + "\n");
+        // }
+        // info(sb.toString());
         return fileNames;
     }
 
