@@ -50,6 +50,7 @@ import com.amazonaws.services.s3.internal.Mimetypes;
 import com.amazonaws.services.s3.internal.RepeatableFileInputStream;
 import com.amazonaws.services.s3.model.Bucket;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
@@ -210,13 +211,45 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
      * List all of the objects in a given directory
      */
     @Override
-    protected List<String> listDirectory(final String directory) throws Exception {
-        ObjectListing objectListing = client.listObjects(bucket.getName(), basedir + directory);
+    protected List<String> listDirectory(String directory) throws Exception {
+        // info("directory=" + directory);
+        if (StringUtils.isBlank(directory)) {
+            directory = "";
+        }
+        String delimiter = "/";
+        String prefix = basedir + directory;
+        if (!prefix.endsWith(delimiter)) {
+            prefix += delimiter;
+        }
+        // info("prefix=" + prefix);
+        ListObjectsRequest request = new ListObjectsRequest();
+        request.setBucketName(bucket.getName());
+        request.setPrefix(prefix);
+        request.setDelimiter(delimiter);
+        ObjectListing objectListing = client.listObjects(request);
+        // info("truncated=" + objectListing.isTruncated());
+        // info("prefix=" + prefix);
+        // info("basedir=" + basedir);
         List<String> fileNames = new ArrayList<String>();
         for (S3ObjectSummary summary : objectListing.getObjectSummaries()) {
-            fileNames.add(summary.getKey());
+            // info("summary.getKey()=" + summary.getKey());
+            String key = summary.getKey();
+            String relativeKey = key.replace(basedir, "");
+            if (!StringUtils.isBlank(relativeKey)) {
+                fileNames.add(relativeKey);
+            }
+        }
+        for (String commonPrefix : objectListing.getCommonPrefixes()) {
+            String relativeValue = commonPrefix.replace(basedir, "");
+            // info("commonPrefix=" + commonPrefix);
+            // info("relativeValue=" + relativeValue);
+            fileNames.add(relativeValue);
         }
         return fileNames;
+    }
+
+    protected void info(String msg) {
+        System.out.println("[INFO] " + msg);
     }
 
     /**
