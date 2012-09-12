@@ -48,7 +48,6 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.internal.Mimetypes;
 import com.amazonaws.services.s3.internal.RepeatableFileInputStream;
-import com.amazonaws.services.s3.model.Bucket;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
@@ -99,7 +98,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 
     private AmazonS3Client client;
 
-    private Bucket bucket;
+    private String bucketName;
 
     private String basedir;
 
@@ -112,14 +111,16 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
         super.addTransferListener(listener);
     }
 
-    protected Bucket getOrCreateBucket(AmazonS3Client client, String bucketName) {
-        List<Bucket> buckets = client.listBuckets();
-        for (Bucket bucket : buckets) {
-            if (bucket.getName().equals(bucketName)) {
-                return bucket;
-            }
+    protected void ensureBucketExists(AmazonS3Client client) {
+        log.info("Looking for bucket: " + bucketName);
+        if (client.doesBucketExist(bucketName)) {
+            log.debug("Bucket exists, but might not be ours...");
+            // The following will make sure that an exception gets thrown now if there's a problem authenticating
+            client.listObjects(new ListObjectsRequest(bucketName, null, null, null, 0));
+        } else {
+            log.debug("Creating bucket");
+            client.createBucket(bucketName);
         }
-        return client.createBucket(bucketName);
     }
 
     protected CannedAccessControlList getAclFromRepository(Repository repository) {
@@ -140,7 +141,8 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 
         AWSCredentials credentials = getCredentials(auth);
         client = new AmazonS3Client(credentials);
-        bucket = getOrCreateBucket(client, source.getHost());
+        bucketName = source.getHost();
+        ensureBucketExists(client);
         basedir = getBaseDir(source);
 
         // If they've specified <filePermissions> in settings.xml, that always wins
@@ -154,7 +156,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
     @Override
     protected boolean doesRemoteResourceExist(final String resourceName) {
         try {
-            client.getObjectMetadata(bucket.getName(), basedir + resourceName);
+            client.getObjectMetadata(bucketName, basedir + resourceName);
         } catch (AmazonClientException e) {
             return false;
         }
@@ -176,7 +178,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
         S3Object object = null;
         try {
             String key = basedir + resourceName;
-            object = client.getObject(bucket.getName(), key);
+            object = client.getObject(bucketName, key);
         } catch (Exception e) {
             throw new ResourceDoesNotExistException("Resource " + resourceName + " does not exist in the repository", e);
         }
@@ -203,7 +205,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
      */
     @Override
     protected boolean isRemoteResourceNewer(final String resourceName, final long timestamp) {
-        ObjectMetadata metadata = client.getObjectMetadata(bucket.getName(), basedir + resourceName);
+        ObjectMetadata metadata = client.getObjectMetadata(bucketName, basedir + resourceName);
         return metadata.getLastModified().compareTo(new Date(timestamp)) < 0;
     }
 
@@ -223,7 +225,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
         }
         // info("prefix=" + prefix);
         ListObjectsRequest request = new ListObjectsRequest();
-        request.setBucketName(bucket.getName());
+        request.setBucketName(bucketName);
         request.setPrefix(prefix);
         request.setDelimiter(delimiter);
         ObjectListing objectListing = client.listObjects(request);
@@ -272,7 +274,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
         // Generate our bucket key for this file
         String key = basedir + destination;
         try {
-            String prefix = "http://s3.amazonaws.com/" + bucket.getName() + "/";
+            String prefix = "http://s3.amazonaws.com/" + bucketName + "/";
             String urlString = prefix + key;
             URI rawURI = new URI(urlString);
             URI normalizedURI = rawURI.normalize();
@@ -320,7 +322,6 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
     protected PutObjectRequest getPutObjectRequest(File source, String destination, TransferProgress progress) {
         try {
             String key = getNormalizedKey(source, destination);
-            String bucketName = bucket.getName();
             InputStream input = getInputStream(source, progress);
             ObjectMetadata metadata = getObjectMetadata(source, destination);
             PutObjectRequest request = new PutObjectRequest(bucketName, key, input, metadata);
