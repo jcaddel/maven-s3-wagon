@@ -19,16 +19,14 @@ import java.util.List;
 
 import org.apache.maven.wagon.authentication.AuthenticationInfo;
 import org.apache.maven.wagon.repository.Repository;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class S3WagonTest {
 	private static final String USERNAME = "AKIAJFD5IM7IPVVUEBNA";
 	private static final String PASSWORD = System.getProperty("secret.key");
-	private static final Logger log = LoggerFactory.getLogger(S3WagonTest.class);
 
-	@Test
+	// private static final Logger log = LoggerFactory.getLogger(S3WagonTest.class);
+
+	// @Test
 	public void testPermissions() {
 		try {
 			AuthenticationInfo auth = new AuthenticationInfo();
