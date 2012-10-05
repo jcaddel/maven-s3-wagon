@@ -19,5 +19,5 @@ Documentation
 
 [Permissions](maven-s3-wagon/wiki/Permissions)
 
-[Maven generated site](http://site.kuali.org/maven/wagons/maven-s3-wagon/1.1.14/)
+[Maven generated site](http://site.kuali.org/maven/wagons/maven-s3-wagon/1.1.15/)
 
