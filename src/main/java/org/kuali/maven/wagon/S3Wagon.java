@@ -55,6 +55,8 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.transfer.TransferManager;
+import com.amazonaws.services.s3.transfer.Upload;
 
 /**
  * <p>
@@ -93,6 +95,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 	int divisor = getDivisor();
 	int readTimeout = DEFAULT_READ_TIMEOUT;
 	CannedAccessControlList acl = DEFAULT_ACL;
+	TransferManager transferManager;
 
 	private static final Logger log = LoggerFactory.getLogger(S3Wagon.class);
 
@@ -161,6 +164,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 
 		AWSCredentials credentials = getCredentials(auth);
 		this.client = new AmazonS3Client(credentials);
+		this.transferManager = new TransferManager(credentials);
 		this.bucketName = source.getHost();
 		ensureBucketExists(client, bucketName);
 		this.basedir = getBaseDir(source);
@@ -434,7 +438,13 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 		PutObjectRequest request = getPutObjectRequest(source, destination, progress);
 
 		// Store the file on S3
-		client.putObject(request);
+		Upload upload = transferManager.upload(request);
+		try {
+			// Block and wait for the upload to finish
+			upload.waitForCompletion();
+		} catch (Exception e) {
+			throw new IOException("Unexpected error uploading file", e);
+		}
 	}
 
 	protected String getDestinationPath(final String destination) {
@@ -492,8 +502,8 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 	@Override
 	protected PutFileContext getPutFileContext(File source, String destination) {
 		PutFileContext context = super.getPutFileContext(source, destination);
-		context.setClient(client);
 		context.setFactory(this);
+		context.setTransferManager(this.transferManager);
 		return context;
 	}
 
