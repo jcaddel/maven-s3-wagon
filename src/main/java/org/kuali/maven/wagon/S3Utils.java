@@ -43,16 +43,16 @@ public class S3Utils {
 			// Use normal upload for small files
 			client.putObject(request);
 		} else {
+			log.debug("Blocking multi-part upload: " + file.getAbsolutePath());
 			// Use multi-part upload for large files
-			blockingMultiPartUpload(file, request, manager);
+			blockingMultiPartUpload(request, manager);
 		}
 	}
 
 	/**
 	 * Use this to reliably upload large files. Amazon recommends using multi-part uploading on files larger than 100MB.
 	 */
-	public static final void blockingMultiPartUpload(File file, PutObjectRequest request, TransferManager manager) {
-		log.debug("Multi-part: " + file.getAbsolutePath());
+	public static final void blockingMultiPartUpload(PutObjectRequest request, TransferManager manager) {
 		// Use multi-part upload for large files
 		Upload upload = manager.upload(request);
 		try {
