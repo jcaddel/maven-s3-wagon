@@ -50,9 +50,9 @@ public class S3Utils {
 	}
 
 	/**
-	 * Use this method to reliably upload large files. Amazon recommends using a multi-part upload on files larger than 100MB. When this
-	 * method returns all of the upload threads that handle portions of the file have completed. The file has also been reassembled on
-	 * Amazon S3 and is ready for use.
+	 * Use this method to reliably upload large files by splitting it up into manageable chunks and using separate threads to upload each
+	 * chunk. Amazon recommends using a multi-part upload on files larger than 100MB. When this method returns all of the upload threads
+	 * that handle portions of the file have completed. The file has also been reassembled on Amazon S3 and is ready for use.
 	 */
 	public static final void blockingMultiPartUpload(PutObjectRequest request, TransferManager manager) {
 		// Use multi-part upload for large files
