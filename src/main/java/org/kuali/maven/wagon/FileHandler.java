@@ -18,23 +18,18 @@ package org.kuali.maven.wagon;
 import org.kuali.common.threads.ElementHandler;
 import org.kuali.common.threads.ListIteratorContext;
 
-import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.transfer.TransferManager;
-import com.amazonaws.services.s3.transfer.Upload;
 
 public class FileHandler implements ElementHandler<PutFileContext> {
 
 	public void handleElement(ListIteratorContext<PutFileContext> context, int index, PutFileContext element) {
 		RequestFactory factory = element.getFactory();
 		TransferManager manager = element.getTransferManager();
+		AmazonS3Client client = element.getClient();
 		PutObjectRequest request = factory.getPutObjectRequest(element);
-		Upload upload = manager.upload(request);
-		try {
-			upload.waitForCompletion();
-		} catch (Exception e) {
-			throw new AmazonS3Exception("Unexpected error uploading file", e);
-		}
+		S3Utils.upload(element.getSource().length(), request, client, manager);
 	}
 
 }

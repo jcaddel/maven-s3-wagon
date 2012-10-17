@@ -20,6 +20,7 @@ import java.io.File;
 import org.apache.maven.wagon.events.TransferEvent;
 import org.apache.maven.wagon.resource.Resource;
 
+import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.transfer.TransferManager;
 
 /**
@@ -33,6 +34,7 @@ public class PutFileContext {
 	TransferListenerSupport listeners;
 	RequestFactory factory;
 	TransferManager transferManager;
+	AmazonS3Client client;
 
 	public void fireStart() {
 		listeners.fireTransferInitiated(getResource(), TransferEvent.REQUEST_PUT);
@@ -97,6 +99,14 @@ public class PutFileContext {
 
 	public void setTransferManager(TransferManager transferManager) {
 		this.transferManager = transferManager;
+	}
+
+	public AmazonS3Client getClient() {
+		return client;
+	}
+
+	public void setClient(AmazonS3Client client) {
+		this.client = client;
 	}
 
 }

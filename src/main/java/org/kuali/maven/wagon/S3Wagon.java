@@ -56,7 +56,6 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.transfer.TransferManager;
-import com.amazonaws.services.s3.transfer.Upload;
 
 /**
  * <p>
@@ -434,17 +433,11 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 	@Override
 	protected void putResource(final File source, final String destination, final TransferProgress progress) throws IOException {
 
-		// Create a new S3Object
+		// Create a new PutObjectRequest
 		PutObjectRequest request = getPutObjectRequest(source, destination, progress);
 
-		// Store the file on S3
-		Upload upload = transferManager.upload(request);
-		try {
-			// Block and wait for the upload to finish
-			upload.waitForCompletion();
-		} catch (Exception e) {
-			throw new IOException("Unexpected error uploading file", e);
-		}
+		// Upload the file to S3, using multi-part upload for large files
+		S3Utils.upload(source.length(), request, client, transferManager);
 	}
 
 	protected String getDestinationPath(final String destination) {
@@ -504,6 +497,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 		PutFileContext context = super.getPutFileContext(source, destination);
 		context.setFactory(this);
 		context.setTransferManager(this.transferManager);
+		context.setClient(this.client);
 		return context;
 	}
 
