@@ -26,6 +26,9 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.Upload;
 
+/**
+ * Utility methods related to Amazon S3
+ */
 public class S3Utils {
 	private static final int KILOBYTE = 1024;
 	private static final int MEGABYTE = 1024 * KILOBYTE;
@@ -50,9 +53,10 @@ public class S3Utils {
 	}
 
 	/**
-	 * Use this method to reliably upload large files by splitting it up into manageable chunks and using separate threads to upload each
-	 * chunk. Amazon recommends using a multi-part upload on files larger than 100MB. When this method returns all of the upload threads
-	 * that handle portions of the file have completed. The file has also been reassembled on Amazon S3 and is ready for use.
+	 * Use this method to reliably upload large files and wait until they are fully uploaded before continuing. Behind the scenes this is
+	 * accomplished by splitting the file up into manageable chunks and using separate threads to upload each chunk. Amazon recommends using
+	 * a multi-part upload on files larger than 100MB. When this method returns all of the upload threads that handle portions of the file
+	 * have completed. The file has also been reassembled on Amazon S3 and is ready for use.
 	 */
 	public static final void blockingMultiPartUpload(PutObjectRequest request, TransferManager manager) {
 		// Use multi-part upload for large files
