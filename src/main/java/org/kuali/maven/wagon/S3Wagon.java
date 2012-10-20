@@ -116,7 +116,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 	protected void validateBucket(AmazonS3Client client, String bucketName) {
 		log.debug("Looking for bucket: " + bucketName);
 		if (client.doesBucketExist(bucketName)) {
-			log.debug("Found bucket " + bucketName + " Validating permissions");
+			log.debug("Found bucket '" + bucketName + "' Validating permissions");
 			validatePermissions(client, bucketName);
 		} else {
 			log.info("Creating bucket " + bucketName);
