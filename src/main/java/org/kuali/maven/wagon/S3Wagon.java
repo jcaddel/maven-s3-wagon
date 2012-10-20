@@ -61,19 +61,19 @@ import com.amazonaws.services.s3.transfer.TransferManager;
  * <p>
  * An implementation of the Maven Wagon interface that is integrated with the Amazon S3 service.
  * </p>
- * 
+ *
  * <p>
  * URLs that reference the S3 service should be in the form of <code>s3://bucket.name</code>. As an example
  * <code>s3://maven.kuali.org</code> puts files into the <code>maven.kuali.org</code> bucket on the S3 service.
  * </p>
- * 
+ *
  * <p>
  * This implementation uses the <code>username</code> and <code>password</code> portions of the server authentication metadata for
  * credentials.
  * </p>
- * 
+ *
  * @plexus.component role="org.apache.maven.wagon.Wagon" role-hint="http" instantiation-strategy="per-lookup"
- * 
+ *
  * @author Ben Hale
  * @author Jeff Caddel
  */
@@ -113,7 +113,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 		super.addTransferListener(listener);
 	}
 
-	protected void ensureBucketExists(AmazonS3Client client, String bucketName) {
+	protected void validateBucket(AmazonS3Client client, String bucketName) {
 		log.debug("Looking for bucket: " + bucketName);
 		if (client.doesBucketExist(bucketName)) {
 			log.debug("Found bucket " + bucketName + " Validating permissions");
@@ -165,7 +165,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 		this.client = new AmazonS3Client(credentials);
 		this.transferManager = new TransferManager(credentials);
 		this.bucketName = source.getHost();
-		ensureBucketExists(client, bucketName);
+		validateBucket(client, bucketName);
 		this.basedir = getBaseDir(source);
 
 		// If they've specified <filePermissions> in settings.xml, that always wins
@@ -289,7 +289,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 	 * Normalize the key to our S3 object<br>
 	 * 1. Convert "./css/style.css" into "/css/style.css"<br>
 	 * 2. Convert "/foo/bar/../../css/style.css" into "/css/style.css"
-	 * 
+	 *
 	 * @see java.net.URI.normalize()
 	 */
 	protected String getNormalizedKey(final File source, final String destination) {
@@ -489,7 +489,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 
 	/*
 	 * (non-Javadoc)
-	 * 
+	 *
 	 * @see org.kuali.maven.wagon.AbstractWagon#getPutFileContext(java.io.File, java.lang.String)
 	 */
 	@Override
