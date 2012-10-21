@@ -88,7 +88,7 @@ public class S3UtilsTest {
 
 			long start = System.currentTimeMillis();
 			List<String> prefixes = new ArrayList<String>();
-			buildPrefixList(client, bucket, prefixes, null, delimiter, baseCase1);
+			buildPrefixList(client, bucket, prefixes, null, delimiter, baseCase2);
 			long elapsed = System.currentTimeMillis() - start;
 			DefaultMutableTreeNode node = buildTree(prefixes, delimiter);
 			List<DefaultMutableTreeNode> leaves = getLeaves(node);

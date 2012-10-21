@@ -8,9 +8,9 @@ public class KualiMavenBucketBaseCase implements BaseCase {
 	String token;
 
 	public boolean isBaseCase(String prefix) {
-		boolean test1 = endsWithVersionNumber(prefix, delimiter);
-		boolean test2 = endsWithToken(prefix, delimiter, token);
-		return test1 || test2;
+		boolean baseCase1 = endsWithVersionNumber(prefix, delimiter);
+		boolean baseCase2 = endsWithToken(prefix, delimiter, token);
+		return baseCase1 || baseCase2;
 	}
 
 	public boolean endsWithVersionNumber(String prefix, String delimiter) {
