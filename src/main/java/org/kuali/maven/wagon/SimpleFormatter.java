@@ -36,7 +36,6 @@ public class SimpleFormatter {
 	NumberFormat sizeFormatter = NumberFormat.getInstance();
 	NumberFormat timeFormatter = NumberFormat.getInstance();
 	NumberFormat rateFormatter = NumberFormat.getInstance();
-	int leftPad = 1;
 
 	public SimpleFormatter() {
 		super();
@@ -163,14 +162,6 @@ public class SimpleFormatter {
 
 	public void setRateFormatter(NumberFormat rateFormatter) {
 		this.rateFormatter = rateFormatter;
-	}
-
-	public int getLeftPad() {
-		return leftPad;
-	}
-
-	public void setLeftPad(int pad) {
-		this.leftPad = pad;
 	}
 
 	public NumberFormat getSizeFormatter() {
