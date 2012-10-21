@@ -59,10 +59,11 @@ public class SimpleFormatter {
 	 * TB/s, PB/s, or EB/s as appropriate
 	 */
 	public String getRate(long millis, long bytes) {
-		Size size = getSizeEnum(bytes);
 		double seconds = millis / SECOND;
-		double transferRate = (bytes / (double) size.getValue()) / seconds;
-		return rateFormatter.format(transferRate) + " " + size.getRateLabel();
+		double bytesPerSecond = bytes / seconds;
+		Size bandwidthLevel = getSizeEnum(bytesPerSecond);
+		double transferRate = bytesPerSecond / bandwidthLevel.getValue();
+		return rateFormatter.format(transferRate) + " " + bandwidthLevel.getRateLabel();
 	}
 
 	/**
@@ -101,7 +102,7 @@ public class SimpleFormatter {
 	public String getSize(long bytes, Size size) {
 		size = (size == null) ? getSizeEnum(bytes) : size;
 		StringBuilder sb = new StringBuilder();
-		sb.append(getFormattedSizeValue(bytes, size));
+		sb.append(getFormattedSize(bytes, size));
 		if (bytes >= Size.TB.getValue() || bytes < Size.KB.getValue()) {
 			sb.append(" ");
 		}
@@ -109,7 +110,7 @@ public class SimpleFormatter {
 		return sb.toString();
 	}
 
-	public String getFormattedSizeValue(long bytes, Size size) {
+	public String getFormattedSize(long bytes, Size size) {
 		switch (size) {
 		case BYTE:
 			return bytes + "";
@@ -122,7 +123,7 @@ public class SimpleFormatter {
 		}
 	}
 
-	public Size getSizeEnum(long bytes) {
+	public Size getSizeEnum(double bytes) {
 		if (bytes < Size.KB.getValue()) {
 			return Size.BYTE;
 		} else if (bytes < Size.MB.getValue()) {
