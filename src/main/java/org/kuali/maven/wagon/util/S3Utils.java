@@ -232,6 +232,10 @@ public class S3Utils {
 		return toString(node, null, null);
 	}
 
+	public String toString(DefaultMutableTreeNode node, Size size) {
+		return toString(node, size, null);
+	}
+
 	public String toString(DefaultMutableTreeNode node, Comparator<BucketSummary> comparator) {
 		return toString(node, null, comparator);
 	}
