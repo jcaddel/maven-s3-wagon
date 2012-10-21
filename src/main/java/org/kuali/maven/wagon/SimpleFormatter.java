@@ -20,7 +20,7 @@ import java.text.NumberFormat;
 import org.apache.commons.lang.StringUtils;
 
 /**
- * Very simple formatter for formatting a few things - transfer rate, elapsed time, bytes
+ * Format time, bytes, and transfer rate into human friendly form
  *
  * @author Jeff Caddel
  * @since May 27, 2010 6:46:17 PM
@@ -44,7 +44,7 @@ public class SimpleFormatter {
 	NumberFormat smallSizeFormatter = NumberFormat.getInstance();
 	NumberFormat timeFormatter = NumberFormat.getInstance();
 	NumberFormat rateFormatter = NumberFormat.getInstance();
-	int pad = 1;
+	int leftPad = 1;
 
 	public SimpleFormatter() {
 		super();
@@ -70,22 +70,22 @@ public class SimpleFormatter {
 		double seconds = millis / SECOND;
 		double bytesPerSecond = bytes / seconds;
 		if (bytesPerSecond < KB) {
-			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond) + " bytes/s", pad, " ");
+			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond) + " bytes/s", leftPad, " ");
 		} else if (bytesPerSecond < MB) {
-			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / KB) + " KB/s", pad, " ");
+			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / KB) + " KB/s", leftPad, " ");
 		} else if (bytesPerSecond < GB) {
-			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / MB) + " MB/s", pad, " ");
+			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / MB) + " MB/s", leftPad, " ");
 		} else if (bytesPerSecond < TB) {
-			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / GB) + " GB/s", pad, " ");
+			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / GB) + " GB/s", leftPad, " ");
 		} else if (bytesPerSecond < PB) {
 			// Terabytes per second. Wow
-			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / TB) + " terabytes/s", pad, " ");
+			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / TB) + " terabytes/s", leftPad, " ");
 		} else if (bytesPerSecond < EB) {
 			// Petabytes per second!!! Holy smokes.
-			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / PB) + " petabytes/s", pad, " ");
+			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / PB) + " petabytes/s", leftPad, " ");
 		} else {
 			// Exabytes per second!!! Get outta here.
-			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / EB) + " exabytes/s", pad, " ");
+			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / EB) + " exabytes/s", leftPad, " ");
 		}
 	}
 
@@ -94,21 +94,21 @@ public class SimpleFormatter {
 	 */
 	public String getTime(long millis) {
 		if (millis < SECOND) {
-			return StringUtils.leftPad(millis + "ms", pad, " ");
+			return StringUtils.leftPad(millis + "ms", leftPad, " ");
 		} else if (millis < MINUTE) {
-			return StringUtils.leftPad(timeFormatter.format(millis / SECOND) + "s", pad, " ");
+			return StringUtils.leftPad(timeFormatter.format(millis / SECOND) + "s", leftPad, " ");
 		} else if (millis < HOUR) {
-			return StringUtils.leftPad(timeFormatter.format(millis / MINUTE) + "m", pad, " ");
+			return StringUtils.leftPad(timeFormatter.format(millis / MINUTE) + "m", leftPad, " ");
 		} else if (millis < DAY) {
-			return StringUtils.leftPad(timeFormatter.format(millis / HOUR) + " hours", pad, " ");
+			return StringUtils.leftPad(timeFormatter.format(millis / HOUR) + " hours", leftPad, " ");
 		} else if (millis < YEAR) {
-			return StringUtils.leftPad(timeFormatter.format(millis / DAY) + " days", pad, " ");
+			return StringUtils.leftPad(timeFormatter.format(millis / DAY) + " days", leftPad, " ");
 		} else if (millis < DECADE) {
-			return StringUtils.leftPad(timeFormatter.format(millis / YEAR) + " years", pad, " ");
+			return StringUtils.leftPad(timeFormatter.format(millis / YEAR) + " years", leftPad, " ");
 		} else if (millis < CENTURY) {
-			return StringUtils.leftPad(timeFormatter.format(millis / DECADE) + " decades", pad, " ");
+			return StringUtils.leftPad(timeFormatter.format(millis / DECADE) + " decades", leftPad, " ");
 		} else {
-			return StringUtils.leftPad(timeFormatter.format(millis / CENTURY) + " centuries", pad, " ");
+			return StringUtils.leftPad(timeFormatter.format(millis / CENTURY) + " centuries", leftPad, " ");
 		}
 	}
 
@@ -117,22 +117,22 @@ public class SimpleFormatter {
 	 */
 	public String getSize(long bytes) {
 		if (bytes < KB) {
-			return StringUtils.leftPad(bytes + " bytes", pad, " ");
+			return StringUtils.leftPad(bytes + " bytes", leftPad, " ");
 		} else if (bytes < MB) {
-			return StringUtils.leftPad(smallSizeFormatter.format(bytes / KB) + "k", pad, " ");
+			return StringUtils.leftPad(smallSizeFormatter.format(bytes / KB) + "k", leftPad, " ");
 		} else if (bytes < GB) {
-			return StringUtils.leftPad(smallSizeFormatter.format(bytes / MB) + "m", pad, " ");
+			return StringUtils.leftPad(smallSizeFormatter.format(bytes / MB) + "m", leftPad, " ");
 		} else if (bytes < TB) {
-			return StringUtils.leftPad(sizeFormatter.format(bytes / GB) + "g", pad, " ");
+			return StringUtils.leftPad(sizeFormatter.format(bytes / GB) + "g", leftPad, " ");
 		} else if (bytes < PB) {
 			// A terabyte. Nice.
-			return StringUtils.leftPad(sizeFormatter.format(bytes / TB) + " terabytes", pad, " ");
+			return StringUtils.leftPad(sizeFormatter.format(bytes / TB) + " terabytes", leftPad, " ");
 		} else if (bytes < EB) {
 			// A petabyte!!!!!! Wow.
-			return StringUtils.leftPad(sizeFormatter.format(bytes / PB) + " petabytes", pad, " ");
+			return StringUtils.leftPad(sizeFormatter.format(bytes / PB) + " petabytes", leftPad, " ");
 		} else {
 			// An exabyte?????? Get outta here.
-			return StringUtils.leftPad(sizeFormatter.format(bytes / EB) + " exabytes", pad, " ");
+			return StringUtils.leftPad(sizeFormatter.format(bytes / EB) + " exabytes", leftPad, " ");
 		}
 	}
 
@@ -160,12 +160,12 @@ public class SimpleFormatter {
 		this.rateFormatter = rateFormatter;
 	}
 
-	public int getPad() {
-		return pad;
+	public int getLeftPad() {
+		return leftPad;
 	}
 
-	public void setPad(int pad) {
-		this.pad = pad;
+	public void setLeftPad(int pad) {
+		this.leftPad = pad;
 	}
 
 	public NumberFormat getSmallSizeFormatter() {

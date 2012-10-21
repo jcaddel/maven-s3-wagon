@@ -77,8 +77,8 @@ public class S3UtilsTest {
 			DefaultMutableTreeNode node = utils.buildTree(prefixes, delimiter);
 			log.info("Total Prefixes: " + prefixes.size());
 			log.info("Total Time: " + sf.getTime(elapsed));
-			List<String> leafPrefixes = utils.getLeafPrefixes(node, delimiter);
-			log.info("Total Leaves: " + leafPrefixes.size());
+			List<DefaultMutableTreeNode> leaves = utils.getLeaves(node);
+			log.info("Total Leaves: " + leaves.size());
 			utils.summarize(client, bucket, node);
 			BucketSummary summary = (BucketSummary) node.getUserObject();
 			log.info("Count: " + summary.getCount());

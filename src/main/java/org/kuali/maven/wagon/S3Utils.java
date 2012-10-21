@@ -45,6 +45,7 @@ public class S3Utils {
 	private static final int KILOBYTE = 1024;
 	private static final int MEGABYTE = 1024 * KILOBYTE;
 	private static final int MULTI_PART_UPLOAD_THRESHOLD = 100 * MEGABYTE;
+	private static final String ROOT_NODE_PREFIX = null;
 	SimpleFormatter formatter = new SimpleFormatter();
 
 	private static S3Utils instance;
@@ -126,26 +127,23 @@ public class S3Utils {
 	public DefaultMutableTreeNode buildTree(List<String> prefixes, String delimiter) {
 		Map<String, DefaultMutableTreeNode> map = new HashMap<String, DefaultMutableTreeNode>();
 		for (String prefix : prefixes) {
-			if (prefix == null) {
-				DefaultMutableTreeNode root = new DefaultMutableTreeNode(new BucketSummary());
-				map.put(null, root);
-			} else {
-				BucketSummary summary = new BucketSummary();
-				summary.setPrefix(prefix);
-				DefaultMutableTreeNode child = new DefaultMutableTreeNode(summary);
+			BucketSummary summary = new BucketSummary();
+			summary.setPrefix(prefix);
+			DefaultMutableTreeNode node = new DefaultMutableTreeNode(summary);
+			if (prefix != null) {
 				String parentKey = getParentPrefix(prefix, delimiter);
 				DefaultMutableTreeNode parent = map.get(parentKey);
-				parent.add(child);
-				map.put(prefix, child);
+				parent.add(node);
 			}
+			map.put(prefix, node);
 		}
-		return map.get(null);
+		return map.get(ROOT_NODE_PREFIX);
 	}
 
 	public String getParentPrefix(String prefix, String delimiter) {
 		String[] tokens = StringUtils.split(prefix, delimiter);
 		if (tokens.length == 1) {
-			return null;
+			return ROOT_NODE_PREFIX;
 		}
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < tokens.length - 1; i++) {
@@ -230,20 +228,9 @@ public class S3Utils {
 		return summary;
 	}
 
-	public List<String> getLeafPrefixes(DefaultMutableTreeNode node, String delimiter) {
-		List<DefaultMutableTreeNode> leaves = getLeaves(node);
-		List<String> prefixes = new ArrayList<String>();
-		for (DefaultMutableTreeNode leaf : leaves) {
-			BucketSummary summary = (BucketSummary) leaf.getUserObject();
-			prefixes.add(summary.getPrefix());
-		}
-		return prefixes;
-	}
-
-	protected void summarize(BucketSummary summary, List<S3ObjectSummary> summaries) {
+	public void summarize(BucketSummary summary, List<S3ObjectSummary> summaries) {
 		for (S3ObjectSummary element : summaries) {
-			long totalSize = summary.getSize() + element.getSize();
-			summary.setSize(totalSize);
+			summary.setSize(summary.getSize() + element.getSize());
 			summary.setCount(summary.getCount() + 1);
 			if (log.isDebugEnabled()) {
 				log.debug(summary.getCount() + " - " + element.getKey() + " - " + formatter.getSize(element.getSize()));
