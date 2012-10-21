@@ -15,11 +15,21 @@
  */
 package org.kuali.maven.wagon.util;
 
-public class BucketSummary {
+public class BucketSummary implements Comparable<BucketSummary> {
 
 	String prefix;
 	long count;
 	long size;
+
+	public int compareTo(BucketSummary other) {
+		String prefix1 = getPrefix();
+		String prefix2 = other.getPrefix();
+		if (prefix1 == null) {
+			return -1;
+		} else {
+			return prefix1.compareTo(prefix2);
+		}
+	}
 
 	public BucketSummary() {
 		this(null);

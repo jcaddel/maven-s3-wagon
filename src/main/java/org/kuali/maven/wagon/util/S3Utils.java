@@ -18,6 +18,7 @@ package org.kuali.maven.wagon.util;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -228,27 +229,44 @@ public class S3Utils {
 	}
 
 	public String toString(DefaultMutableTreeNode node) {
-		return toString(node, null);
+		return toString(node, null, null);
 	}
 
-	public List<BucketDisplay> getBucketDisplay(DefaultMutableTreeNode node, Size size) {
-		List<BucketDisplay> bucketDisplayList = new ArrayList<BucketDisplay>();
+	public String toString(DefaultMutableTreeNode node, Comparator<BucketSummary> comparator) {
+		return toString(node, null, comparator);
+	}
+
+	public List<BucketSummary> getBucketSummaryList(DefaultMutableTreeNode node, Comparator<BucketSummary> comparator) {
+		List<BucketSummary> list = new ArrayList<BucketSummary>();
 		Enumeration<?> e = node.breadthFirstEnumeration();
 		while (e.hasMoreElements()) {
 			DefaultMutableTreeNode element = (DefaultMutableTreeNode) e.nextElement();
 			BucketSummary summary = (BucketSummary) element.getUserObject();
-			BucketDisplay display = new BucketDisplay();
-			display.setPrefix(summary.getPrefix() == null ? "" : summary.getPrefix());
-			display.setCount(summary.getCount());
-			display.setSize(formatter.getSize(summary.getSize(), size));
-			bucketDisplayList.add(display);
+			list.add(summary);
 		}
-		Collections.sort(bucketDisplayList);
-		return bucketDisplayList;
+		if (comparator == null) {
+			Collections.sort(list);
+		} else {
+			Collections.sort(list, comparator);
+		}
+		return list;
 	}
 
-	public String toString(DefaultMutableTreeNode node, Size size) {
-		List<BucketDisplay> list = getBucketDisplay(node, size);
+	public List<BucketDisplay> getBucketDisplayList(List<BucketSummary> summaries, Size size) {
+		List<BucketDisplay> list = new ArrayList<BucketDisplay>();
+		for (BucketSummary summary : summaries) {
+			BucketDisplay display = new BucketDisplay();
+			display.setPrefix(summary.getPrefix() == null ? "/" : summary.getPrefix());
+			display.setCount(summary.getCount());
+			display.setSize(formatter.getSize(summary.getSize(), size));
+			list.add(display);
+		}
+		return list;
+	}
+
+	public String toString(DefaultMutableTreeNode node, Size size, Comparator<BucketSummary> comparator) {
+		List<BucketSummary> bucketSummaryList = getBucketSummaryList(node, comparator);
+		List<BucketDisplay> list = getBucketDisplayList(bucketSummaryList, size);
 		int maxPrefixLength = PREFIX.length();
 		int maxCountLength = COUNT.length();
 		int maxSizeLength = SIZE.length();

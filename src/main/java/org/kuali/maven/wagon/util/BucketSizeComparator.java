@@ -2,7 +2,6 @@ package org.kuali.maven.wagon.util;
 
 import java.util.Comparator;
 
-
 public class BucketSizeComparator implements Comparator<BucketSummary> {
 
 	public int compare(BucketSummary one, BucketSummary two) {

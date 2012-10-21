@@ -21,6 +21,7 @@ import java.util.List;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.junit.Test;
+import org.kuali.maven.wagon.util.BucketSizeComparator;
 import org.kuali.maven.wagon.util.BucketSummary;
 import org.kuali.maven.wagon.util.S3Utils;
 import org.kuali.maven.wagon.util.SimpleFormatter;
@@ -81,7 +82,7 @@ public class S3UtilsTest {
 
 			long start1 = System.currentTimeMillis();
 			List<String> prefixes = new ArrayList<String>();
-			utils.buildPrefixList(client, bucket, prefixes, null, delimiter, baseCase3);
+			utils.buildPrefixList(client, bucket, prefixes, null, delimiter, baseCase2);
 			long elapsed1 = System.currentTimeMillis() - start1;
 			DefaultMutableTreeNode node = utils.buildTree(prefixes, delimiter);
 			log.info("Total Prefixes: " + prefixes.size());
@@ -96,7 +97,7 @@ public class S3UtilsTest {
 			log.info("Count: " + summary.getCount());
 			log.info("Size: " + sf.getSize(summary.getSize()));
 
-			log.info("S3 Bucket Summary\n" + utils.toString(node, Size.MB));
+			log.info("S3 Bucket Summary\n" + utils.toString(node, Size.MB, new BucketSizeComparator()));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
