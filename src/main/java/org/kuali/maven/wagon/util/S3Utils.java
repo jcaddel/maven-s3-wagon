@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.kuali.maven.wagon;
+package org.kuali.maven.wagon.util;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -26,6 +26,11 @@ import java.util.Map;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.codehaus.plexus.util.StringUtils;
+import org.kuali.maven.wagon.BaseCase;
+import org.kuali.maven.wagon.BucketDisplay;
+import org.kuali.maven.wagon.BucketSummary;
+import org.kuali.maven.wagon.SimpleFormatter;
+import org.kuali.maven.wagon.Size;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

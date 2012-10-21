@@ -21,6 +21,7 @@ import java.util.List;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.junit.Test;
+import org.kuali.maven.wagon.util.S3Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
