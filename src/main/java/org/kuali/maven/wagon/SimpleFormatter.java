@@ -63,13 +63,15 @@ public class SimpleFormatter {
 	}
 
 	/**
-	 * Given a number of bytes and the number of milliseconds it took to transfer that number of bytes, return KB/s, MB/s, GB/s, TB/s, PB/s,
-	 * or EB/s as appropriate
+	 * Given a number of bytes and the number of milliseconds it took to transfer that number of bytes, return bytes/s, KB/s, MB/s, GB/s,
+	 * TB/s, PB/s, or EB/s as appropriate
 	 */
 	public String getRate(long millis, long bytes) {
 		double seconds = millis / SECOND;
 		double bytesPerSecond = bytes / seconds;
-		if (bytesPerSecond < MB) {
+		if (bytesPerSecond < KB) {
+			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond) + " bytes/s", pad, " ");
+		} else if (bytesPerSecond < MB) {
 			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / KB) + " KB/s", pad, " ");
 		} else if (bytesPerSecond < GB) {
 			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / MB) + " MB/s", pad, " ");
@@ -77,18 +79,18 @@ public class SimpleFormatter {
 			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / GB) + " GB/s", pad, " ");
 		} else if (bytesPerSecond < PB) {
 			// Terabytes per second. Wow
-			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / TB) + " TB/s", pad, " ");
+			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / TB) + " terabytes/s", pad, " ");
 		} else if (bytesPerSecond < EB) {
 			// Petabytes per second!!! Holy smokes.
-			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / PB) + " PB/s", pad, " ");
+			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / PB) + " petabytes/s", pad, " ");
 		} else {
 			// Exabytes per second!!! Get outta here.
-			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / EB) + " EB/s", pad, " ");
+			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / EB) + " exabytes/s", pad, " ");
 		}
 	}
 
 	/**
-	 * Given milliseconds, return seconds, minutes, hours, days, years, decades, or centuries as appropriate
+	 * Given milliseconds, return milliseconds, seconds, minutes, hours, days, years, decades, or centuries as appropriate
 	 */
 	public String getTime(long millis) {
 		if (millis < SECOND) {
@@ -111,7 +113,7 @@ public class SimpleFormatter {
 	}
 
 	/**
-	 * Given a number of bytes return kilobytes, megabytes, gigabytes, terabytes, petabytes, or exabytes as appropriate.
+	 * Given a number of bytes return bytes, kilobytes, megabytes, gigabytes, terabytes, petabytes, or exabytes as appropriate.
 	 */
 	public String getSize(long bytes) {
 		if (bytes < KB) {
