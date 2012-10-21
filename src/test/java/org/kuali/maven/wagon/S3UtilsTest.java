@@ -75,7 +75,12 @@ public class S3UtilsTest {
 	@Test
 	public void testGetStructure() {
 		try {
+			long now = System.currentTimeMillis();
+			long bytes = Long.MAX_VALUE;
 			SimpleFormatter sf = new SimpleFormatter();
+			log.info(sf.getSize(bytes));
+			log.info(sf.getRate(now, bytes));
+			log.info(sf.getTime(now));
 			String delimiter = "/";
 			String bucket = "maven.kuali.org";
 			AmazonS3Client client = getClient();

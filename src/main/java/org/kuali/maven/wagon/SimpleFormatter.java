@@ -48,14 +48,14 @@ public class SimpleFormatter {
 	public SimpleFormatter() {
 		super();
 		sizeFormatter.setGroupingUsed(false);
-		sizeFormatter.setMaximumFractionDigits(1);
-		sizeFormatter.setMinimumFractionDigits(1);
+		sizeFormatter.setMaximumFractionDigits(3);
+		sizeFormatter.setMinimumFractionDigits(3);
 		timeFormatter.setGroupingUsed(false);
 		timeFormatter.setMaximumFractionDigits(3);
 		timeFormatter.setMinimumFractionDigits(3);
 		rateFormatter.setGroupingUsed(false);
-		rateFormatter.setMaximumFractionDigits(1);
-		rateFormatter.setMinimumFractionDigits(1);
+		rateFormatter.setMaximumFractionDigits(3);
+		rateFormatter.setMinimumFractionDigits(3);
 	}
 
 	/**
@@ -111,20 +111,20 @@ public class SimpleFormatter {
 	 */
 	public String getSize(long bytes) {
 		if (bytes < MB) {
-			return StringUtils.leftPad(sizeFormatter.format(bytes / KB) + "k", pad, " ");
+			return StringUtils.leftPad(sizeFormatter.format(bytes / KB) + " kilobytes", pad, " ");
 		} else if (bytes < GB) {
-			return StringUtils.leftPad(sizeFormatter.format(bytes / MB) + "m", pad, " ");
+			return StringUtils.leftPad(sizeFormatter.format(bytes / MB) + " megabytes", pad, " ");
 		} else if (bytes < TB) {
-			return StringUtils.leftPad(sizeFormatter.format(bytes / GB) + "g", pad, " ");
+			return StringUtils.leftPad(sizeFormatter.format(bytes / GB) + " gigabytes", pad, " ");
 		} else if (bytes < PB) {
 			// A terabyte. Nice.
-			return StringUtils.leftPad(sizeFormatter.format(bytes / TB) + "t", pad, " ");
+			return StringUtils.leftPad(sizeFormatter.format(bytes / TB) + " terabytes", pad, " ");
 		} else if (bytes < EB) {
 			// A petabyte!!!!!! Wow.
-			return StringUtils.leftPad(sizeFormatter.format(bytes / PB) + "p", pad, " ");
+			return StringUtils.leftPad(sizeFormatter.format(bytes / PB) + " petabytes", pad, " ");
 		} else {
 			// An exabyte?????? Get outta here.
-			return StringUtils.leftPad(sizeFormatter.format(bytes / EB) + "e", pad, " ");
+			return StringUtils.leftPad(sizeFormatter.format(bytes / EB) + " exabytes", pad, " ");
 		}
 	}
 
