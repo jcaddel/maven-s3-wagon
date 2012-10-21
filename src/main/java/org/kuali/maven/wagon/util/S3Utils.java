@@ -27,7 +27,6 @@ import java.util.Map;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.codehaus.plexus.util.StringUtils;
-import org.kuali.maven.wagon.BaseCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -209,6 +208,7 @@ public class S3Utils {
 			current = client.listNextBatchOfObjects(current);
 			summarize(summary, current.getObjectSummaries());
 		}
+		log.info("Completed summary for " + summary.getPrefix());
 		return summary;
 	}
 

@@ -16,6 +16,7 @@
 package org.kuali.maven.wagon;
 
 import org.apache.commons.lang.StringUtils;
+import org.kuali.maven.wagon.util.BaseCase;
 
 public class JavaxServletOnlyBaseCase implements BaseCase {
 
