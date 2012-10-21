@@ -21,6 +21,15 @@ public class BucketSummary {
 	long count;
 	long size;
 
+	public BucketSummary() {
+		this(null);
+	}
+
+	public BucketSummary(String prefix) {
+		super();
+		this.prefix = prefix;
+	}
+
 	public long getCount() {
 		return count;
 	}

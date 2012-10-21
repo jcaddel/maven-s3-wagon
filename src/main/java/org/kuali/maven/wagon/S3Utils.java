@@ -127,8 +127,7 @@ public class S3Utils {
 	public DefaultMutableTreeNode buildTree(List<String> prefixes, String delimiter) {
 		Map<String, DefaultMutableTreeNode> map = new HashMap<String, DefaultMutableTreeNode>();
 		for (String prefix : prefixes) {
-			BucketSummary summary = new BucketSummary();
-			summary.setPrefix(prefix);
+			BucketSummary summary = new BucketSummary(prefix);
 			DefaultMutableTreeNode node = new DefaultMutableTreeNode(summary);
 			if (prefix != null) {
 				String parentKey = getParentPrefix(prefix, delimiter);
