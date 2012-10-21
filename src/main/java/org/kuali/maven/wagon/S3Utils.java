@@ -17,6 +17,7 @@ package org.kuali.maven.wagon;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -58,7 +59,7 @@ public class S3Utils {
 		return instance;
 	}
 
-	private S3Utils() {
+	protected S3Utils() {
 		super();
 	}
 
@@ -81,9 +82,10 @@ public class S3Utils {
 
 	/**
 	 * Use this method to reliably upload large files and wait until they are fully uploaded before continuing. Behind the scenes this is
-	 * accomplished by splitting the file up into manageable chunks and using separate threads to upload each chunk. Amazon recommends using
-	 * a multi-part upload on files larger than 100MB. When this method returns all of the upload threads that handle portions of the file
-	 * have completed. The file has also been reassembled on Amazon S3 and is ready for use.
+	 * accomplished by splitting the file up into manageable chunks and using separate threads to upload each chunk. You should consider
+	 * using multi-part uploads on files larger than 100 megabytes. When this method returns all threads have finished and the file has been
+	 * reassembled on S3. The benefit to this method is that if any one thread fails, only the portion of the file that particular thread
+	 * was handling will have to be re-uploaded (instead of the entire file). Re-uploading failed portions of a file happens automatically.
 	 */
 	public void blockingMultiPartUpload(PutObjectRequest request, TransferManager manager) {
 		// Use multi-part upload for large files
@@ -225,31 +227,43 @@ public class S3Utils {
 	}
 
 	public String toString(DefaultMutableTreeNode node) {
+		return toString(node, null);
+	}
+
+	public List<BucketDisplay> getBucketDisplay(DefaultMutableTreeNode node, Size size) {
+		List<BucketDisplay> bucketDisplayList = new ArrayList<BucketDisplay>();
 		Enumeration<?> e = node.breadthFirstEnumeration();
+		while (e.hasMoreElements()) {
+			DefaultMutableTreeNode element = (DefaultMutableTreeNode) e.nextElement();
+			BucketSummary summary = (BucketSummary) element.getUserObject();
+			BucketDisplay display = new BucketDisplay();
+			display.setPrefix(summary.getPrefix() == null ? "" : summary.getPrefix());
+			display.setCount(summary.getCount());
+			display.setSize(formatter.getSize(summary.getSize(), size));
+			bucketDisplayList.add(display);
+		}
+		Collections.sort(bucketDisplayList);
+		return bucketDisplayList;
+	}
+
+	public String toString(DefaultMutableTreeNode node, Size size) {
+		List<BucketDisplay> list = getBucketDisplay(node, size);
 		int maxPrefixLength = PREFIX.length();
 		int maxCountLength = COUNT.length();
 		int maxSizeLength = SIZE.length();
-		while (e.hasMoreElements()) {
-			DefaultMutableTreeNode element = (DefaultMutableTreeNode) e.nextElement();
-			BucketSummary summary = (BucketSummary) element.getUserObject();
-			if (summary.getPrefix() != null) {
-				maxPrefixLength = Math.max(maxPrefixLength, summary.getPrefix().length());
-			}
-			maxCountLength = Math.max(maxCountLength, (summary.getCount() + "").length());
-			maxSizeLength = Math.max(maxSizeLength, formatter.getSize(summary.getSize()).length());
+		for (BucketDisplay display : list) {
+			maxPrefixLength = Math.max(maxPrefixLength, display.getPrefix().length());
+			maxCountLength = Math.max(maxCountLength, (display.getCount() + "").length());
+			maxSizeLength = Math.max(maxSizeLength, display.getSize().length());
 		}
-		e = node.breadthFirstEnumeration();
 		StringBuilder sb = new StringBuilder();
 		sb.append(rpad(PREFIX, maxPrefixLength) + " " + lpad(COUNT, maxCountLength) + " " + lpad(SIZE, maxSizeLength) + "\n");
-		while (e.hasMoreElements()) {
-			DefaultMutableTreeNode element = (DefaultMutableTreeNode) e.nextElement();
-			BucketSummary summary = (BucketSummary) element.getUserObject();
-			String prefix = summary.getPrefix() == null ? "/" : summary.getPrefix();
-			sb.append(rpad(prefix, maxPrefixLength));
+		for (BucketDisplay display : list) {
+			sb.append(rpad(display.getPrefix(), maxPrefixLength));
 			sb.append(" ");
-			sb.append(lpad(summary.getCount() + "", maxCountLength));
+			sb.append(lpad(display.getCount() + "", maxCountLength));
 			sb.append(" ");
-			sb.append(lpad(formatter.getSize(summary.getSize()), maxSizeLength));
+			sb.append(lpad(display.getSize(), maxSizeLength));
 			sb.append("\n");
 		}
 		return sb.toString();

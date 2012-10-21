@@ -102,11 +102,23 @@ public class SimpleFormatter {
 		size = (size == null) ? getSizeEnum(bytes) : size;
 		StringBuilder sb = new StringBuilder();
 		sb.append(getFormattedSize(bytes, size));
-		if (bytes >= Size.TB.getValue() || bytes < Size.KB.getValue()) {
+		if (needsSpaceBeforeLabel(size)) {
 			sb.append(" ");
 		}
 		sb.append(size.getSizeLabel());
 		return sb.toString();
+	}
+
+	protected boolean needsSpaceBeforeLabel(Size size) {
+		switch (size) {
+		case BYTE:
+		case TB:
+		case PB:
+		case EB:
+			return true;
+		default:
+			return false;
+		}
 	}
 
 	public String getFormattedSize(long bytes, Size size) {
