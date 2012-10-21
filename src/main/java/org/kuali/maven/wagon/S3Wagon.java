@@ -39,6 +39,7 @@ import org.kuali.common.threads.ThreadHandlerContext;
 import org.kuali.common.threads.ThreadInvoker;
 import org.kuali.common.threads.listener.PercentCompleteListener;
 import org.kuali.maven.wagon.util.S3Utils;
+import org.kuali.maven.wagon.util.SimpleFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

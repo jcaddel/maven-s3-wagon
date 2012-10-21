@@ -2,7 +2,6 @@ package org.kuali.maven.wagon.util;
 
 import java.util.Comparator;
 
-import org.kuali.maven.wagon.BucketSummary;
 
 public class BucketCountComparator implements Comparator<BucketSummary> {
 

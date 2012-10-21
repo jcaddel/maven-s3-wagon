@@ -27,10 +27,6 @@ import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.codehaus.plexus.util.StringUtils;
 import org.kuali.maven.wagon.BaseCase;
-import org.kuali.maven.wagon.BucketDisplay;
-import org.kuali.maven.wagon.BucketSummary;
-import org.kuali.maven.wagon.SimpleFormatter;
-import org.kuali.maven.wagon.Size;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

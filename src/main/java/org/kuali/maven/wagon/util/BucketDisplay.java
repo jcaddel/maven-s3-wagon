@@ -1,4 +1,4 @@
-package org.kuali.maven.wagon;
+package org.kuali.maven.wagon.util;
 public class BucketDisplay implements Comparable<BucketDisplay> {
 
 	String prefix;

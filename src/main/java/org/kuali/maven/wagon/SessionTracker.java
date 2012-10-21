@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.maven.wagon.events.SessionEvent;
+import org.kuali.maven.wagon.util.SimpleFormatter;
 
 /**
  * Holds timing and byte count information about a transfer operation

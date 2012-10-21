@@ -1,4 +1,4 @@
-package org.kuali.maven.wagon;
+package org.kuali.maven.wagon.util;
 
 public enum Size {
 

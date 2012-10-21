@@ -22,6 +22,7 @@ import org.apache.maven.wagon.events.SessionEvent;
 import org.apache.maven.wagon.events.SessionListener;
 import org.apache.maven.wagon.events.TransferEvent;
 import org.apache.maven.wagon.events.TransferListener;
+import org.kuali.maven.wagon.util.SimpleFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
