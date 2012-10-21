@@ -48,6 +48,10 @@ public class S3UtilsTest {
 	@Test
 	public void testGetStructure() {
 		try {
+			Size[] values = Size.values();
+			for (Size value : values) {
+				log.info(value.getSizeLabel() + " " + value.getValue());
+			}
 			long now = System.currentTimeMillis();
 			long bytes = Long.MAX_VALUE;
 			SimpleFormatter sf = new SimpleFormatter();

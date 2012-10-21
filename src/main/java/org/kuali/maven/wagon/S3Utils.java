@@ -42,10 +42,11 @@ import com.amazonaws.services.s3.transfer.Upload;
  */
 public class S3Utils {
 	private static final Logger log = LoggerFactory.getLogger(S3Utils.class);
-	private static final int KILOBYTE = 1024;
-	private static final int MEGABYTE = 1024 * KILOBYTE;
-	private static final int MULTI_PART_UPLOAD_THRESHOLD = 100 * MEGABYTE;
-	private static final String ROOT_NODE_PREFIX = null;
+	// Use multi part upload for files larger than 100 megabytes
+	private static final long MULTI_PART_UPLOAD_THRESHOLD = 100 * Size.MB.getValue();
+	private static final String PREFIX = "prefix";
+	private static final String COUNT = "count";
+	private static final String SIZE = "size";
 	SimpleFormatter formatter = new SimpleFormatter();
 
 	private static S3Utils instance;
@@ -136,13 +137,13 @@ public class S3Utils {
 			}
 			map.put(prefix, node);
 		}
-		return map.get(ROOT_NODE_PREFIX);
+		return map.get(null);
 	}
 
 	public String getParentPrefix(String prefix, String delimiter) {
 		String[] tokens = StringUtils.split(prefix, delimiter);
 		if (tokens.length == 1) {
-			return ROOT_NODE_PREFIX;
+			return null;
 		}
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < tokens.length - 1; i++) {
@@ -225,9 +226,9 @@ public class S3Utils {
 
 	public String toString(DefaultMutableTreeNode node) {
 		Enumeration<?> e = node.breadthFirstEnumeration();
-		int maxPrefixLength = "prefix".length();
-		int maxCountLength = "count".length();
-		int maxSizeLength = "size".length();
+		int maxPrefixLength = PREFIX.length();
+		int maxCountLength = COUNT.length();
+		int maxSizeLength = SIZE.length();
 		while (e.hasMoreElements()) {
 			DefaultMutableTreeNode element = (DefaultMutableTreeNode) e.nextElement();
 			BucketSummary summary = (BucketSummary) element.getUserObject();
@@ -239,7 +240,7 @@ public class S3Utils {
 		}
 		e = node.breadthFirstEnumeration();
 		StringBuilder sb = new StringBuilder();
-		sb.append(rpad("prefix", maxPrefixLength) + " " + lpad("count", maxCountLength) + " " + lpad("size", maxSizeLength) + "\n");
+		sb.append(rpad(PREFIX, maxPrefixLength) + " " + lpad(COUNT, maxCountLength) + " " + lpad(SIZE, maxSizeLength) + "\n");
 		while (e.hasMoreElements()) {
 			DefaultMutableTreeNode element = (DefaultMutableTreeNode) e.nextElement();
 			BucketSummary summary = (BucketSummary) element.getUserObject();
