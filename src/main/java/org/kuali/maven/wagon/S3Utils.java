@@ -16,7 +16,6 @@
 package org.kuali.maven.wagon;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -42,7 +41,7 @@ public class S3Utils {
 	private static final int MEGABYTE = 1024 * KILOBYTE;
 	private static final int MULTI_PART_UPLOAD_THRESHOLD = 100 * MEGABYTE;
 	private static final Logger log = LoggerFactory.getLogger(S3Utils.class);
-	private static final int MAX_OBJECTS_PER_LISTING = 100000;
+	private static final int MAX_OBJECTS_PER_LISTING = 1001;
 
 	/**
 	 * Upload a single file to Amazon S3. If the file is larger than 100MB a multi-part upload is used. This splits the file into multiple
@@ -92,18 +91,27 @@ public class S3Utils {
 			throw new IllegalArgumentException("Bucket '" + bucketName + "' does not exist");
 		}
 
+		BucketSummary bucketSummary = new BucketSummary();
 		ListObjectsRequest request = new ListObjectsRequest(bucketName, null, null, null, MAX_OBJECTS_PER_LISTING);
-		List<S3ObjectSummary> contents = new ArrayList<S3ObjectSummary>();
-		int count = 1;
-		while (true) {
-			log.info("Listing " + count);
-			ObjectListing listing = client.listObjects(request);
-			List<S3ObjectSummary> summaries = listing.getObjectSummaries();
-			contents.addAll(summaries);
-			if (!listing.isTruncated()) {
-				break;
-			}
+		ObjectListing current = client.listObjects(request);
+		List<S3ObjectSummary> summaries = current.getObjectSummaries();
+		updateBucketSummary(bucketSummary, summaries);
+		while (current.isTruncated()) {
+			current = client.listNextBatchOfObjects(current);
+			updateBucketSummary(bucketSummary, current.getObjectSummaries());
+			summaries.addAll(current.getObjectSummaries());
 		}
-		log.info("Total objects: " + contents.size());
+	}
+
+	protected static final void updateBucketSummary(BucketSummary summary, List<S3ObjectSummary> summaries) {
+		SimpleFormatter sf = new SimpleFormatter();
+		long totalObjectCount = summary.getObjectCount() + summaries.size();
+		summary.setObjectCount(totalObjectCount);
+
+		for (S3ObjectSummary element : summaries) {
+			long totalSize = summary.getObjectSize() + element.getSize();
+			summary.setObjectSize(totalSize);
+		}
+		log.info("Object count: " + summary.getObjectCount() + " Total Size: " + sf.getSize(summary.getObjectSize()));
 	}
 }

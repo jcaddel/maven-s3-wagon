@@ -29,13 +29,21 @@ public class SimpleFormatter {
 	private static final double KB = 1024;
 	private static final double MB = 1024 * KB;
 	private static final double GB = 1024 * MB;
-	private static final double ONE_SECOND = 1000;
-	private static final double ONE_MINUTE = 60 * ONE_SECOND;
-	private static final double FIFTEEN_MINUTES = 15 * ONE_MINUTE;
+	private static final double TB = 1024 * GB;
+	private static final double PB = 1024 * TB;
+	private static final double EB = 1024 * PB;
+	private static final double SECOND = 1000;
+	private static final double MINUTE = 60 * SECOND;
+	private static final double HOUR = 60 * MINUTE;
+	private static final double DAY = 24 * HOUR;
+	private static final double YEAR = 365 * DAY;
+	private static final double DECADE = 10 * YEAR;
+	private static final double CENTURY = 10 * DECADE;
 
 	NumberFormat sizeFormatter = NumberFormat.getInstance();
 	NumberFormat timeFormatter = NumberFormat.getInstance();
 	NumberFormat rateFormatter = NumberFormat.getInstance();
+	int pad = 1;
 
 	public SimpleFormatter() {
 		super();
@@ -51,48 +59,95 @@ public class SimpleFormatter {
 	}
 
 	/**
-	 * Given milliseconds and bytes return kilobytes or megabytes per second as appropriate
+	 * Given a number of bytes and the number of milliseconds it took to transfer that number of bytes, return KB/s, MB/s, or GB/s as
+	 * appropriate
 	 */
-	public String getRate(final long millis, final long bytes) {
-		int pad = 1;
-		double seconds = millis / 1000D;
-		double kilobytes = bytes / 1024D;
-		double kilobytesPerSecond = kilobytes / seconds;
-		if (kilobytesPerSecond < 1024) {
-			return StringUtils.leftPad(rateFormatter.format(kilobytesPerSecond) + " kB/s", pad, " ");
+	public String getRate(long elapsed, long bytes) {
+		double seconds = elapsed / SECOND;
+		double bytesPerSecond = bytes / seconds;
+		if (bytesPerSecond < MB) {
+			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / KB) + " KB/s", pad, " ");
+		} else if (bytesPerSecond < GB) {
+			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / MB) + " MB/s", pad, " ");
 		} else {
-			double transferRate = kilobytesPerSecond / 1024;
-			return StringUtils.leftPad(rateFormatter.format(transferRate) + " MB/s", pad, " ");
+			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / GB) + " GB/s", pad, " ");
 		}
 	}
 
 	/**
-	 * Given milliseconds, return seconds or minutes
+	 * Given milliseconds, return seconds, minutes, hours, days, years, decades, or centuries as appropriate
 	 */
-	public String getTime(final long millis) {
-		int pad = 1;
-		if (millis < ONE_SECOND) {
-			return StringUtils.leftPad(millis + "ms", pad, " ");
-		} else if (millis < 10 * ONE_SECOND) {
-			return StringUtils.leftPad(timeFormatter.format(millis / ONE_SECOND) + "s", pad, " ");
-		} else if (millis < FIFTEEN_MINUTES) {
-			return StringUtils.leftPad(rateFormatter.format(millis / ONE_SECOND) + "s", pad, " ");
+	public String getTime(long millis) {
+		if (millis < SECOND) {
+			return StringUtils.leftPad(millis + " ms", pad, " ");
+		} else if (millis < MINUTE) {
+			return StringUtils.leftPad(timeFormatter.format(millis / SECOND) + " seconds", pad, " ");
+		} else if (millis < HOUR) {
+			return StringUtils.leftPad(timeFormatter.format(millis / MINUTE) + " minutes", pad, " ");
+		} else if (millis < DAY) {
+			return StringUtils.leftPad(timeFormatter.format(millis / HOUR) + " hours", pad, " ");
+		} else if (millis < YEAR) {
+			return StringUtils.leftPad(timeFormatter.format(millis / DAY) + " days", pad, " ");
+		} else if (millis < DECADE) {
+			return StringUtils.leftPad(timeFormatter.format(millis / YEAR) + " years", pad, " ");
+		} else if (millis < CENTURY) {
+			return StringUtils.leftPad(timeFormatter.format(millis / DECADE) + " decades", pad, " ");
 		} else {
-			return StringUtils.leftPad(rateFormatter.format(millis / ONE_MINUTE) + "m", pad, " ");
+			return StringUtils.leftPad(timeFormatter.format(millis / CENTURY) + " centuries", pad, " ");
 		}
 	}
 
 	/**
-	 * Given a number of bytes return kilobytes, megabytes, or gigabytes as appropriate.
+	 * Given a number of bytes return kilobytes, megabytes, gigabytes, terabytes, petabytes, or exabytes as appropriate.
 	 */
-	public String getSize(final long bytes) {
-		int pad = 1;
+	public String getSize(long bytes) {
 		if (bytes < MB) {
 			return StringUtils.leftPad(sizeFormatter.format(bytes / KB) + "k", pad, " ");
-		}
-		if (bytes < GB) {
+		} else if (bytes < GB) {
 			return StringUtils.leftPad(sizeFormatter.format(bytes / MB) + "m", pad, " ");
+		} else if (bytes < TB) {
+			return StringUtils.leftPad(sizeFormatter.format(bytes / GB) + "g", pad, " ");
+		} else if (bytes < PB) {
+			// A terabyte. Nice.
+			return StringUtils.leftPad(sizeFormatter.format(bytes / TB) + "t", pad, " ");
+		} else if (bytes < EB) {
+			// A petabyte!!!!!! Holy crap.
+			return StringUtils.leftPad(sizeFormatter.format(bytes / PB) + "p", pad, " ");
+		} else {
+			// An exabyte?????? Get outta here.
+			return StringUtils.leftPad(sizeFormatter.format(bytes / EB) + "e", pad, " ");
 		}
-		return StringUtils.leftPad(sizeFormatter.format(bytes / GB) + "g", pad, " ");
+	}
+
+	public NumberFormat getSizeFormatter() {
+		return sizeFormatter;
+	}
+
+	public void setSizeFormatter(NumberFormat sizeFormatter) {
+		this.sizeFormatter = sizeFormatter;
+	}
+
+	public NumberFormat getTimeFormatter() {
+		return timeFormatter;
+	}
+
+	public void setTimeFormatter(NumberFormat timeFormatter) {
+		this.timeFormatter = timeFormatter;
+	}
+
+	public NumberFormat getRateFormatter() {
+		return rateFormatter;
+	}
+
+	public void setRateFormatter(NumberFormat rateFormatter) {
+		this.rateFormatter = rateFormatter;
+	}
+
+	public int getPad() {
+		return pad;
+	}
+
+	public void setPad(int pad) {
+		this.pad = pad;
 	}
 }
