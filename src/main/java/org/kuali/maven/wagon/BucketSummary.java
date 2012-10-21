@@ -16,23 +16,33 @@
 package org.kuali.maven.wagon;
 
 public class BucketSummary {
-	long objectCount;
-	long objectSize;
 
-	public long getObjectCount() {
-		return objectCount;
+	String prefix;
+	long count;
+	long size;
+
+	public long getCount() {
+		return count;
 	}
 
-	public void setObjectCount(long objectCount) {
-		this.objectCount = objectCount;
+	public void setCount(long objectCount) {
+		this.count = objectCount;
 	}
 
-	public long getObjectSize() {
-		return objectSize;
+	public long getSize() {
+		return size;
 	}
 
-	public void setObjectSize(long objectSize) {
-		this.objectSize = objectSize;
+	public void setSize(long objectSize) {
+		this.size = objectSize;
+	}
+
+	public String getPrefix() {
+		return prefix;
+	}
+
+	public void setPrefix(String prefix) {
+		this.prefix = prefix;
 	}
 
 }

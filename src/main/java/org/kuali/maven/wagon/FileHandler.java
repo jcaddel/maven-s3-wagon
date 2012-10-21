@@ -29,7 +29,7 @@ public class FileHandler implements ElementHandler<PutFileContext> {
 		TransferManager manager = element.getTransferManager();
 		AmazonS3Client client = element.getClient();
 		PutObjectRequest request = factory.getPutObjectRequest(element);
-		S3Utils.upload(element.getSource(), request, client, manager);
+		S3Utils.getInstance().upload(element.getSource(), request, client, manager);
 	}
 
 }

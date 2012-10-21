@@ -41,6 +41,7 @@ public class SimpleFormatter {
 	private static final double CENTURY = 10 * DECADE;
 
 	NumberFormat sizeFormatter = NumberFormat.getInstance();
+	NumberFormat smallSizeFormatter = NumberFormat.getInstance();
 	NumberFormat timeFormatter = NumberFormat.getInstance();
 	NumberFormat rateFormatter = NumberFormat.getInstance();
 	int pad = 1;
@@ -50,6 +51,9 @@ public class SimpleFormatter {
 		sizeFormatter.setGroupingUsed(false);
 		sizeFormatter.setMaximumFractionDigits(3);
 		sizeFormatter.setMinimumFractionDigits(3);
+		smallSizeFormatter.setGroupingUsed(false);
+		smallSizeFormatter.setMaximumFractionDigits(1);
+		smallSizeFormatter.setMinimumFractionDigits(1);
 		timeFormatter.setGroupingUsed(false);
 		timeFormatter.setMaximumFractionDigits(3);
 		timeFormatter.setMinimumFractionDigits(3);
@@ -88,11 +92,11 @@ public class SimpleFormatter {
 	 */
 	public String getTime(long millis) {
 		if (millis < SECOND) {
-			return StringUtils.leftPad(millis + " ms", pad, " ");
+			return StringUtils.leftPad(millis + "ms", pad, " ");
 		} else if (millis < MINUTE) {
-			return StringUtils.leftPad(timeFormatter.format(millis / SECOND) + " seconds", pad, " ");
+			return StringUtils.leftPad(timeFormatter.format(millis / SECOND) + "s", pad, " ");
 		} else if (millis < HOUR) {
-			return StringUtils.leftPad(timeFormatter.format(millis / MINUTE) + " minutes", pad, " ");
+			return StringUtils.leftPad(timeFormatter.format(millis / MINUTE) + "m", pad, " ");
 		} else if (millis < DAY) {
 			return StringUtils.leftPad(timeFormatter.format(millis / HOUR) + " hours", pad, " ");
 		} else if (millis < YEAR) {
@@ -110,12 +114,14 @@ public class SimpleFormatter {
 	 * Given a number of bytes return kilobytes, megabytes, gigabytes, terabytes, petabytes, or exabytes as appropriate.
 	 */
 	public String getSize(long bytes) {
-		if (bytes < MB) {
-			return StringUtils.leftPad(sizeFormatter.format(bytes / KB) + " kilobytes", pad, " ");
+		if (bytes < KB) {
+			return StringUtils.leftPad(bytes + " bytes", pad, " ");
+		} else if (bytes < MB) {
+			return StringUtils.leftPad(smallSizeFormatter.format(bytes / KB) + "k", pad, " ");
 		} else if (bytes < GB) {
-			return StringUtils.leftPad(sizeFormatter.format(bytes / MB) + " megabytes", pad, " ");
+			return StringUtils.leftPad(smallSizeFormatter.format(bytes / MB) + "m", pad, " ");
 		} else if (bytes < TB) {
-			return StringUtils.leftPad(sizeFormatter.format(bytes / GB) + " gigabytes", pad, " ");
+			return StringUtils.leftPad(sizeFormatter.format(bytes / GB) + "g", pad, " ");
 		} else if (bytes < PB) {
 			// A terabyte. Nice.
 			return StringUtils.leftPad(sizeFormatter.format(bytes / TB) + " terabytes", pad, " ");
@@ -158,5 +164,13 @@ public class SimpleFormatter {
 
 	public void setPad(int pad) {
 		this.pad = pad;
+	}
+
+	public NumberFormat getSmallSizeFormatter() {
+		return smallSizeFormatter;
+	}
+
+	public void setSmallSizeFormatter(NumberFormat smallSizeFormatter) {
+		this.smallSizeFormatter = smallSizeFormatter;
 	}
 }

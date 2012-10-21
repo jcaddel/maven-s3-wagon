@@ -16,14 +16,18 @@
 package org.kuali.maven.wagon;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import javax.swing.tree.DefaultMutableTreeNode;
+
+import org.codehaus.plexus.util.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.Assert;
 
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
@@ -37,18 +41,31 @@ import com.amazonaws.services.s3.transfer.Upload;
  * Utility methods related to Amazon S3
  */
 public class S3Utils {
+	private static final Logger log = LoggerFactory.getLogger(S3Utils.class);
 	private static final int KILOBYTE = 1024;
 	private static final int MEGABYTE = 1024 * KILOBYTE;
 	private static final int MULTI_PART_UPLOAD_THRESHOLD = 100 * MEGABYTE;
-	private static final Logger log = LoggerFactory.getLogger(S3Utils.class);
-	private static final int MAX_OBJECTS_PER_LISTING = 1001;
+	SimpleFormatter formatter = new SimpleFormatter();
+
+	private static S3Utils instance;
+
+	public static synchronized S3Utils getInstance() {
+		if (instance == null) {
+			instance = new S3Utils();
+		}
+		return instance;
+	}
+
+	private S3Utils() {
+		super();
+	}
 
 	/**
 	 * Upload a single file to Amazon S3. If the file is larger than 100MB a multi-part upload is used. This splits the file into multiple
 	 * smaller chunks with each chunk being uploaded in a different thread. Once all the threads have completed the file is reassembled on
 	 * Amazon's side as a single file again.
 	 */
-	public static final void upload(File file, PutObjectRequest request, AmazonS3Client client, TransferManager manager) {
+	public void upload(File file, PutObjectRequest request, AmazonS3Client client, TransferManager manager) {
 		// Store the file on S3
 		if (file.length() < MULTI_PART_UPLOAD_THRESHOLD) {
 			// Use normal upload for small files
@@ -66,7 +83,7 @@ public class S3Utils {
 	 * a multi-part upload on files larger than 100MB. When this method returns all of the upload threads that handle portions of the file
 	 * have completed. The file has also been reassembled on Amazon S3 and is ready for use.
 	 */
-	public static final void blockingMultiPartUpload(PutObjectRequest request, TransferManager manager) {
+	public void blockingMultiPartUpload(PutObjectRequest request, TransferManager manager) {
 		// Use multi-part upload for large files
 		Upload upload = manager.upload(request);
 		try {
@@ -77,41 +94,174 @@ public class S3Utils {
 		}
 	}
 
-	public static final void getBucketStats(String accessKey, String secretKey, String bucketName) {
-		Assert.notNull(accessKey, "accessKey cannot be null");
-		Assert.notNull(secretKey, "secretKey cannot be null");
-		Assert.notNull(bucketName, "bucketName cannot be null");
-		AWSCredentials credentials = new BasicAWSCredentials(accessKey, secretKey);
-		AmazonS3Client client = new AmazonS3Client(credentials);
-		getBucketStats(client, bucketName);
+	public ListObjectsRequest getListObjectsRequest(String bucketName, String prefix, String delimiter, Integer maxKeys) {
+		ListObjectsRequest request = new ListObjectsRequest();
+		request.setBucketName(bucketName);
+		request.setDelimiter(delimiter);
+		request.setPrefix(prefix);
+		request.setMaxKeys(maxKeys);
+		return request;
 	}
 
-	public static final void getBucketStats(AmazonS3Client client, String bucketName) {
-		if (!client.doesBucketExist(bucketName)) {
-			throw new IllegalArgumentException("Bucket '" + bucketName + "' does not exist");
-		}
+	public ListObjectsRequest getListObjectsRequest(String bucketName, String prefix, String delimiter) {
+		return getListObjectsRequest(bucketName, prefix, delimiter, null);
+	}
 
-		BucketSummary bucketSummary = new BucketSummary();
-		ListObjectsRequest request = new ListObjectsRequest(bucketName, null, null, null, MAX_OBJECTS_PER_LISTING);
+	public ListObjectsRequest getListObjectsRequest(String bucketName, String prefix) {
+		return getListObjectsRequest(bucketName, prefix, null);
+	}
+
+	public List<DefaultMutableTreeNode> getLeaves(DefaultMutableTreeNode node) {
+		Enumeration<?> e = node.breadthFirstEnumeration();
+		List<DefaultMutableTreeNode> leaves = new ArrayList<DefaultMutableTreeNode>();
+		while (e.hasMoreElements()) {
+			DefaultMutableTreeNode element = (DefaultMutableTreeNode) e.nextElement();
+			if (element.isLeaf()) {
+				leaves.add(element);
+			}
+		}
+		return leaves;
+	}
+
+	public DefaultMutableTreeNode buildTree(List<String> prefixes, String delimiter) {
+		Map<String, DefaultMutableTreeNode> map = new HashMap<String, DefaultMutableTreeNode>();
+		for (String prefix : prefixes) {
+			if (prefix == null) {
+				DefaultMutableTreeNode root = new DefaultMutableTreeNode(new BucketSummary());
+				map.put(null, root);
+			} else {
+				BucketSummary summary = new BucketSummary();
+				summary.setPrefix(prefix);
+				DefaultMutableTreeNode child = new DefaultMutableTreeNode(summary);
+				String parentKey = getParentPrefix(prefix, delimiter);
+				DefaultMutableTreeNode parent = map.get(parentKey);
+				parent.add(child);
+				map.put(prefix, child);
+			}
+		}
+		return map.get(null);
+	}
+
+	public String getParentPrefix(String prefix, String delimiter) {
+		String[] tokens = StringUtils.split(prefix, delimiter);
+		if (tokens.length == 1) {
+			return null;
+		}
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < tokens.length - 1; i++) {
+			sb.append(tokens[i] + delimiter);
+		}
+		return sb.toString();
+	}
+
+	public void buildPrefixList(AmazonS3Client client, String bucketName, List<String> prefixes, String prefix, String delimiter, BaseCase baseCase) {
+		log.info(prefix);
+		prefixes.add(prefix);
+		ListObjectsRequest request = getListObjectsRequest(bucketName, prefix, delimiter);
+		ObjectListing listing = client.listObjects(request);
+		List<String> commonPrefixes = listing.getCommonPrefixes();
+		for (String commonPrefix : commonPrefixes) {
+			if (!baseCase.isBaseCase(commonPrefix)) {
+				buildPrefixList(client, bucketName, prefixes, commonPrefix, delimiter, baseCase);
+			}
+		}
+	}
+
+	public void summarize(AmazonS3Client client, String bucketName, DefaultMutableTreeNode node) {
+		List<DefaultMutableTreeNode> leaves = getLeaves(node);
+		for (DefaultMutableTreeNode leaf : leaves) {
+			BucketSummary summary = (BucketSummary) leaf.getUserObject();
+			summarize(client, bucketName, summary);
+		}
+		fillInSummaries(node);
+	}
+
+	public void fillInSummaries(DefaultMutableTreeNode node) {
+		BucketSummary summary = (BucketSummary) node.getUserObject();
+		List<DefaultMutableTreeNode> children = getChildren(node);
+		for (DefaultMutableTreeNode child : children) {
+			fillInSummaries(child);
+			BucketSummary childSummary = (BucketSummary) child.getUserObject();
+			long size = childSummary.getSize();
+			long count = childSummary.getCount();
+			summary.setCount(summary.getCount() + count);
+			summary.setSize(summary.getSize() + size);
+		}
+	}
+
+	public long getSize(DefaultMutableTreeNode node) {
+		BucketSummary summary = (BucketSummary) node.getUserObject();
+		long size = summary.getSize();
+		List<DefaultMutableTreeNode> children = getChildren(node);
+		for (DefaultMutableTreeNode child : children) {
+			size += getSize(child);
+		}
+		return size;
+	}
+
+	public long getCount(DefaultMutableTreeNode node) {
+		BucketSummary summary = (BucketSummary) node.getUserObject();
+		long count = summary.getCount();
+		List<DefaultMutableTreeNode> children = getChildren(node);
+		for (DefaultMutableTreeNode child : children) {
+			count += getCount(child);
+		}
+		return count;
+	}
+
+	public List<DefaultMutableTreeNode> getChildren(DefaultMutableTreeNode node) {
+		Enumeration<?> e = node.children();
+		List<DefaultMutableTreeNode> children = new ArrayList<DefaultMutableTreeNode>();
+		while (e.hasMoreElements()) {
+			DefaultMutableTreeNode child = (DefaultMutableTreeNode) e.nextElement();
+			children.add(child);
+		}
+		return children;
+	}
+
+	public BucketSummary summarize(AmazonS3Client client, String bucketName, BucketSummary summary) {
+		ListObjectsRequest request = getListObjectsRequest(bucketName, summary.getPrefix());
 		ObjectListing current = client.listObjects(request);
-		List<S3ObjectSummary> summaries = current.getObjectSummaries();
-		updateBucketSummary(bucketSummary, summaries);
+		summarize(summary, current.getObjectSummaries());
 		while (current.isTruncated()) {
 			current = client.listNextBatchOfObjects(current);
-			updateBucketSummary(bucketSummary, current.getObjectSummaries());
-			summaries.addAll(current.getObjectSummaries());
+			summarize(summary, current.getObjectSummaries());
+		}
+		return summary;
+	}
+
+	public List<String> getLeafPrefixes(DefaultMutableTreeNode node, String delimiter) {
+		List<DefaultMutableTreeNode> leaves = getLeaves(node);
+		List<String> prefixes = new ArrayList<String>();
+		for (DefaultMutableTreeNode leaf : leaves) {
+			BucketSummary summary = (BucketSummary) leaf.getUserObject();
+			prefixes.add(summary.getPrefix());
+		}
+		return prefixes;
+	}
+
+	protected void summarize(BucketSummary summary, List<S3ObjectSummary> summaries) {
+		for (S3ObjectSummary element : summaries) {
+			long totalSize = summary.getSize() + element.getSize();
+			summary.setSize(totalSize);
+			summary.setCount(summary.getCount() + 1);
+			if (log.isDebugEnabled()) {
+				log.debug(summary.getCount() + " - " + element.getKey() + " - " + formatter.getSize(element.getSize()));
+			}
+		}
+		if (log.isDebugEnabled()) {
+			String prefix = summary.getPrefix();
+			long count = summary.getCount();
+			long bytes = summary.getSize();
+			log.debug(rpad(prefix, 40) + " Total Count: " + lpad(count + "", 3) + " Total Size: " + lpad(formatter.getSize(bytes), 9));
 		}
 	}
 
-	protected static final void updateBucketSummary(BucketSummary summary, List<S3ObjectSummary> summaries) {
-		SimpleFormatter sf = new SimpleFormatter();
-		long totalObjectCount = summary.getObjectCount() + summaries.size();
-		summary.setObjectCount(totalObjectCount);
+	public String lpad(String s, int size) {
+		return StringUtils.leftPad(s, size, " ");
+	}
 
-		for (S3ObjectSummary element : summaries) {
-			long totalSize = summary.getObjectSize() + element.getSize();
-			summary.setObjectSize(totalSize);
-		}
-		log.info("Object count: " + summary.getObjectCount() + " Total Size: " + sf.getSize(summary.getObjectSize()));
+	public String rpad(String s, int size) {
+		return StringUtils.rightPad(s, size, " ");
 	}
 }
