@@ -2,7 +2,7 @@ package org.kuali.maven.wagon;
 
 import org.apache.commons.lang.StringUtils;
 
-public class KualiMavenBucketBaseCase implements BaseCase {
+public class JavaxServletOnlyBaseCase implements BaseCase {
 
 	String delimiter;
 	String token;
@@ -10,7 +10,9 @@ public class KualiMavenBucketBaseCase implements BaseCase {
 	public boolean isBaseCase(String prefix) {
 		boolean test1 = endsWithVersionNumber(prefix, delimiter);
 		boolean test2 = endsWithToken(prefix, delimiter, token);
-		return test1 || test2;
+		boolean test3 = !prefix.startsWith("external/");
+		boolean test4 = !prefix.equals("external/") && !prefix.equals("external/javax/") && !prefix.startsWith("external/javax/servlet/");
+		return test1 || test2 || test3 || test4;
 	}
 
 	public boolean endsWithVersionNumber(String prefix, String delimiter) {
