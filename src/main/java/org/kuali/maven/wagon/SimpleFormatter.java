@@ -26,12 +26,12 @@ import org.apache.commons.lang.StringUtils;
  * @since May 27, 2010 6:46:17 PM
  */
 public class SimpleFormatter {
-	private static final double KB = 1024;
-	private static final double MB = 1024 * KB;
-	private static final double GB = 1024 * MB;
-	private static final double TB = 1024 * GB;
-	private static final double PB = 1024 * TB;
-	private static final double EB = 1024 * PB;
+	private static final double KB = 1024; // kilobyte
+	private static final double MB = 1024 * KB; // megabyte
+	private static final double GB = 1024 * MB; // gigabyte
+	private static final double TB = 1024 * GB; // terabyte
+	private static final double PB = 1024 * TB; // petabyte
+	private static final double EB = 1024 * PB; // exabyte
 	private static final double SECOND = 1000;
 	private static final double MINUTE = 60 * SECOND;
 	private static final double HOUR = 60 * MINUTE;
@@ -59,18 +59,27 @@ public class SimpleFormatter {
 	}
 
 	/**
-	 * Given a number of bytes and the number of milliseconds it took to transfer that number of bytes, return KB/s, MB/s, or GB/s as
-	 * appropriate
+	 * Given a number of bytes and the number of milliseconds it took to transfer that number of bytes, return KB/s, MB/s, GB/s, TB/s, PB/s,
+	 * or EB/s as appropriate
 	 */
-	public String getRate(long elapsed, long bytes) {
-		double seconds = elapsed / SECOND;
+	public String getRate(long millis, long bytes) {
+		double seconds = millis / SECOND;
 		double bytesPerSecond = bytes / seconds;
 		if (bytesPerSecond < MB) {
 			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / KB) + " KB/s", pad, " ");
 		} else if (bytesPerSecond < GB) {
 			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / MB) + " MB/s", pad, " ");
-		} else {
+		} else if (bytesPerSecond < TB) {
 			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / GB) + " GB/s", pad, " ");
+		} else if (bytesPerSecond < PB) {
+			// Terabytes per second. Wow
+			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / TB) + " TB/s", pad, " ");
+		} else if (bytesPerSecond < EB) {
+			// Petabytes per second!!! Holy smokes.
+			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / PB) + " PB/s", pad, " ");
+		} else {
+			// Exabytes per second!!! Get outta here.
+			return StringUtils.leftPad(rateFormatter.format(bytesPerSecond / EB) + " EB/s", pad, " ");
 		}
 	}
 
@@ -111,7 +120,7 @@ public class SimpleFormatter {
 			// A terabyte. Nice.
 			return StringUtils.leftPad(sizeFormatter.format(bytes / TB) + "t", pad, " ");
 		} else if (bytes < EB) {
-			// A petabyte!!!!!! Holy crap.
+			// A petabyte!!!!!! Wow.
 			return StringUtils.leftPad(sizeFormatter.format(bytes / PB) + "p", pad, " ");
 		} else {
 			// An exabyte?????? Get outta here.
