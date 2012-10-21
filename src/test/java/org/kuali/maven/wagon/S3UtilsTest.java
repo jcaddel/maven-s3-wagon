@@ -66,21 +66,24 @@ public class S3UtilsTest {
 			baseCase2.setDelimiter(delimiter);
 			baseCase2.setToken("latest");
 
-			JavaxOnlyBaseCase baseCase3 = new JavaxOnlyBaseCase();
+			ExternalOnlyBaseCase baseCase3 = new ExternalOnlyBaseCase();
 			baseCase3.setDelimiter(delimiter);
 			baseCase3.setToken("latest");
 
-			long start = System.currentTimeMillis();
+			long start1 = System.currentTimeMillis();
 			List<String> prefixes = new ArrayList<String>();
-			utils.buildPrefixList(client, bucket, prefixes, null, delimiter, baseCase2);
-			long elapsed = System.currentTimeMillis() - start;
+			utils.buildPrefixList(client, bucket, prefixes, null, delimiter, baseCase3);
+			long elapsed1 = System.currentTimeMillis() - start1;
 			DefaultMutableTreeNode node = utils.buildTree(prefixes, delimiter);
 			log.info("Total Prefixes: " + prefixes.size());
-			log.info("Total Time: " + sf.getTime(elapsed));
+			log.info("Total Time: " + sf.getTime(elapsed1));
 			List<DefaultMutableTreeNode> leaves = utils.getLeaves(node);
 			log.info("Total Leaves: " + leaves.size());
+			long start2 = System.currentTimeMillis();
 			utils.summarize(client, bucket, node);
+			long elapsed2 = System.currentTimeMillis() - start2;
 			BucketSummary summary = (BucketSummary) node.getUserObject();
+			log.info("Total Time: " + sf.getTime(elapsed2));
 			log.info("Count: " + summary.getCount());
 			log.info("Size: " + sf.getSize(summary.getSize()));
 		} catch (Exception e) {

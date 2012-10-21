@@ -17,7 +17,7 @@ package org.kuali.maven.wagon;
 
 import org.apache.commons.lang.StringUtils;
 
-public class JavaxOnlyBaseCase implements BaseCase {
+public class ExternalOnlyBaseCase implements BaseCase {
 
 	String delimiter;
 	String token;
@@ -26,8 +26,7 @@ public class JavaxOnlyBaseCase implements BaseCase {
 		boolean test1 = endsWithVersionNumber(prefix, delimiter);
 		boolean test2 = endsWithToken(prefix, delimiter, token);
 		boolean test3 = !prefix.startsWith("external/");
-		boolean test4 = !prefix.equals("external/") && !prefix.equals("external/javax/");
-		return test1 || test2 || test3 || test4;
+		return test1 || test2 || test3;
 	}
 
 	public boolean endsWithVersionNumber(String prefix, String delimiter) {

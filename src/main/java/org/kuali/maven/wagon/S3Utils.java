@@ -179,31 +179,9 @@ public class S3Utils {
 		for (DefaultMutableTreeNode child : children) {
 			fillInSummaries(child);
 			BucketSummary childSummary = (BucketSummary) child.getUserObject();
-			long size = childSummary.getSize();
-			long count = childSummary.getCount();
-			summary.setCount(summary.getCount() + count);
-			summary.setSize(summary.getSize() + size);
+			summary.setCount(summary.getCount() + childSummary.getCount());
+			summary.setSize(summary.getSize() + childSummary.getCount());
 		}
-	}
-
-	public long getSize(DefaultMutableTreeNode node) {
-		BucketSummary summary = (BucketSummary) node.getUserObject();
-		long size = summary.getSize();
-		List<DefaultMutableTreeNode> children = getChildren(node);
-		for (DefaultMutableTreeNode child : children) {
-			size += getSize(child);
-		}
-		return size;
-	}
-
-	public long getCount(DefaultMutableTreeNode node) {
-		BucketSummary summary = (BucketSummary) node.getUserObject();
-		long count = summary.getCount();
-		List<DefaultMutableTreeNode> children = getChildren(node);
-		for (DefaultMutableTreeNode child : children) {
-			count += getCount(child);
-		}
-		return count;
 	}
 
 	public List<DefaultMutableTreeNode> getChildren(DefaultMutableTreeNode node) {
