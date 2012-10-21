@@ -179,8 +179,10 @@ public class S3Utils {
 		for (DefaultMutableTreeNode child : children) {
 			fillInSummaries(child);
 			BucketSummary childSummary = (BucketSummary) child.getUserObject();
-			summary.setCount(summary.getCount() + childSummary.getCount());
-			summary.setSize(summary.getSize() + childSummary.getCount());
+			long count = childSummary.getCount();
+			long size = childSummary.getSize();
+			summary.setCount(summary.getCount() + count);
+			summary.setSize(summary.getSize() + size);
 		}
 	}
 
@@ -219,6 +221,37 @@ public class S3Utils {
 			long bytes = summary.getSize();
 			log.debug(rpad(prefix, 40) + " Total Count: " + lpad(count + "", 3) + " Total Size: " + lpad(formatter.getSize(bytes), 9));
 		}
+	}
+
+	public String toString(DefaultMutableTreeNode node) {
+		Enumeration<?> e = node.breadthFirstEnumeration();
+		int maxPrefixLength = "prefix".length();
+		int maxCountLength = "count".length();
+		int maxSizeLength = "size".length();
+		while (e.hasMoreElements()) {
+			DefaultMutableTreeNode element = (DefaultMutableTreeNode) e.nextElement();
+			BucketSummary summary = (BucketSummary) element.getUserObject();
+			if (summary.getPrefix() != null) {
+				maxPrefixLength = Math.max(maxPrefixLength, summary.getPrefix().length());
+			}
+			maxCountLength = Math.max(maxCountLength, (summary.getCount() + "").length());
+			maxSizeLength = Math.max(maxSizeLength, formatter.getSize(summary.getSize()).length());
+		}
+		e = node.breadthFirstEnumeration();
+		StringBuilder sb = new StringBuilder();
+		sb.append(rpad("prefix", maxPrefixLength) + " " + lpad("count", maxCountLength) + " " + lpad("size", maxSizeLength) + "\n");
+		while (e.hasMoreElements()) {
+			DefaultMutableTreeNode element = (DefaultMutableTreeNode) e.nextElement();
+			BucketSummary summary = (BucketSummary) element.getUserObject();
+			String prefix = summary.getPrefix() == null ? "/" : summary.getPrefix();
+			sb.append(rpad(prefix, maxPrefixLength));
+			sb.append(" ");
+			sb.append(lpad(summary.getCount() + "", maxCountLength));
+			sb.append(" ");
+			sb.append(lpad(formatter.getSize(summary.getSize()), maxSizeLength));
+			sb.append("\n");
+		}
+		return sb.toString();
 	}
 
 	public String lpad(String s, int size) {

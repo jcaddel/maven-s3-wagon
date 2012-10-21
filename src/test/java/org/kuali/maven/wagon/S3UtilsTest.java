@@ -54,6 +54,7 @@ public class S3UtilsTest {
 			log.info(sf.getSize(bytes));
 			log.info(sf.getRate(now, bytes));
 			log.info(sf.getTime(now));
+			log.info(sf.getTime(bytes));
 			String delimiter = "/";
 			String bucket = "maven.kuali.org";
 			AmazonS3Client client = getClient();
@@ -72,7 +73,7 @@ public class S3UtilsTest {
 
 			long start1 = System.currentTimeMillis();
 			List<String> prefixes = new ArrayList<String>();
-			utils.buildPrefixList(client, bucket, prefixes, null, delimiter, baseCase3);
+			utils.buildPrefixList(client, bucket, prefixes, null, delimiter, baseCase2);
 			long elapsed1 = System.currentTimeMillis() - start1;
 			DefaultMutableTreeNode node = utils.buildTree(prefixes, delimiter);
 			log.info("Total Prefixes: " + prefixes.size());
@@ -86,6 +87,8 @@ public class S3UtilsTest {
 			log.info("Total Time: " + sf.getTime(elapsed2));
 			log.info("Count: " + summary.getCount());
 			log.info("Size: " + sf.getSize(summary.getSize()));
+
+			log.info("S3 Bucket Summary\n" + utils.toString(node));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
