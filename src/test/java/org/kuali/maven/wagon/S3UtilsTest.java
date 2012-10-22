@@ -21,7 +21,6 @@ import java.util.List;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
-import org.junit.Test;
 import org.kuali.common.threads.ExecutionStatistics;
 import org.kuali.common.threads.ThreadHandlerContext;
 import org.kuali.common.threads.ThreadInvoker;
@@ -56,7 +55,14 @@ public class S3UtilsTest {
 		return new AmazonS3Client(credentials);
 	}
 
-	@Test
+	// @Test
+	public void bruteForceListing() {
+		String bucketName = "maven.kuali.org";
+		AmazonS3Client client = getClient();
+		utils.summarize(client, bucketName);
+	}
+
+	// @Test
 	public void testGetStructure() {
 		try {
 			Size[] values = Size.values();

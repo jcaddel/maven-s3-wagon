@@ -116,6 +116,10 @@ public class S3Utils {
 		return getListObjectsRequest(bucketName, prefix, null);
 	}
 
+	public ListObjectsRequest getListObjectsRequest(String bucketName) {
+		return getListObjectsRequest(bucketName, null);
+	}
+
 	public List<DefaultMutableTreeNode> getLeaves(DefaultMutableTreeNode node) {
 		Enumeration<?> e = node.breadthFirstEnumeration();
 		List<DefaultMutableTreeNode> leaves = new ArrayList<DefaultMutableTreeNode>();
@@ -211,6 +215,24 @@ public class S3Utils {
 		return children;
 	}
 
+	public BucketSummary summarize(AmazonS3Client client, String bucketName) {
+		int count = 1;
+		BucketSummary summary = new BucketSummary();
+		ListObjectsRequest request = getListObjectsRequest(bucketName);
+		long start = System.currentTimeMillis();
+		ObjectListing current = client.listObjects(request);
+		System.out.println((count++) + "," + (System.currentTimeMillis() - start));
+		summarize(summary, current.getObjectSummaries());
+		while (current.isTruncated()) {
+			start = System.currentTimeMillis();
+			current = client.listNextBatchOfObjects(current);
+			System.out.println((count++) + "," + (System.currentTimeMillis() - start));
+			summarize(summary, current.getObjectSummaries());
+		}
+		log.debug("Completed summary for prefix '{}'", summary.getPrefix());
+		return summary;
+	}
+
 	public BucketSummary summarize(AmazonS3Client client, String bucketName, BucketSummary summary) {
 		ListObjectsRequest request = getListObjectsRequest(bucketName, summary.getPrefix());
 		ObjectListing current = client.listObjects(request);
@@ -219,7 +241,7 @@ public class S3Utils {
 			current = client.listNextBatchOfObjects(current);
 			summarize(summary, current.getObjectSummaries());
 		}
-		log.debug("Completed summary for {}", summary.getPrefix());
+		log.debug("Completed summary for prefix '{}'", summary.getPrefix());
 		return summary;
 	}
 
