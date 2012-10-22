@@ -177,6 +177,17 @@ public class S3Utils {
 		fillInSummaries(node);
 	}
 
+	public List<BucketSummary> getBucketSummaryLeafs(DefaultMutableTreeNode node) {
+		List<DefaultMutableTreeNode> leaves = getLeaves(node);
+		List<BucketSummary> summaries = new ArrayList<BucketSummary>();
+		for (DefaultMutableTreeNode leaf : leaves) {
+			BucketSummary summary = (BucketSummary) leaf.getUserObject();
+			summaries.add(summary);
+		}
+		Collections.shuffle(summaries);
+		return summaries;
+	}
+
 	public void fillInSummaries(DefaultMutableTreeNode node) {
 		BucketSummary summary = (BucketSummary) node.getUserObject();
 		List<DefaultMutableTreeNode> children = getChildren(node);
@@ -208,7 +219,7 @@ public class S3Utils {
 			current = client.listNextBatchOfObjects(current);
 			summarize(summary, current.getObjectSummaries());
 		}
-		log.info("Completed summary for " + summary.getPrefix());
+		log.debug("Completed summary for {}", summary.getPrefix());
 		return summary;
 	}
 
@@ -266,6 +277,18 @@ public class S3Utils {
 			list.add(display);
 		}
 		return list;
+	}
+
+	public List<S3PrefixContext> getS3PrefixContexts(AmazonS3Client client, String bucketName, List<BucketSummary> summaries) {
+		List<S3PrefixContext> contexts = new ArrayList<S3PrefixContext>();
+		for (BucketSummary summary : summaries) {
+			S3PrefixContext context = new S3PrefixContext();
+			context.setClient(client);
+			context.setBucketName(bucketName);
+			context.setSummary(summary);
+			contexts.add(context);
+		}
+		return contexts;
 	}
 
 	public String toString(DefaultMutableTreeNode node, Size size, Comparator<BucketSummary> comparator) {

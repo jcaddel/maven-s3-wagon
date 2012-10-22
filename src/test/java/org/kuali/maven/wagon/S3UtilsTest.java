@@ -21,7 +21,13 @@ import java.util.List;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.junit.Test;
+import org.kuali.common.threads.ExecutionStatistics;
+import org.kuali.common.threads.ThreadHandlerContext;
+import org.kuali.common.threads.ThreadInvoker;
+import org.kuali.common.threads.listener.PercentCompleteListener;
 import org.kuali.maven.wagon.util.BucketSummary;
+import org.kuali.maven.wagon.util.BucketSummaryHandler;
+import org.kuali.maven.wagon.util.S3PrefixContext;
 import org.kuali.maven.wagon.util.S3Utils;
 import org.kuali.maven.wagon.util.SimpleFormatter;
 import org.kuali.maven.wagon.util.Size;
@@ -81,22 +87,47 @@ public class S3UtilsTest {
 
 			long start1 = System.currentTimeMillis();
 			List<String> prefixes = new ArrayList<String>();
-			utils.buildPrefixList(client, bucket, prefixes, null, delimiter, baseCase3);
+			utils.buildPrefixList(client, bucket, prefixes, null, delimiter, baseCase1);
 			long elapsed1 = System.currentTimeMillis() - start1;
 			DefaultMutableTreeNode node = utils.buildTree(prefixes, delimiter);
 			log.info("Total Prefixes: " + prefixes.size());
 			log.info("Total Time: " + sf.getTime(elapsed1));
 			List<DefaultMutableTreeNode> leaves = utils.getLeaves(node);
 			log.info("Total Leaves: " + leaves.size());
-			long start2 = System.currentTimeMillis();
-			utils.summarize(client, bucket, node);
-			long elapsed2 = System.currentTimeMillis() - start2;
-			BucketSummary summary = (BucketSummary) node.getUserObject();
-			log.info("Total Time: " + sf.getTime(elapsed2));
-			log.info("Count: " + summary.getCount());
-			log.info("Size: " + sf.getSize(summary.getSize()));
+			// long start2 = System.currentTimeMillis();
+			// utils.summarize(client, bucket, node);
+			// long elapsed2 = System.currentTimeMillis() - start2;
+			// BucketSummary summary = (BucketSummary) node.getUserObject();
+			// log.info("Total Time: " + sf.getTime(elapsed2));
+			// log.info("Count: " + summary.getCount());
+			// log.info("Size: " + sf.getSize(summary.getSize()));
+			List<BucketSummary> summaries = utils.getBucketSummaryLeafs(node);
+			List<S3PrefixContext> contexts = utils.getS3PrefixContexts(client, bucket, summaries);
 
-			log.info("S3 Bucket Summary\n" + utils.toString(node, Size.MB));
+			// Store some context for the thread handler
+			PercentCompleteListener<S3PrefixContext> listener = new PercentCompleteListener<S3PrefixContext>();
+			listener.setPercentageIncrement(1);
+			ThreadHandlerContext<S3PrefixContext> thc = new ThreadHandlerContext<S3PrefixContext>();
+			thc.setList(contexts);
+			thc.setHandler(new BucketSummaryHandler());
+			thc.setMax(50);
+			thc.setMin(10);
+			thc.setDivisor(1);
+			thc.setListener(listener);
+			ThreadInvoker invoker = new ThreadInvoker();
+			ExecutionStatistics stats = invoker.invokeThreads(thc);
+
+			// Show some stats
+			long millis = stats.getExecutionTime();
+			long iterationCount = stats.getIterationCount();
+			log.info("Elapsed: " + sf.getTime(millis));
+			log.info("Iteration Count: " + iterationCount);
+			BucketSummary summary = (BucketSummary) node.getUserObject();
+			utils.fillInSummaries(node);
+			log.info("Total Bucket Size: " + sf.getSize(summary.getSize()));
+			log.info("Total Object Count: " + summary.getCount());
+
+			// log.info("S3 Bucket Summary\n" + utils.toString(node, Size.MB));
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
