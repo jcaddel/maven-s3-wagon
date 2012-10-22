@@ -16,6 +16,7 @@
 package org.kuali.maven.wagon;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -102,6 +103,7 @@ public class S3UtilsTest {
 			// log.info("Count: " + summary.getCount());
 			// log.info("Size: " + sf.getSize(summary.getSize()));
 			List<BucketSummary> summaries = utils.getBucketSummaryLeafs(node);
+			Collections.shuffle(summaries);
 			List<S3PrefixContext> contexts = utils.getS3PrefixContexts(client, bucket, summaries);
 
 			// Store some context for the thread handler

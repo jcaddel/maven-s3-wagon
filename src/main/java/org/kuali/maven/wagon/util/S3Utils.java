@@ -184,7 +184,7 @@ public class S3Utils {
 			BucketSummary summary = (BucketSummary) leaf.getUserObject();
 			summaries.add(summary);
 		}
-		Collections.shuffle(summaries);
+		Collections.sort(summaries);
 		return summaries;
 	}
 
