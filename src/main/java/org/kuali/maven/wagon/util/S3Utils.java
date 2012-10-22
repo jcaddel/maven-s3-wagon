@@ -216,17 +216,12 @@ public class S3Utils {
 	}
 
 	public BucketSummary summarize(AmazonS3Client client, String bucketName) {
-		int count = 1;
 		BucketSummary summary = new BucketSummary();
 		ListObjectsRequest request = getListObjectsRequest(bucketName);
-		long start = System.currentTimeMillis();
 		ObjectListing current = client.listObjects(request);
-		System.out.println((count++) + "," + (System.currentTimeMillis() - start));
 		summarize(summary, current.getObjectSummaries());
 		while (current.isTruncated()) {
-			start = System.currentTimeMillis();
 			current = client.listNextBatchOfObjects(current);
-			System.out.println((count++) + "," + (System.currentTimeMillis() - start));
 			summarize(summary, current.getObjectSummaries());
 		}
 		log.debug("Completed summary for prefix '{}'", summary.getPrefix());
