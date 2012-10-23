@@ -21,16 +21,16 @@ import java.util.List;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
+import org.kuali.common.aws.s3.BucketSummary;
+import org.kuali.common.aws.s3.BucketSummaryHandler;
+import org.kuali.common.aws.s3.S3PrefixContext;
+import org.kuali.common.aws.s3.S3Utils;
+import org.kuali.common.aws.s3.SimpleFormatter;
+import org.kuali.common.aws.s3.Size;
 import org.kuali.common.threads.ExecutionStatistics;
 import org.kuali.common.threads.ThreadHandlerContext;
 import org.kuali.common.threads.ThreadInvoker;
 import org.kuali.common.threads.listener.PercentCompleteListener;
-import org.kuali.maven.wagon.util.BucketSummary;
-import org.kuali.maven.wagon.util.BucketSummaryHandler;
-import org.kuali.maven.wagon.util.S3PrefixContext;
-import org.kuali.maven.wagon.util.S3Utils;
-import org.kuali.maven.wagon.util.SimpleFormatter;
-import org.kuali.maven.wagon.util.Size;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

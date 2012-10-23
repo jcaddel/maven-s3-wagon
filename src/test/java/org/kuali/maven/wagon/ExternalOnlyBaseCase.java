@@ -16,7 +16,7 @@
 package org.kuali.maven.wagon;
 
 import org.apache.commons.lang.StringUtils;
-import org.kuali.maven.wagon.util.BaseCase;
+import org.kuali.common.aws.s3.BaseCase;
 
 public class ExternalOnlyBaseCase implements BaseCase {
 

@@ -15,13 +15,13 @@
  */
 package org.kuali.maven.wagon;
 
-import org.kuali.maven.wagon.util.SimpleFormatter;
+import org.kuali.common.aws.s3.SimpleFormatter;
 
 /**
  * Holds timing and byte count information about a transfer operation
- * 
+ *
  * @author Jeff Caddel
- * 
+ *
  * @since May 27, 2010 6:51:19 PM
  */
 public class TransferTracker {
@@ -63,7 +63,8 @@ public class TransferTracker {
 		this.byteCount = byteCount;
 	}
 
-	public String toString() {
+	@Override
+    public String toString() {
 		long elapsed = completed - started;
 		StringBuffer sb = new StringBuffer();
 		sb.append("[" + formatter.getTime(elapsed));

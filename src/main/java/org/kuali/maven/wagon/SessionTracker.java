@@ -19,13 +19,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.maven.wagon.events.SessionEvent;
-import org.kuali.maven.wagon.util.SimpleFormatter;
+import org.kuali.common.aws.s3.SimpleFormatter;
 
 /**
  * Holds timing and byte count information about a transfer operation
- * 
+ *
  * @author Jeff Caddel
- * 
+ *
  * @since May 27, 2010 6:51:19 PM
  */
 public class SessionTracker {
