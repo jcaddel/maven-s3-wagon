@@ -39,6 +39,7 @@
     <slf4j.version>1.6.4</slf4j.version>
     <aws.version>1.3.22</aws.version>
     <spring.version>3.1.2.RELEASE</spring.version>
+    <kuali-s3.version>1.0.1</kuali-s3.version>
   </properties>
   <profiles>
     <profile>
@@ -85,7 +86,7 @@
     <dependency>
       <groupId>org.kuali.common</groupId>
       <artifactId>kuali-s3</artifactId>
-      <version>1.0.0-SNAPSHOT</version>
+      <version>${kuali-s3.version}</version>
     </dependency>
     <dependency>
       <groupId>com.amazonaws</groupId>
@@ -121,7 +122,7 @@
     <dependency>
       <groupId>commons-io</groupId>
       <artifactId>commons-io</artifactId>
-      <version>2.3</version>
+      <version>2.4</version>
     </dependency>
     <dependency>
       <groupId>commons-lang</groupId>
