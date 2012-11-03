@@ -80,12 +80,17 @@ import com.amazonaws.services.s3.transfer.TransferManager;
  * @author Jeff Caddel
  */
 public class S3Wagon extends AbstractWagon implements RequestFactory {
-	public static final String HTTP_ENDPOINT = "http";
+
+	/**
+	 * Set the system property <code>maven.wagon.protocol</code> to <code>http</code> to force the wagon to communicate over
+	 * <code>http</code>. Default is <code>https</code>.
+	 */
+	public static final String PROTOCOL_KEY = "maven.wagon.protocol";
+	public static final String HTTP = "http";
 	public static final String HTTP_ENDPOINT_VALUE = "http://s3.amazonaws.com";
-	public static final String HTTPS_ENDPOINT = "https";
+	public static final String HTTPS = "https";
 	public static final String MIN_THREADS_KEY = "maven.wagon.threads.min";
 	public static final String MAX_THREADS_KEY = "maven.wagon.threads.max";
-	public static final String ENDPOINT_KEY = "maven.wagon.endpoint";
 	public static final String DIVISOR_KEY = "maven.wagon.threads.divisor";
 	public static final int DEFAULT_MIN_THREAD_COUNT = 10;
 	public static final int DEFAULT_MAX_THREAD_COUNT = 50;
@@ -165,10 +170,11 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 	}
 
 	protected AmazonS3Client getAmazonS3Client(AWSCredentials credentials) {
-		String endpoint = getValue(ENDPOINT_KEY, HTTPS_ENDPOINT);
-		boolean http = HTTP_ENDPOINT.equals(endpoint);
+		String protocol = getValue(PROTOCOL_KEY, HTTPS);
+		boolean http = HTTP.equals(protocol);
 		AmazonS3Client client = new AmazonS3Client(credentials);
 		if (http) {
+			log.info("http selected.  Setting endpoint to " + HTTP_ENDPOINT_VALUE);
 			client.setEndpoint(HTTP_ENDPOINT_VALUE);
 		}
 		return client;
