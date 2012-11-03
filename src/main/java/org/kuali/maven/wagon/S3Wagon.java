@@ -45,6 +45,8 @@ import org.slf4j.LoggerFactory;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.ClientConfiguration;
+import com.amazonaws.Protocol;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -103,6 +105,8 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 	int minThreads = getMinThreads();
 	int maxThreads = getMaxThreads();
 	int divisor = getDivisor();
+	String protocol = getValue(PROTOCOL_KEY, HTTPS);
+	boolean http = HTTP.equals(protocol);
 	int readTimeout = DEFAULT_READ_TIMEOUT;
 	CannedAccessControlList acl = DEFAULT_ACL;
 	TransferManager transferManager;
@@ -169,15 +173,18 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 		return CannedAccessControlList.valueOf(filePermissions.trim());
 	}
 
-	protected AmazonS3Client getAmazonS3Client(AWSCredentials credentials) {
-		String protocol = getValue(PROTOCOL_KEY, HTTPS);
-		boolean http = HTTP.equals(protocol);
-		AmazonS3Client client = new AmazonS3Client(credentials);
+	protected ClientConfiguration getClientConfiguration() {
+		ClientConfiguration configuration = new ClientConfiguration();
 		if (http) {
-			log.info("http selected.  Setting endpoint to " + HTTP_ENDPOINT_VALUE);
-			client.setEndpoint(HTTP_ENDPOINT_VALUE);
+			log.info("http selected");
+			configuration.setProtocol(Protocol.HTTP);
 		}
-		return client;
+		return configuration;
+	}
+
+	protected AmazonS3Client getAmazonS3Client(AWSCredentials credentials) {
+		ClientConfiguration configuration = getClientConfiguration();
+		return new AmazonS3Client(credentials, configuration);
 	}
 
 	@Override
