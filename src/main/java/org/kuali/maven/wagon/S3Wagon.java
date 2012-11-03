@@ -80,8 +80,12 @@ import com.amazonaws.services.s3.transfer.TransferManager;
  * @author Jeff Caddel
  */
 public class S3Wagon extends AbstractWagon implements RequestFactory {
+	public static final String HTTP_ENDPOINT = "http";
+	public static final String HTTP_ENDPOINT_VALUE = "http://s3.amazonaws.com";
+	public static final String HTTPS_ENDPOINT = "https";
 	public static final String MIN_THREADS_KEY = "maven.wagon.threads.min";
 	public static final String MAX_THREADS_KEY = "maven.wagon.threads.max";
+	public static final String ENDPOINT_KEY = "maven.wagon.endpoint";
 	public static final String DIVISOR_KEY = "maven.wagon.threads.divisor";
 	public static final int DEFAULT_MIN_THREAD_COUNT = 10;
 	public static final int DEFAULT_MAX_THREAD_COUNT = 50;
@@ -160,11 +164,21 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 		return CannedAccessControlList.valueOf(filePermissions.trim());
 	}
 
+	protected AmazonS3Client getAmazonS3Client(AWSCredentials credentials) {
+		String endpoint = getValue(ENDPOINT_KEY, HTTPS_ENDPOINT);
+		boolean http = HTTP_ENDPOINT.equals(endpoint);
+		AmazonS3Client client = new AmazonS3Client(credentials);
+		if (http) {
+			client.setEndpoint(HTTP_ENDPOINT_VALUE);
+		}
+		return client;
+	}
+
 	@Override
 	protected void connectToRepository(Repository source, AuthenticationInfo auth, ProxyInfo proxy) throws AuthenticationException {
 
 		AWSCredentials credentials = getCredentials(auth);
-		this.client = new AmazonS3Client(credentials);
+		this.client = getAmazonS3Client(credentials);
 		this.transferManager = new TransferManager(credentials);
 		this.bucketName = source.getHost();
 		validateBucket(client, bucketName);
@@ -521,6 +535,15 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 			return defaultValue;
 		} else {
 			return new Integer(value);
+		}
+	}
+
+	protected String getValue(String key, String defaultValue) {
+		String value = System.getProperty(key);
+		if (StringUtils.isEmpty(value)) {
+			return defaultValue;
+		} else {
+			return value;
 		}
 	}
 
