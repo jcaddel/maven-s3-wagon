@@ -15,9 +15,9 @@ Check [Maven Central](http://search.maven.org/#search|ga|1|maven-s3-wagon) or th
 Documentation
 -------
 
-[Usage](maven-s3-wagon/wiki/Usage)
+[Usage](https://github.com/jcaddel/maven-s3-wagon/wiki/Usage)
 
-[Permissions](maven-s3-wagon/wiki/Permissions)
+[Permissions](https://github.com/jcaddel/maven-s3-wagon/wiki/Permissions)
 
 [Maven generated site](http://site.kuali.org/maven/wagons/maven-s3-wagon/latest/)
 
