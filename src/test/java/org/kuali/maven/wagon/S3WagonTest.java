@@ -19,6 +19,8 @@ import java.util.List;
 
 import org.apache.maven.wagon.authentication.AuthenticationInfo;
 import org.apache.maven.wagon.repository.Repository;
+import org.junit.Ignore;
+import org.junit.Test;
 
 public class S3WagonTest {
 	private static final String USERNAME = "AKIAJFD5IM7IPVVUEBNA";
@@ -26,7 +28,8 @@ public class S3WagonTest {
 
 	// private static final Logger log = LoggerFactory.getLogger(S3WagonTest.class);
 
-	// @Test
+	@Test
+	@Ignore
 	public void testPermissions() {
 		try {
 			AuthenticationInfo auth = new AuthenticationInfo();
@@ -40,7 +43,8 @@ public class S3WagonTest {
 		}
 	}
 
-	// @Test
+	@Test
+	@Ignore
 	public void simple() {
 		try {
 			AuthenticationInfo auth = new AuthenticationInfo();
