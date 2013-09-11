@@ -1,0 +1,4 @@
+total 0
+drwxr-xr-x  3 jcaddel  staff  102 Sep 11 10:44 .
+drwxr-xr-x  3 jcaddel  staff  102 Sep 11 10:44 ..
+-rw-r--r--  1 jcaddel  staff    0 Sep 11 10:44 files.txt
