@@ -65,27 +65,25 @@ import com.amazonaws.services.s3.transfer.TransferManager;
  * <p>
  * An implementation of the Maven Wagon interface that is integrated with the Amazon S3 service.
  * </p>
- *
+ * 
  * <p>
- * URLs that reference the S3 service should be in the form of <code>s3://bucket.name</code>. As an example
- * <code>s3://maven.kuali.org</code> puts files into the <code>maven.kuali.org</code> bucket on the S3 service.
+ * URLs that reference the S3 service should be in the form of <code>s3://bucket.name</code>. As an example <code>s3://maven.kuali.org</code> puts files into the
+ * <code>maven.kuali.org</code> bucket on the S3 service.
  * </p>
- *
+ * 
  * <p>
- * This implementation uses the <code>username</code> and <code>password</code> portions of the server authentication metadata for
- * credentials.
+ * This implementation uses the <code>username</code> and <code>password</code> portions of the server authentication metadata for credentials.
  * </p>
- *
+ * 
  * @plexus.component role="org.apache.maven.wagon.Wagon" role-hint="http" instantiation-strategy="per-lookup"
- *
+ * 
  * @author Ben Hale
  * @author Jeff Caddel
  */
 public class S3Wagon extends AbstractWagon implements RequestFactory {
 
 	/**
-	 * Set the system property <code>maven.wagon.protocol</code> to <code>http</code> to force the wagon to communicate over
-	 * <code>http</code>. Default is <code>https</code>.
+	 * Set the system property <code>maven.wagon.protocol</code> to <code>http</code> to force the wagon to communicate over <code>http</code>. Default is <code>https</code>.
 	 */
 	public static final String PROTOCOL_KEY = "maven.wagon.protocol";
 	public static final String HTTP = "http";
@@ -149,10 +147,9 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 		client.listObjects(zeroObjectsRequest);
 
 		/**
-		 * The current AWS Java SDK does not appear to have a simple method for discovering what set of permissions the currently
-		 * authenticated user has on a bucket. The AWS dev's suggest that you attempt to perform an operation that would fail if you don't
-		 * have the permission in question. You would then use the success/failure of that attempt to establish what your permissions are.
-		 * This is definitely not ideal and they are working on it, but it is not ready yet.
+		 * The current AWS Java SDK does not appear to have a simple method for discovering what set of permissions the currently authenticated user has on a bucket. The AWS dev's
+		 * suggest that you attempt to perform an operation that would fail if you don't have the permission in question. You would then use the success/failure of that attempt to
+		 * establish what your permissions are. This is definitely not ideal and they are working on it, but it is not ready yet.
 		 */
 
 		// Do something simple and quick to verify that we have write permissions on this bucket
@@ -318,10 +315,10 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 	 * Normalize the key to our S3 object<br>
 	 * 1. Convert "./css/style.css" into "/css/style.css"<br>
 	 * 2. Convert "/foo/bar/../../css/style.css" into "/css/style.css"
-	 *
+	 * 
 	 * @see java.net.URI.normalize()
 	 */
-	protected String getNormalizedKey(final File source, final String destination) {
+	protected String getNormalizedKey(final String destination) {
 		// Generate our bucket key for this file
 		String key = basedir + destination;
 		try {
@@ -372,7 +369,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 	 */
 	protected PutObjectRequest getPutObjectRequest(File source, String destination, TransferProgress progress) {
 		try {
-			String key = getNormalizedKey(source, destination);
+			String key = getNormalizedKey(destination);
 			InputStream input = getInputStream(source, progress);
 			ObjectMetadata metadata = getObjectMetadata(source, destination);
 			PutObjectRequest request = new PutObjectRequest(bucketName, key, input, metadata);
@@ -384,9 +381,8 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 	}
 
 	/**
-	 * On S3 there are no true "directories". An S3 bucket is essentially a Hashtable of files stored by key. The integration between a
-	 * traditional file system and an S3 bucket is to use the path of the file on the local file system as the key to the file in the
-	 * bucket. The S3 bucket does not contain a separate key for the directory itself.
+	 * On S3 there are no true "directories". An S3 bucket is essentially a Hashtable of files stored by key. The integration between a traditional file system and an S3 bucket is
+	 * to use the path of the file on the local file system as the key to the file in the bucket. The S3 bucket does not contain a separate key for the directory itself.
 	 */
 	public final void putDirectory(File sourceDir, String destinationDir) throws TransferFailedException {
 
@@ -518,7 +514,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 
 	/*
 	 * (non-Javadoc)
-	 *
+	 * 
 	 * @see org.kuali.maven.wagon.AbstractWagon#getPutFileContext(java.io.File, java.lang.String)
 	 */
 	@Override
