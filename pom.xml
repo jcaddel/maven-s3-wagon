@@ -1,18 +1,18 @@
 <!--
 
-    Copyright 2010-2013 The Kuali Foundation
+  Copyright 2010-2013 The Kuali Foundation
 
-    Licensed under the Educational Community License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
+  Licensed under the Educational Community License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
 
-    http://www.opensource.org/licenses/ecl2.php
+  http://www.opensource.org/licenses/ecl2.php
 
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
 
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
@@ -34,8 +34,8 @@
   </description>
   <url>http://${kuali.site.hostname}/maven/wagons/${project.artifactId}/${project.version}/</url>
   <properties>
-    <kuali.compile.source>1.5</kuali.compile.source>
-    <kuali.compile.target>1.5</kuali.compile.target>
+    <project.scm.vendor>git</project.scm.vendor>
+    <project.java.version>1.5</project.java.version>
     <slf4j.version>1.7.5</slf4j.version>
     <aws.version>1.5.7</aws.version>
     <spring.version>3.2.4.RELEASE</spring.version>
@@ -146,8 +146,8 @@
     </dependency>
   </dependencies>
   <scm>
-    <connection>scm:git:git@github.com:jcaddel/maven-s3-wagon.git</connection>
-    <developerConnection>scm:git:git@github.com:jcaddel/maven-s3-wagon.git</developerConnection>
+    <connection>scm:${project.scm.vendor}:git@github.com:jcaddel/maven-s3-wagon.git</connection>
+    <developerConnection>scm:${project.scm.vendor}:git@github.com:jcaddel/maven-s3-wagon.git</developerConnection>
     <url>https://github.com/jcaddel/maven-s3-wagon</url>
     <tag>HEAD</tag>
   </scm>
