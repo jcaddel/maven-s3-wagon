@@ -221,6 +221,7 @@ public abstract class AbstractWagon implements Wagon {
 		}
 	}
 
+	@Deprecated
 	public final void openConnection() throws ConnectionException, AuthenticationException {
 		// Nothing to do here (never called by the wagon manager)
 	}
