@@ -20,8 +20,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -43,10 +41,6 @@ import org.kuali.common.threads.ThreadInvoker;
 import org.kuali.common.threads.listener.PercentCompleteListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.DefaultResourceLoader;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.ResourceLoader;
-import org.springframework.util.Assert;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -102,6 +96,8 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 	public static final int DEFAULT_DIVISOR = 50;
 	public static final int DEFAULT_READ_TIMEOUT = 60 * 1000;
 	public static final CannedAccessControlList DEFAULT_ACL = CannedAccessControlList.PublicRead;
+	private static final File TEMP_DIR = getCanonicalFile(System.getProperty("java.io.tmpdir"));
+	private static final String TEMP_DIR_PATH = TEMP_DIR.getAbsolutePath();
 
 	ThreadInvoker invoker = new ThreadInvoker();
 	SimpleFormatter formatter = new SimpleFormatter();
@@ -315,39 +311,37 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 	}
 
 	/**
-	 * Normalize the key to our S3 object<br>
-	 * 1. Convert "./css/style.css" into "/css/style.css"<br>
-	 * 2. Convert "/foo/bar/../../css/style.css" into "/css/style.css"
-	 * 
-	 * @see java.net.URI.normalize()
+	 * Normalize the key to our S3 object:<br>
+	 * Convert <code>./css/style.css</code> into <code>/css/style.css</code><br>
+	 * Convert <code>/foo/bar/../../css/style.css<code> into <code>/css/style.css</code><br>
 	 */
-	protected String getNormalizedKey(final String destination) {
-		try {
-			String prefix = "http://s3.amazonaws.com/" + bucketName + "/";
-			String urlString = getNormalizedKeyURLString(prefix, destination);
-			URI rawURI = new URI(urlString);
-			URI normalizedURI = rawURI.normalize();
-			String normalized = normalizedURI.toString();
-			int pos = normalized.indexOf(prefix) + prefix.length();
-			String normalizedKey = normalized.substring(pos);
-			return normalizedKey;
-		} catch (URISyntaxException e) {
-			throw new IllegalArgumentException(e);
-		}
+	protected String getCanonicalKey(File source, String key) {
+		// release/./css/style.css
+		String path = basedir + key;
+
+		// /temp/release/css/style.css
+		File file = getCanonicalFile(new File(TEMP_DIR, path));
+		String canonical = file.getAbsolutePath();
+
+		// release/css/style.css
+		int pos = canonical.indexOf(TEMP_DIR_PATH) + TEMP_DIR_PATH.length() + 1;
+		String suffix = canonical.substring(pos);
+
+		// Replace backslash with forward slash if we happen to be running on Windows
+		String canonicalKey = suffix.replace("\\", "/");
+		return canonicalKey;
 	}
 
-	protected String getNormalizedKeyURLString(String prefix, String destination) {
-		ResourceLoader loader = new DefaultResourceLoader();
-		// Generate a bucket key for this file
-		String key = basedir + destination;
-		String combined = prefix + key;
-		Resource resource = loader.getResource(combined);
-		String filename = resource.getFilename();
-		String encoded = encodeUTF8(filename);
-		Assert.isTrue(combined.endsWith(filename));
-		int pos = combined.length() - filename.length();
-		String trimmed = combined.substring(0, pos);
-		return trimmed + encoded;
+	protected static File getCanonicalFile(String path) {
+		return getCanonicalFile(new File(path));
+	}
+
+	protected static File getCanonicalFile(File file) {
+		try {
+			return new File(file.getCanonicalPath());
+		} catch (IOException e) {
+			throw new IllegalArgumentException("Unexpected IO error", e);
+		}
 	}
 
 	protected ObjectMetadata getObjectMetadata(final File source, final String destination) {
@@ -384,8 +378,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 	 */
 	protected PutObjectRequest getPutObjectRequest(File source, String destination, TransferProgress progress) {
 		try {
-			String escaped = StringUtils.replace(destination, " ", "+");
-			String key = getNormalizedKey(escaped);
+			String key = getCanonicalKey(source, destination);
 			InputStream input = getInputStream(source, progress);
 			ObjectMetadata metadata = getObjectMetadata(source, destination);
 			PutObjectRequest request = new PutObjectRequest(bucketName, key, input, metadata);
@@ -528,11 +521,6 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 		return new BasicAWSCredentials(accessKey, secretKey);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.kuali.maven.wagon.AbstractWagon#getPutFileContext(java.io.File, java.lang.String)
-	 */
 	@Override
 	protected PutFileContext getPutFileContext(File source, String destination) {
 		PutFileContext context = super.getPutFileContext(source, destination);

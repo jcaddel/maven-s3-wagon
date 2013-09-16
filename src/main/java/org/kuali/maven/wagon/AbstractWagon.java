@@ -16,8 +16,6 @@
 package org.kuali.maven.wagon;
 
 import java.io.File;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -239,7 +237,6 @@ public abstract class AbstractWagon implements Wagon {
 
 	public final void put(final File source, final String destination) throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
 		PutFileContext context = getPutFileContext(source, destination);
-
 		try {
 			context.fireStart();
 			putResource(source, destination, context.getProgress());
@@ -269,37 +266,16 @@ public abstract class AbstractWagon implements Wagon {
 
 		// Cycle through all the files in this directory
 		for (File f : sourceDirectory.listFiles()) {
-
-			/**
-			 * The filename is used in two very similar ways:<br>
-			 * 
-			 * 1 - as a "key" into the bucket<br>
-			 * 2 - In the http url itself<br>
-			 * 
-			 * We encode the filename to ensure that the S3 key is always valid URL fragment even in cases where the raw filename would not be. Filenames can contain characters
-			 * that are problematic in a URL (eg spaces, non-ascii characters, etc)
-			 */
-			String encodedFilename = encodeUTF8(f.getName());
-
-			// We hit a directory
+			// We hit a sub-directory
 			if (f.isDirectory()) {
-				// Recurse into the sub-directory and create put requests for any files we find
-				contexts.addAll(getPutFileContexts(f, destinationDirectory + "/" + encodedFilename));
+				contexts.addAll(getPutFileContexts(f, destinationDirectory + "/" + f.getName()));
 			} else {
-				PutFileContext context = getPutFileContext(f, destinationDirectory + "/" + encodedFilename);
+				PutFileContext context = getPutFileContext(f, destinationDirectory + "/" + f.getName());
 				contexts.add(context);
 			}
 		}
 
 		return contexts;
-	}
-
-	protected static String encodeUTF8(String s) {
-		try {
-			return URLEncoder.encode(s, "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			throw new IllegalArgumentException(e);
-		}
 	}
 
 	public final boolean resourceExists(final String resourceName) throws TransferFailedException, AuthorizationException {
