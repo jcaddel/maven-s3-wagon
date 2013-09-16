@@ -315,7 +315,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 	 * Convert <code>./css/style.css</code> into <code>/css/style.css</code><br>
 	 * Convert <code>/foo/bar/../../css/style.css<code> into <code>/css/style.css</code><br>
 	 */
-	protected String getCanonicalKey(File source, String key) {
+	protected String getCanonicalKey(String key) {
 		// release/./css/style.css
 		String path = basedir + key;
 
@@ -329,6 +329,8 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 
 		// Replace backslash with forward slash if we happen to be running on Windows
 		String canonicalKey = suffix.replace("\\", "/");
+
+		// Return the canonical key
 		return canonicalKey;
 	}
 
@@ -378,7 +380,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 	 */
 	protected PutObjectRequest getPutObjectRequest(File source, String destination, TransferProgress progress) {
 		try {
-			String key = getCanonicalKey(source, destination);
+			String key = getCanonicalKey(destination);
 			InputStream input = getInputStream(source, progress);
 			ObjectMetadata metadata = getObjectMetadata(source, destination);
 			PutObjectRequest request = new PutObjectRequest(bucketName, key, input, metadata);
