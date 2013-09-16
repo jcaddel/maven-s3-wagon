@@ -20,7 +20,7 @@
   <parent>
     <groupId>org.kuali.pom</groupId>
     <artifactId>kuali-common</artifactId>
-    <version>2.3.38</version>
+    <version>3.3.17</version>
   </parent>
   <groupId>org.kuali.maven.wagons</groupId>
   <artifactId>maven-s3-wagon</artifactId>
@@ -36,9 +36,9 @@
   <properties>
     <kuali.compile.source>1.5</kuali.compile.source>
     <kuali.compile.target>1.5</kuali.compile.target>
-    <slf4j.version>1.6.4</slf4j.version>
-    <aws.version>1.4.2</aws.version>
-    <spring.version>3.1.2.RELEASE</spring.version>
+    <slf4j.version>1.7.5</slf4j.version>
+    <aws.version>1.5.7</aws.version>
+    <spring.version>3.2.4.RELEASE</spring.version>
     <kuali-s3.version>1.0.1</kuali-s3.version>
   </properties>
   <profiles>

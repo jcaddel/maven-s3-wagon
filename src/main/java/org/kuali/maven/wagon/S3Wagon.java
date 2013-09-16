@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -42,6 +43,10 @@ import org.kuali.common.threads.ThreadInvoker;
 import org.kuali.common.threads.listener.PercentCompleteListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.util.Assert;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
@@ -111,11 +116,9 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 
 	private static final Logger log = LoggerFactory.getLogger(S3Wagon.class);
 
-	private AmazonS3Client client;
-
-	private String bucketName;
-
-	private String basedir;
+	AmazonS3Client client;
+	String bucketName;
+	String basedir;
 
 	private final Mimetypes mimeTypes = Mimetypes.getInstance();
 
@@ -319,20 +322,32 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 	 * @see java.net.URI.normalize()
 	 */
 	protected String getNormalizedKey(final String destination) {
-		// Generate our bucket key for this file
-		String key = basedir + destination;
 		try {
 			String prefix = "http://s3.amazonaws.com/" + bucketName + "/";
-			String urlString = prefix + key;
+			String urlString = getNormalizedKeyURLString(prefix, destination);
 			URI rawURI = new URI(urlString);
 			URI normalizedURI = rawURI.normalize();
 			String normalized = normalizedURI.toString();
 			int pos = normalized.indexOf(prefix) + prefix.length();
 			String normalizedKey = normalized.substring(pos);
 			return normalizedKey;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
+		} catch (URISyntaxException e) {
+			throw new IllegalArgumentException(e);
 		}
+	}
+
+	protected String getNormalizedKeyURLString(String prefix, String destination) {
+		ResourceLoader loader = new DefaultResourceLoader();
+		// Generate a bucket key for this file
+		String key = basedir + destination;
+		String combined = prefix + key;
+		Resource resource = loader.getResource(combined);
+		String filename = resource.getFilename();
+		String encoded = encodeUTF8(filename);
+		Assert.isTrue(combined.endsWith(filename));
+		int pos = combined.length() - filename.length();
+		String trimmed = combined.substring(0, pos);
+		return trimmed + encoded;
 	}
 
 	protected ObjectMetadata getObjectMetadata(final File source, final String destination) {
@@ -369,7 +384,8 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 	 */
 	protected PutObjectRequest getPutObjectRequest(File source, String destination, TransferProgress progress) {
 		try {
-			String key = getNormalizedKey(destination);
+			String escaped = StringUtils.replace(destination, " ", "+");
+			String key = getNormalizedKey(escaped);
 			InputStream input = getInputStream(source, progress);
 			ObjectMetadata metadata = getObjectMetadata(source, destination);
 			PutObjectRequest request = new PutObjectRequest(bucketName, key, input, metadata);

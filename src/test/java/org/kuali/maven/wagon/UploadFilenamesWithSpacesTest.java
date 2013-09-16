@@ -15,9 +15,14 @@
  */
 package org.kuali.maven.wagon;
 
+import java.io.File;
+
 import org.apache.maven.wagon.authentication.AuthenticationInfo;
 import org.apache.maven.wagon.repository.Repository;
+import org.junit.Ignore;
 import org.junit.Test;
+
+import com.amazonaws.services.s3.model.PutObjectRequest;
 
 public class UploadFilenamesWithSpacesTest {
 
@@ -27,6 +32,24 @@ public class UploadFilenamesWithSpacesTest {
 	// private static final Logger log = LoggerFactory.getLogger(S3WagonTest.class);
 
 	@Test
+	public void spaces() {
+		try {
+			Repository repository = new Repository("kuali.external", "s3://maven.kuali.org/external");
+			S3Wagon wagon = new S3Wagon();
+			wagon.basedir = wagon.getBaseDir(repository);
+			wagon.bucketName = "maven.kuali.org";
+			String filename = "/Users/jcaddel/ws/kuali-spaces/src/site/resources/myimages/icon with spaces.png";
+			File file = new File(filename);
+			PutObjectRequest request = wagon.getPutObjectRequest(file, "myimages/icon with spaces.png", null);
+			System.out.println(request.getKey());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+
+	@Test
+	@Ignore
 	public void testPermissions() {
 		try {
 			AuthenticationInfo auth = new AuthenticationInfo();

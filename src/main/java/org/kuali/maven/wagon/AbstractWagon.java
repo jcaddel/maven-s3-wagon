@@ -200,7 +200,7 @@ public abstract class AbstractWagon implements Wagon {
 	}
 
 	public final boolean getIfNewer(final String resourceName, final File destination, final long timestamp) throws TransferFailedException, ResourceDoesNotExistException,
-	        AuthorizationException {
+			AuthorizationException {
 		Resource resource = new Resource(resourceName);
 		try {
 			if (isRemoteResourceNewer(resourceName, timestamp)) {
@@ -263,38 +263,41 @@ public abstract class AbstractWagon implements Wagon {
 	}
 
 	protected List<PutFileContext> getPutFileContexts(File sourceDirectory, String destinationDirectory) {
+
 		List<PutFileContext> contexts = new ArrayList<PutFileContext>();
+
 		// Cycle through all the files in this directory
 		for (File f : sourceDirectory.listFiles()) {
 
 			/**
-			 * The filename is used 2 ways:<br>
+			 * The filename is used in two very similar ways:<br>
 			 * 
 			 * 1 - as a "key" into the bucket<br>
 			 * 2 - In the http url itself<br>
 			 * 
-			 * We encode it here so the key matches the url AND to guarantee that the url is valid even in cases where filenames contain
-			 * characters (eg spaces) that are not allowed in urls
+			 * We encode the filename to ensure that the S3 key is always valid URL fragment even in cases where the raw filename would not be. Filenames can contain characters
+			 * that are problematic in a URL (eg spaces, non-ascii characters, etc)
 			 */
-			String filename = encodeUTF8(f.getName());
+			String encodedFilename = encodeUTF8(f.getName());
 
 			// We hit a directory
 			if (f.isDirectory()) {
 				// Recurse into the sub-directory and create put requests for any files we find
-				contexts.addAll(getPutFileContexts(f, destinationDirectory + "/" + filename));
+				contexts.addAll(getPutFileContexts(f, destinationDirectory + "/" + encodedFilename));
 			} else {
-				PutFileContext context = getPutFileContext(f, destinationDirectory + "/" + filename);
+				PutFileContext context = getPutFileContext(f, destinationDirectory + "/" + encodedFilename);
 				contexts.add(context);
 			}
 		}
+
 		return contexts;
 	}
 
-	protected String encodeUTF8(String s) {
+	protected static String encodeUTF8(String s) {
 		try {
 			return URLEncoder.encode(s, "UTF-8");
 		} catch (UnsupportedEncodingException e) {
-			throw new RuntimeException(e);
+			throw new IllegalArgumentException(e);
 		}
 	}
 
@@ -401,7 +404,7 @@ public abstract class AbstractWagon implements Wagon {
 	protected abstract void putResource(File source, String destination, TransferProgress progress) throws Exception;
 
 	public void connect(final Repository source, final AuthenticationInfo authenticationInfo, final ProxyInfoProvider proxyInfoProvider) throws ConnectionException,
-	        AuthenticationException {
+			AuthenticationException {
 		doConnect(source, authenticationInfo, null);
 	}
 
