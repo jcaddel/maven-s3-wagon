@@ -24,7 +24,7 @@
   </parent>
   <groupId>org.kuali.maven.wagons</groupId>
   <artifactId>maven-s3-wagon</artifactId>
-  <version>1.1.21-SNAPSHOT</version>
+  <version>1.1.21</version>
   <name>Maven S3 Wagon</name>
   <inceptionYear>2010</inceptionYear>
   <description>
@@ -157,6 +157,6 @@
     <connection>scm:${project.scm.vendor}:git@github.com:jcaddel/maven-s3-wagon.git</connection>
     <developerConnection>scm:${project.scm.vendor}:git@github.com:jcaddel/maven-s3-wagon.git</developerConnection>
     <url>https://github.com/jcaddel/maven-s3-wagon</url>
-    <tag>HEAD</tag>
+    <tag>maven-s3-wagon-1.1.21</tag>
   </scm>
 </project>
