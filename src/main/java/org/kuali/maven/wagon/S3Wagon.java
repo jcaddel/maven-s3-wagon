@@ -324,7 +324,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 		String canonical = file.getAbsolutePath();
 
 		// release/css/style.css
-		int pos = canonical.indexOf(TEMP_DIR_PATH) + TEMP_DIR_PATH.length() + 1;
+		int pos = TEMP_DIR_PATH.length() + 1;
 		String suffix = canonical.substring(pos);
 
 		// Always replace backslash with forward slash just in case we are running on Windows
