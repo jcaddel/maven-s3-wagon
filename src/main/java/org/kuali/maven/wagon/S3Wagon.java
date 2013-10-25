@@ -21,15 +21,12 @@ import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.auth.BasicSessionCredentials;
 import com.amazonaws.auth.InstanceProfileCredentialsProvider;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.internal.Mimetypes;
 import com.amazonaws.services.s3.internal.RepeatableFileInputStream;
 import com.amazonaws.services.s3.model.*;
 import com.amazonaws.services.s3.transfer.TransferManager;
-import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
-import com.amazonaws.services.securitytoken.model.Credentials;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.wagon.ResourceDoesNotExistException;
@@ -519,16 +516,6 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 		}
 		return new BasicAWSCredentials(accessKey, secretKey);
 	}
-
-    private AWSCredentials getCredentialsFromInstanceProfile() {
-        AWSSecurityTokenServiceClient stsClient =
-                new AWSSecurityTokenServiceClient(new InstanceProfileCredentialsProvider());
-
-        Credentials sessionCredentials = stsClient.getSessionToken().getCredentials();
-        return new BasicSessionCredentials(sessionCredentials.getAccessKeyId(),
-                        sessionCredentials.getSecretAccessKey(),
-                        sessionCredentials.getSessionToken());
-    }
 
 	@Override
 	protected PutFileContext getPutFileContext(File source, String destination) {
