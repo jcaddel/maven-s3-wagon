@@ -69,10 +69,12 @@ public class InstanceProfileCredentialsProvider implements AWSCredentialsProvide
 
 				String accessKey = jsonObject.getString("AccessKeyId");
 				String secretKey = jsonObject.getString("SecretAccessKey");
-				System.out.println("accessKey: " + accessKey + " secretKey:" + secretKey);
 				if (jsonObject.has("Token")) {
-					credentials = new BasicSessionCredentials(accessKey, secretKey, jsonObject.getString("Token"));
+					String token = jsonObject.getString("Token");
+					System.out.println("accessKey: " + accessKey + " secretKey:" + secretKey + " token:" + token);
+					credentials = new BasicSessionCredentials(accessKey, secretKey, token);
 				} else {
+					System.out.println("accessKey: " + accessKey + " secretKey:" + secretKey);
 					credentials = new BasicAWSCredentials(accessKey, secretKey);
 				}
 

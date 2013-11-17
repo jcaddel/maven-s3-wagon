@@ -49,6 +49,7 @@ import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProviderChain;
+import com.amazonaws.auth.AWSSessionCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.internal.Mimetypes;
 import com.amazonaws.services.s3.internal.RepeatableFileInputStream;
@@ -507,7 +508,11 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 		Optional<AuthenticationInfo> auth = Optional.fromNullable(authenticationInfo);
 		AWSCredentialsProviderChain chain = new MavenAwsCredentialsProviderChain(auth);
 		AWSCredentials credentials = chain.getCredentials();
-		return new ImmutableAwsCredentials(credentials);
+		if (credentials instanceof AWSSessionCredentials) {
+			return new ImmutableAwsCredentials((AWSSessionCredentials) credentials);
+		} else {
+			return new ImmutableAwsCredentials(credentials);
+		}
 	}
 
 	@Override
