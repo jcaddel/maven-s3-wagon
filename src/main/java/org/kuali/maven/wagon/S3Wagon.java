@@ -28,7 +28,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.wagon.ResourceDoesNotExistException;
 import org.apache.maven.wagon.TransferFailedException;
-import org.apache.maven.wagon.authentication.AuthenticationException;
 import org.apache.maven.wagon.authentication.AuthenticationInfo;
 import org.apache.maven.wagon.proxy.ProxyInfo;
 import org.apache.maven.wagon.repository.Repository;
@@ -39,6 +38,8 @@ import org.kuali.common.threads.ExecutionStatistics;
 import org.kuali.common.threads.ThreadHandlerContext;
 import org.kuali.common.threads.ThreadInvoker;
 import org.kuali.common.threads.listener.PercentCompleteListener;
+import org.kuali.maven.wagon.auth.ImmutableAwsCredentials;
+import org.kuali.maven.wagon.auth.MavenAwsCredentialsProviderChain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +48,7 @@ import com.amazonaws.AmazonServiceException;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.Protocol;
 import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProviderChain;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.internal.Mimetypes;
 import com.amazonaws.services.s3.internal.RepeatableFileInputStream;
@@ -59,6 +60,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.transfer.TransferManager;
+import com.google.common.base.Optional;
 
 /**
  * <p>
@@ -184,7 +186,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 	}
 
 	@Override
-	protected void connectToRepository(Repository source, AuthenticationInfo auth, ProxyInfo proxy) throws AuthenticationException {
+	protected void connectToRepository(Repository source, AuthenticationInfo auth, ProxyInfo proxy) {
 
 		AWSCredentials credentials = getCredentials(auth);
 		this.client = getAmazonS3Client(credentials);
@@ -497,30 +499,15 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 		return sb.toString();
 	}
 
-	protected String getAuthenticationErrorMessage() {
-		StringBuffer sb = new StringBuffer();
-		sb.append("The S3 wagon needs AWS Access Key set as the username and AWS Secret Key set as the password. eg:\n");
-		sb.append("<server>\n");
-		sb.append("  <id>my.server</id>\n");
-		sb.append("  <username>[AWS Access Key ID]</username>\n");
-		sb.append("  <password>[AWS Secret Access Key]</password>\n");
-		sb.append("</server>\n");
-		return sb.toString();
-	}
-
 	/**
-	 * Create AWSCredentionals from the information in settings.xml
+	 * Create AWSCredentionals from the information in system properties, environment variables, settings.xml, or EC2 instance metadata (only applicable when running the wagon on
+	 * an Amazon EC2 instance)
 	 */
-	protected AWSCredentials getCredentials(final AuthenticationInfo authenticationInfo) throws AuthenticationException {
-		if (authenticationInfo == null) {
-			throw new AuthenticationException(getAuthenticationErrorMessage());
-		}
-		String accessKey = authenticationInfo.getUserName();
-		String secretKey = authenticationInfo.getPassword();
-		if (accessKey == null || secretKey == null) {
-			throw new AuthenticationException(getAuthenticationErrorMessage());
-		}
-		return new BasicAWSCredentials(accessKey, secretKey);
+	protected AWSCredentials getCredentials(final AuthenticationInfo authenticationInfo) {
+		Optional<AuthenticationInfo> auth = Optional.fromNullable(authenticationInfo);
+		AWSCredentialsProviderChain chain = new MavenAwsCredentialsProviderChain(auth);
+		AWSCredentials credentials = chain.getCredentials();
+		return new ImmutableAwsCredentials(credentials);
 	}
 
 	@Override
