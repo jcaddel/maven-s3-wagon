@@ -18,6 +18,10 @@ public final class ImmutableAwsCredentials implements AWSSessionCredentials {
 		this(accessKey, secretKey, Optional.<String> absent());
 	}
 
+	public ImmutableAwsCredentials(String accessKey, String secretKey, String sessionToken) {
+		this(accessKey, secretKey, Optional.of(sessionToken));
+	}
+
 	public ImmutableAwsCredentials(String accessKey, String secretKey, Optional<String> sessionToken) {
 		Assert.noBlanks(accessKey, secretKey);
 		Assert.noNulls(sessionToken);
