@@ -19,5 +19,7 @@ Documentation
 
 [Permissions](https://github.com/jcaddel/maven-s3-wagon/wiki/Permissions)
 
+[Authentication](https://github.com/jcaddel/maven-s3-wagon/wiki/Authentication)
+
 [Maven generated site](http://site.kuali.org/maven/wagons/maven-s3-wagon/latest/)
 
