@@ -8,10 +8,6 @@ import org.apache.maven.wagon.authentication.AuthenticationInfo;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSCredentialsProviderChain;
 import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
-<<<<<<< HEAD
-=======
-import com.amazonaws.auth.InstanceProfileCredentialsProvider;
->>>>>>> 5d0ebfc66cc96f01ac034362c4998188a5d38ec2
 import com.amazonaws.auth.SystemPropertiesCredentialsProvider;
 import com.google.common.base.Optional;
 

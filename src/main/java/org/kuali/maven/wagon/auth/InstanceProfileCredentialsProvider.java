@@ -67,13 +67,13 @@ public class InstanceProfileCredentialsProvider implements AWSCredentialsProvide
 				String credentialsResponse = new EC2MetadataClient().getDefaultCredentials();
 				JSONObject jsonObject = new JSONObject(credentialsResponse);
 
+				String accessKey = jsonObject.getString("AccessKeyId");
+				String secretKey = jsonObject.getString("SecretAccessKey");
+				System.out.println("accessKey: " + accessKey + " secretKey:" + secretKey);
 				if (jsonObject.has("Token")) {
-					credentials = new BasicSessionCredentials(jsonObject.getString("AccessKeyId"), jsonObject.getString("SecretAccessKey"), jsonObject.getString("Token"));
+					credentials = new BasicSessionCredentials(accessKey, secretKey, jsonObject.getString("Token"));
 				} else {
-					String accessKey = jsonObject.getString("AccessKeyId");
-					String secretKey = jsonObject.getString("SecretAccessKey");
-					System.out.println("accessKey: " + accessKey + " secretKey:" + secretKey);
-					credentials = new BasicAWSCredentials(jsonObject.getString("AccessKeyId"), jsonObject.getString("SecretAccessKey"));
+					credentials = new BasicAWSCredentials(accessKey, secretKey);
 				}
 
 				if (jsonObject.has("Expiration")) {
