@@ -38,7 +38,8 @@ import org.kuali.common.threads.ExecutionStatistics;
 import org.kuali.common.threads.ThreadHandlerContext;
 import org.kuali.common.threads.ThreadInvoker;
 import org.kuali.common.threads.listener.PercentCompleteListener;
-import org.kuali.maven.wagon.auth.ImmutableAwsCredentials;
+import org.kuali.maven.wagon.auth.AwsCredentials;
+import org.kuali.maven.wagon.auth.AwsSessionCredentials;
 import org.kuali.maven.wagon.auth.MavenAwsCredentialsProviderChain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -509,9 +510,9 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 		AWSCredentialsProviderChain chain = new MavenAwsCredentialsProviderChain(auth);
 		AWSCredentials credentials = chain.getCredentials();
 		if (credentials instanceof AWSSessionCredentials) {
-			return new ImmutableAwsCredentials((AWSSessionCredentials) credentials);
+			return new AwsSessionCredentials((AWSSessionCredentials) credentials);
 		} else {
-			return new ImmutableAwsCredentials(credentials);
+			return new AwsCredentials(credentials);
 		}
 	}
 

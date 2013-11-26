@@ -37,7 +37,7 @@ public final class AuthenticationInfoCredentialsProvider implements AWSCredentia
 		String accessKey = auth.get().getUserName();
 		String secretKey = auth.get().getPassword();
 		Assert.noBlanksWithMsg(getAuthenticationErrorMessage(), accessKey, secretKey);
-		return new ImmutableAwsCredentials(accessKey, secretKey);
+		return new AwsCredentials(accessKey, secretKey);
 	}
 
 	public void refresh() {
