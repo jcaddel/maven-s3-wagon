@@ -17,6 +17,9 @@ package org.kuali.maven.wagon.auth;
 
 import com.amazonaws.auth.AWSSessionCredentials;
 
+/**
+ * Implementation of <code>AWSSessionCredentials</code> that is immutable.
+ */
 public final class AwsSessionCredentials implements AWSSessionCredentials {
 
 	public AwsSessionCredentials(AWSSessionCredentials credentials) {
