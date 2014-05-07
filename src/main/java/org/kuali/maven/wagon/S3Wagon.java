@@ -28,10 +28,12 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.wagon.ResourceDoesNotExistException;
 import org.apache.maven.wagon.TransferFailedException;
+import org.apache.maven.wagon.Wagon;
 import org.apache.maven.wagon.authentication.AuthenticationInfo;
 import org.apache.maven.wagon.proxy.ProxyInfo;
 import org.apache.maven.wagon.repository.Repository;
 import org.apache.maven.wagon.repository.RepositoryPermissions;
+import org.codehaus.plexus.component.annotations.Component;
 import org.kuali.common.aws.s3.S3Utils;
 import org.kuali.common.aws.s3.SimpleFormatter;
 import org.kuali.common.threads.ExecutionStatistics;
@@ -78,11 +80,10 @@ import com.google.common.base.Optional;
  * This implementation uses the <code>username</code> and <code>password</code> portions of the server authentication metadata for credentials.
  * </p>
  * 
- * @plexus.component role="org.apache.maven.wagon.Wagon" role-hint="http" instantiation-strategy="per-lookup"
- * 
  * @author Ben Hale
  * @author Jeff Caddel
  */
+@Component( role = Wagon.class, hint = "s3", instantiationStrategy= "per-lookup")
 public class S3Wagon extends AbstractWagon implements RequestFactory {
 
 	/**

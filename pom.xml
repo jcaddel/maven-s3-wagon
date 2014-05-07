@@ -84,9 +84,42 @@
           </excludes>
         </configuration>
       </plugin>
+      <!-- generate plexus DI metadata from annotations -->
+      <plugin>
+        <groupId>org.codehaus.plexus</groupId>
+        <artifactId>plexus-component-metadata</artifactId>
+        <version>1.5.5</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>generate-metadata</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
     </plugins>
   </build>
   <dependencies>
+	<dependency>
+		<groupId>javax.inject</groupId>
+		<artifactId>javax.inject</artifactId>
+		<version>1</version>
+	</dependency>
+    <dependency>
+      <groupId>org.codehaus.plexus</groupId>
+      <artifactId>plexus-component-annotations</artifactId>
+      <version>1.5.5</version>
+    </dependency>
+    <dependency>
+	  <groupId>org.apache.maven.plugin-tools</groupId>
+	  <artifactId>maven-plugin-annotations</artifactId>
+	  <version>3.2</version>
+    </dependency>
+     <dependency>
+	    <groupId>org.apache.maven</groupId>
+	    <artifactId>maven-project</artifactId>
+	    <version>2.2.1</version>
+    </dependency>
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
