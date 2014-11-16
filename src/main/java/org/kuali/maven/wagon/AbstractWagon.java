@@ -163,7 +163,7 @@ public abstract class AbstractWagon implements Wagon {
 	}
 
 	public final void get(final String resourceName, final File destination) throws TransferFailedException, ResourceDoesNotExistException, AuthorizationException {
-		Resource resource = new Resource(resourceName);
+		S3Resource resource = new S3Resource(resourceName);
 		transferListeners.fireTransferInitiated(resource, TransferEvent.REQUEST_GET);
 		transferListeners.fireTransferStarted(resource, TransferEvent.REQUEST_GET);
 
@@ -225,7 +225,7 @@ public abstract class AbstractWagon implements Wagon {
 	}
 
 	protected PutFileContext getPutFileContext(File source, String destination) {
-		Resource resource = new Resource(destination);
+		S3Resource resource = new S3Resource(destination);
 		PutFileContext context = new PutFileContext();
 		context.setResource(resource);
 		context.setProgress(new TransferProgress(resource, TransferEvent.REQUEST_PUT, transferListeners));

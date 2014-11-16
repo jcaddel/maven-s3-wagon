@@ -15,7 +15,6 @@
  */
 package org.kuali.maven.wagon;
 
-import org.apache.maven.wagon.resource.Resource;
 
 /**
  * A class that encapsulates the notification of the transfer listeners for
@@ -26,13 +25,13 @@ import org.apache.maven.wagon.resource.Resource;
  */
 class TransferProgress {
 
-    private Resource resource;
+    private S3Resource resource;
 
     private int requestType;
 
     private TransferListenerSupport transferListeners;
 
-    public TransferProgress(Resource resource, int requestType, TransferListenerSupport listeners) {
+    public TransferProgress(S3Resource resource, int requestType, TransferListenerSupport listeners) {
         this.resource = resource;
         this.requestType = requestType;
         this.transferListeners = listeners;
@@ -42,4 +41,7 @@ class TransferProgress {
         transferListeners.fireTransferProgress(resource, requestType, buffer, length);
     }
 
+    public S3Resource getResource() {
+    	return resource;
+    }
 }

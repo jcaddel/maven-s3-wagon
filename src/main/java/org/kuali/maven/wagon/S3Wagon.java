@@ -28,10 +28,12 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.wagon.ResourceDoesNotExistException;
 import org.apache.maven.wagon.TransferFailedException;
+import org.apache.maven.wagon.Wagon;
 import org.apache.maven.wagon.authentication.AuthenticationInfo;
 import org.apache.maven.wagon.proxy.ProxyInfo;
 import org.apache.maven.wagon.repository.Repository;
 import org.apache.maven.wagon.repository.RepositoryPermissions;
+import org.codehaus.plexus.component.annotations.Component;
 import org.kuali.common.aws.s3.S3Utils;
 import org.kuali.common.aws.s3.SimpleFormatter;
 import org.kuali.common.threads.ExecutionStatistics;
@@ -78,11 +80,10 @@ import com.google.common.base.Optional;
  * This implementation uses the <code>username</code> and <code>password</code> portions of the server authentication metadata for credentials.
  * </p>
  * 
- * @plexus.component role="org.apache.maven.wagon.Wagon" role-hint="http" instantiation-strategy="per-lookup"
- * 
  * @author Ben Hale
  * @author Jeff Caddel
  */
+@Component( role = Wagon.class, hint = "s3", instantiationStrategy= "per-lookup")
 public class S3Wagon extends AbstractWagon implements RequestFactory {
 
 	/**
@@ -230,6 +231,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 		try {
 			String key = basedir + resourceName;
 			object = client.getObject(bucketName, key);
+			progress.getResource().setURL(client.getResourceUrl(bucketName, key));
 		} catch (Exception e) {
 			throw new ResourceDoesNotExistException("Resource " + resourceName + " does not exist in the repository", e);
 		}
@@ -379,12 +381,17 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 		}
 	}
 
+	protected PutObjectRequest getPutObjectRequest(File source,
+			String destination, TransferProgress progress) {
+		return getPutObjectRequest(source, destination,
+				getCanonicalKey(destination), progress);
+	}
+
 	/**
 	 * Create a PutObjectRequest based on the source file and destination passed in
 	 */
-	protected PutObjectRequest getPutObjectRequest(File source, String destination, TransferProgress progress) {
+	private PutObjectRequest getPutObjectRequest(File source, String destination, String key, TransferProgress progress) {
 		try {
-			String key = getCanonicalKey(destination);
 			InputStream input = getInputStream(source, progress);
 			ObjectMetadata metadata = getObjectMetadata(source, destination);
 			PutObjectRequest request = new PutObjectRequest(bucketName, key, input, metadata);
@@ -474,10 +481,13 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 	protected void putResource(final File source, final String destination, final TransferProgress progress) throws IOException {
 
 		// Create a new PutObjectRequest
-		PutObjectRequest request = getPutObjectRequest(source, destination, progress);
+		String key = getCanonicalKey(destination);
+		PutObjectRequest request = getPutObjectRequest(source, destination,	key, progress);
 
 		// Upload the file to S3, using multi-part upload for large files
 		S3Utils.getInstance().upload(source, request, client, transferManager);
+
+		progress.getResource().setURL(client.getResourceUrl(bucketName, key));
 	}
 
 	protected String getDestinationPath(final String destination) {

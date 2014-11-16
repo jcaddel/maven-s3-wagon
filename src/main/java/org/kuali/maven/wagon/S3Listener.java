@@ -22,6 +22,7 @@ import org.apache.maven.wagon.events.SessionEvent;
 import org.apache.maven.wagon.events.SessionListener;
 import org.apache.maven.wagon.events.TransferEvent;
 import org.apache.maven.wagon.events.TransferListener;
+import org.apache.maven.wagon.resource.Resource;
 import org.kuali.common.aws.s3.SimpleFormatter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +41,15 @@ public class S3Listener implements TransferListener, SessionListener {
 	public void transferCompleted(final TransferEvent transferEvent) {
 		TransferTracker tt = sessionTracker.getCurrentTransfer();
 		tt.setCompleted(System.currentTimeMillis());
-		// System.out.println();
+		Resource resource = transferEvent.getResource();
+		if (resource instanceof S3Resource) {
+			final S3Resource s3resource = (S3Resource) resource;
+			if (transferEvent.getRequestType() == TransferEvent.REQUEST_PUT) {
+				log.info("Uploaded: " + s3resource.getUrl());
+			} else {
+				log.info("Downloaded: " + s3resource.getUrl());
+			}
+		}
 		// log(tt.toString());
 	}
 
@@ -74,7 +83,7 @@ public class S3Listener implements TransferListener, SessionListener {
 		}
 		// System.out.print("[INFO] ");
 	}
-
+	
 	protected String getURI(final TransferEvent event) {
 		return getNormalizedURI(event.getWagon().getRepository().getUrl() + "/" + event.getResource().getName());
 	}
