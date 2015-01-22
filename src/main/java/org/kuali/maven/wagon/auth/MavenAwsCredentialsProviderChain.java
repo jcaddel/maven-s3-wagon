@@ -30,7 +30,7 @@ import com.google.common.base.Optional;
 import org.apache.maven.wagon.repository.Repository;
 
 /**
- * This chain searches for AWS credentials in system properties -> environment variables -> ~/.m2/settings.xml -> Amazon's EC2 Instance Metadata Service
+ * This chain searches for AWS credentials in system properties -> environment variables -> ~/.m2/settings.xml -> ~/.aws/credentials -> Amazon's EC2 Instance Metadata Service
  */
 public final class MavenAwsCredentialsProviderChain extends AWSCredentialsProviderChain {
 

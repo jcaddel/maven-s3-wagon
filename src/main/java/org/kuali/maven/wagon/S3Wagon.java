@@ -501,8 +501,8 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 	}
 
 	/**
-	 * Create AWSCredentionals from the information in system properties, environment variables, settings.xml, or EC2 instance metadata (only applicable when running the wagon on
-	 * an Amazon EC2 instance)
+	 * Create AWSCredentionals from the information in system properties, environment variables, settings.xml,
+	 * ~/.aws/credentials, or EC2 instance metadata (only applicable when running the wagon on an Amazon EC2 instance)
 	 */
 	protected AWSCredentials getCredentials(final Repository source, final AuthenticationInfo authenticationInfo) {
 		Optional<AuthenticationInfo> auth = Optional.fromNullable(authenticationInfo);
