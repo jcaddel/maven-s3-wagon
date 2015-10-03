@@ -39,6 +39,7 @@ import org.kuali.common.threads.ThreadHandlerContext;
 import org.kuali.common.threads.ThreadInvoker;
 import org.kuali.common.threads.listener.PercentCompleteListener;
 import org.kuali.maven.wagon.auth.AwsCredentials;
+import org.kuali.maven.wagon.auth.AwsEncryption;
 import org.kuali.maven.wagon.auth.AwsSessionCredentials;
 import org.kuali.maven.wagon.auth.MavenAwsCredentialsProviderChain;
 import org.slf4j.Logger;
@@ -52,9 +53,12 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProviderChain;
 import com.amazonaws.auth.AWSSessionCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.AmazonS3EncryptionClient;
 import com.amazonaws.services.s3.internal.Mimetypes;
 import com.amazonaws.services.s3.internal.RepeatableFileInputStream;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.CryptoConfiguration;
+import com.amazonaws.services.s3.model.EncryptionMaterials;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.ObjectMetadata;
@@ -182,17 +186,37 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 		return configuration;
 	}
 
-	protected AmazonS3Client getAmazonS3Client(AWSCredentials credentials) {
+	protected EncryptionMaterials getMaterials(AuthenticationInfo auth) {
+		try {
+			return AwsEncryption.getMaterials(auth);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	protected AmazonS3Client getAmazonS3Client(AWSCredentials credentials, EncryptionMaterials materials ) {
 		ClientConfiguration configuration = getClientConfiguration();
-		return new AmazonS3Client(credentials, configuration);
+		if(materials == null) {
+			return new AmazonS3Client(credentials, configuration);
+		} else {
+			return new AmazonS3EncryptionClient(credentials, materials, configuration, new CryptoConfiguration());
+		}
 	}
 
 	@Override
 	protected void connectToRepository(Repository source, AuthenticationInfo auth, ProxyInfo proxy) {
-
+		
+		// Required login credentials.
 		AWSCredentials credentials = getCredentials(auth);
-		this.client = getAmazonS3Client(credentials);
-		this.transferManager = new TransferManager(credentials);
+		
+		// Optional encryption materials.
+		EncryptionMaterials materials = getMaterials(auth);
+		if(materials != null) {
+			log.info("Using encryption.");
+		}
+		
+		this.client = getAmazonS3Client(credentials, materials);
+		this.transferManager = new TransferManager(client);
 		this.bucketName = source.getHost();
 		validateBucket(client, bucketName);
 		this.basedir = getBaseDir(source);
