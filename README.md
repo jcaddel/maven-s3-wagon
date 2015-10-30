@@ -8,6 +8,7 @@ pom's with a reference to this wagon can publish build artifacts (.jar's, .war's
 When uploading the contents of a directory, API calls to S3 are multi-threaded.
 
 This allows directories with a lot of content (eg when invoking mvn site-deploy) to be published very quickly
+
 Check [Maven Central](http://search.maven.org/#search|ga|1|a%3A%22maven-s3-wagon%22) for the latest version
 
 Documentation
