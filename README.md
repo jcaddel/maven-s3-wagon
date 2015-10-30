@@ -9,7 +9,7 @@ When uploading the contents of a directory, API calls to S3 are multi-threaded.
 
 This allows directories with a lot of content (eg when invoking mvn site-deploy) to be published very quickly
 
-Check [Maven Central](http://search.maven.org/#search|ga|1|a%3A%22maven-s3-wagon%22) for the latest version
+Check [Maven Central](http://search.maven.org/#search|gav|1|g%3A%22org.kuali.maven.wagons%22%20AND%20a%3A%22maven-s3-wagon%22) for the latest version
 
 Documentation
 -------
