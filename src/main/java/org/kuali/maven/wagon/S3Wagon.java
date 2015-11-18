@@ -189,8 +189,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 
 	@Override
 	protected void connectToRepository(Repository source, AuthenticationInfo auth, ProxyInfo proxy) {
-
-		AWSCredentials credentials = getCredentials(auth);
+		AWSCredentials credentials = getCredentials(source, auth);
 		this.client = getAmazonS3Client(credentials);
 		this.transferManager = new TransferManager(credentials);
 		this.bucketName = source.getHost();
@@ -502,12 +501,12 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 	}
 
 	/**
-	 * Create AWSCredentionals from the information in system properties, environment variables, settings.xml, or EC2 instance metadata (only applicable when running the wagon on
-	 * an Amazon EC2 instance)
+	 * Create AWSCredentionals from the information in system properties, environment variables, settings.xml,
+	 * ~/.aws/credentials, or EC2 instance metadata (only applicable when running the wagon on an Amazon EC2 instance)
 	 */
-	protected AWSCredentials getCredentials(final AuthenticationInfo authenticationInfo) {
+	protected AWSCredentials getCredentials(final Repository source, final AuthenticationInfo authenticationInfo) {
 		Optional<AuthenticationInfo> auth = Optional.fromNullable(authenticationInfo);
-		AWSCredentialsProviderChain chain = new MavenAwsCredentialsProviderChain(auth);
+		AWSCredentialsProviderChain chain = new MavenAwsCredentialsProviderChain(source, auth);
 		AWSCredentials credentials = chain.getCredentials();
 		if (credentials instanceof AWSSessionCredentials) {
 			return new AwsSessionCredentials((AWSSessionCredentials) credentials);

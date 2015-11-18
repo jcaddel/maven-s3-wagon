@@ -18,6 +18,7 @@ package org.kuali.maven.wagon.auth;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import org.apache.maven.wagon.authentication.AuthenticationInfo;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
@@ -26,17 +27,18 @@ import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
 import com.amazonaws.auth.InstanceProfileCredentialsProvider;
 import com.amazonaws.auth.SystemPropertiesCredentialsProvider;
 import com.google.common.base.Optional;
+import org.apache.maven.wagon.repository.Repository;
 
 /**
- * This chain searches for AWS credentials in system properties -> environment variables -> ~/.m2/settings.xml -> Amazon's EC2 Instance Metadata Service
+ * This chain searches for AWS credentials in system properties -> environment variables -> ~/.m2/settings.xml -> ~/.aws/credentials -> Amazon's EC2 Instance Metadata Service
  */
 public final class MavenAwsCredentialsProviderChain extends AWSCredentialsProviderChain {
 
-	public MavenAwsCredentialsProviderChain(Optional<AuthenticationInfo> auth) {
-		super(getProviders(auth));
+	public MavenAwsCredentialsProviderChain(Repository source, Optional<AuthenticationInfo> auth) {
+		super(getProviders(source, auth));
 	}
 
-	private static AWSCredentialsProvider[] getProviders(Optional<AuthenticationInfo> auth) {
+	private static AWSCredentialsProvider[] getProviders(Repository source, Optional<AuthenticationInfo> auth) {
 		List<AWSCredentialsProvider> providers = new ArrayList<AWSCredentialsProvider>();
 
 		// System properties always win
@@ -47,6 +49,14 @@ public final class MavenAwsCredentialsProviderChain extends AWSCredentialsProvid
 
 		// Then fall through to settings.xml
 		providers.add(new AuthenticationInfoCredentialsProvider(auth));
+
+		// Then fall through to a ProfileCredentialsProvider that looks for a credentials profile
+		// using the repository id
+		providers.add(new ProfileCredentialsProvider(source.getId()));
+
+		// Then fall through to a ProfileCredentialsProvider that uses the AWS_PROFILE env variable
+		// or the default profile, if it is defined
+		providers.add(new ProfileCredentialsProvider());
 
 		// Then fall through to Amazon's EC2 Instance Metadata Service
 		// http://docs.aws.amazon.com/AWSSdkDocsJava/latest/DeveloperGuide/java-dg-roles.html
