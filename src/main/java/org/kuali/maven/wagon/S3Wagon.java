@@ -542,7 +542,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 		if (StringUtils.isEmpty(value)) {
 			return defaultValue;
 		} else {
-			return new Integer(value);
+			return Integer.parseInt(value);
 		}
 	}
 
