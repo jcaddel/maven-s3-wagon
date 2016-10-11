@@ -52,6 +52,7 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProviderChain;
 import com.amazonaws.auth.AWSSessionCredentials;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.S3ClientOptions;
 import com.amazonaws.services.s3.internal.Mimetypes;
 import com.amazonaws.services.s3.internal.RepeatableFileInputStream;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
@@ -95,6 +96,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 	public static final String MIN_THREADS_KEY = "maven.wagon.threads.min";
 	public static final String MAX_THREADS_KEY = "maven.wagon.threads.max";
 	public static final String DIVISOR_KEY = "maven.wagon.threads.divisor";
+	public static final String ENDPOINT_KEY = "maven.wagon.s3.endpoint";
 	public static final int DEFAULT_MIN_THREAD_COUNT = 10;
 	public static final int DEFAULT_MAX_THREAD_COUNT = 50;
 	public static final int DEFAULT_DIVISOR = 50;
@@ -109,6 +111,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 	int maxThreads = getMaxThreads();
 	int divisor = getDivisor();
 	String protocol = getValue(PROTOCOL_KEY, HTTPS);
+	String endpoint = getValue(ENDPOINT_KEY, null);
 	boolean http = HTTP.equals(protocol);
 	int readTimeout = DEFAULT_READ_TIMEOUT;
 	CannedAccessControlList acl = DEFAULT_ACL;
@@ -184,7 +187,14 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 
 	protected AmazonS3Client getAmazonS3Client(AWSCredentials credentials) {
 		ClientConfiguration configuration = getClientConfiguration();
-		return new AmazonS3Client(credentials, configuration);
+		AmazonS3Client result = new AmazonS3Client(credentials, configuration);
+		if (endpoint != null) {
+			log.info("setting the S3 endpoint to " + endpoint);
+			result.setEndpoint(endpoint);
+			// Always use path-style access with a custom endpoint
+			result.setS3ClientOptions(S3ClientOptions.builder().setPathStyleAccess(true).build());
+		}
+		return result;
 	}
 
 	@Override
