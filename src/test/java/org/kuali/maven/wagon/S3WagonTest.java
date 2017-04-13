@@ -15,16 +15,16 @@
  */
 package org.kuali.maven.wagon;
 
-import java.util.List;
-
 import org.apache.maven.wagon.authentication.AuthenticationInfo;
 import org.apache.maven.wagon.repository.Repository;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.util.List;
+
 public class S3WagonTest {
-	private static final String USERNAME = "AKIAJFD5IM7IPVVUEBNA";
-	private static final String PASSWORD = System.getProperty("secret.key");
+	private static final String USERNAME = System.getProperty("AWS_ACCESS_KEY_ID");
+	private static final String PASSWORD = System.getProperty("AWS_SECRET_ACCESS_KEY");
 
 	// private static final Logger log = LoggerFactory.getLogger(S3WagonTest.class);
 

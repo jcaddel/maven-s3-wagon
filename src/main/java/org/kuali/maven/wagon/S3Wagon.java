@@ -15,15 +15,19 @@
  */
 package org.kuali.maven.wagon;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.AmazonServiceException;
+import com.amazonaws.ClientConfiguration;
+import com.amazonaws.Protocol;
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProviderChain;
+import com.amazonaws.auth.AWSSessionCredentials;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.internal.Mimetypes;
+import com.amazonaws.services.s3.internal.RepeatableFileInputStream;
+import com.amazonaws.services.s3.model.*;
+import com.amazonaws.services.s3.transfer.TransferManager;
+import com.google.common.base.Optional;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.maven.wagon.ResourceDoesNotExistException;
@@ -44,25 +48,10 @@ import org.kuali.maven.wagon.auth.MavenAwsCredentialsProviderChain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.ClientConfiguration;
-import com.amazonaws.Protocol;
-import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSCredentialsProviderChain;
-import com.amazonaws.auth.AWSSessionCredentials;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.internal.Mimetypes;
-import com.amazonaws.services.s3.internal.RepeatableFileInputStream;
-import com.amazonaws.services.s3.model.CannedAccessControlList;
-import com.amazonaws.services.s3.model.ListObjectsRequest;
-import com.amazonaws.services.s3.model.ObjectListing;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
-import com.amazonaws.services.s3.transfer.TransferManager;
-import com.google.common.base.Optional;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 /**
  * <p>
@@ -95,11 +84,13 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 	public static final String MIN_THREADS_KEY = "maven.wagon.threads.min";
 	public static final String MAX_THREADS_KEY = "maven.wagon.threads.max";
 	public static final String DIVISOR_KEY = "maven.wagon.threads.divisor";
+	public static final String SSE_KEY = "maven.wagon.s3.server-side-encryption";
 	public static final int DEFAULT_MIN_THREAD_COUNT = 10;
 	public static final int DEFAULT_MAX_THREAD_COUNT = 50;
 	public static final int DEFAULT_DIVISOR = 50;
 	public static final int DEFAULT_READ_TIMEOUT = 60 * 1000;
-	public static final CannedAccessControlList DEFAULT_ACL = CannedAccessControlList.PublicRead;
+	public static final CannedAccessControlList DEFAULT_ACL = CannedAccessControlList.AuthenticatedRead;
+	public static final boolean DEFAULT_SERVER_SIDE_ENCRYPTION = true;
 	private static final File TEMP_DIR = getCanonicalFile(System.getProperty("java.io.tmpdir"));
 	private static final String TEMP_DIR_PATH = TEMP_DIR.getAbsolutePath();
 
@@ -113,6 +104,7 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 	int readTimeout = DEFAULT_READ_TIMEOUT;
 	CannedAccessControlList acl = DEFAULT_ACL;
 	TransferManager transferManager;
+	boolean requireServerSideEncryption = getValue(SSE_KEY, DEFAULT_SERVER_SIDE_ENCRYPTION);
 
 	private static final Logger log = LoggerFactory.getLogger(S3Wagon.class);
 
@@ -134,11 +126,36 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 		if (client.doesBucketExist(bucketName)) {
 			log.debug("Found bucket '" + bucketName + "' Validating permissions");
 			validatePermissions(client, bucketName);
+			requireServerSideEncryption = detectServerSideEncryption(client, bucketName, requireServerSideEncryption);
 		} else {
 			log.info("Creating bucket " + bucketName);
 			// If we create the bucket, we "own" it and by default have the "fullcontrol" permission
 			client.createBucket(bucketName);
 		}
+	}
+
+	private boolean detectServerSideEncryption(AmazonS3Client client, String bucketName, boolean defaultValue) {
+		log.debug("Checking to see if bucket requires server-side encryption: " + bucketName);
+		String objectKey = ".test-server-side-encryption";
+		byte[] bytes = "This file tests if S3 SSE is required. If present, your bucket does not enforce SSE.".getBytes();
+		ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes);
+		ObjectMetadata md = new ObjectMetadata();
+		md.setContentLength(bytes.length);
+		md.setContentType("text/plain");
+		PutObjectRequest req = new PutObjectRequest(bucketName, objectKey, inputStream, md);
+
+		try {
+			client.putObject(req);
+			client.deleteObject(bucketName, objectKey);
+		} catch (AmazonServiceException e) {
+			if ("403".equals(e.getErrorCode())) {
+				log.info("Bucket policies required server-side encryption. SSE = true.");
+				return true;
+			}
+		}
+
+		log.info("Bucket policies allowed creation of unencrypted file. SSE = false.");
+		return defaultValue;
 	}
 
 	/**
@@ -358,6 +375,10 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 		ObjectMetadata omd = new ObjectMetadata();
 		omd.setContentLength(contentLength);
 		omd.setContentType(contentType);
+
+		if (requireServerSideEncryption) {
+			omd.setServerSideEncryption(ObjectMetadata.AES_256_SERVER_SIDE_ENCRYPTION);
+		}
 		return omd;
 	}
 
@@ -543,6 +564,15 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 			return defaultValue;
 		} else {
 			return new Integer(value);
+		}
+	}
+
+	protected boolean getValue(String key, boolean defaultValue) {
+		String value = System.getProperty(key);
+		if (StringUtils.isEmpty(value)) {
+			return defaultValue;
+		} else {
+			return Boolean.parseBoolean(value);
 		}
 	}
 
