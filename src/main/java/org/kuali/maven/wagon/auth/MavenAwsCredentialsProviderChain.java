@@ -25,6 +25,7 @@ import com.amazonaws.auth.AWSCredentialsProviderChain;
 import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
 import com.amazonaws.auth.InstanceProfileCredentialsProvider;
 import com.amazonaws.auth.SystemPropertiesCredentialsProvider;
+import com.amazonaws.auth.EC2ContainerCredentialsProviderWrapper;
 import com.google.common.base.Optional;
 
 /**
@@ -52,7 +53,9 @@ public final class MavenAwsCredentialsProviderChain extends AWSCredentialsProvid
 		// http://docs.aws.amazon.com/AWSSdkDocsJava/latest/DeveloperGuide/java-dg-roles.html
 		// This allows you setup an IAM role, attach that role to an EC2 Instance at launch time,
 		// and thus automatically provide the wagon with the credentials it needs
-		providers.add(new InstanceProfileCredentialsProvider());
+		providers.add(new EC2ContainerCredentialsProviderWrapper());
+
+		providers.add(InstanceProfileCredentialsProvider.getInstance());
 
 		return providers.toArray(new AWSCredentialsProvider[providers.size()]);
 	}
