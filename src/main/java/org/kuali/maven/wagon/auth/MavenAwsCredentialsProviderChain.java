@@ -22,13 +22,15 @@ import org.apache.maven.wagon.authentication.AuthenticationInfo;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSCredentialsProviderChain;
+import com.amazonaws.auth.EC2ContainerCredentialsProviderWrapper;
 import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
-import com.amazonaws.auth.InstanceProfileCredentialsProvider;
 import com.amazonaws.auth.SystemPropertiesCredentialsProvider;
+import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.google.common.base.Optional;
 
 /**
- * This chain searches for AWS credentials in system properties -> environment variables -> ~/.m2/settings.xml -> Amazon's EC2 Instance Metadata Service
+ * This chain searches for AWS credentials in system properties -> environment variables -> ~/.m2/settings.xml 
+ * -> AWS Configuration Profile -> Amazon's EC2 Container Service/EC2 Instance Metadata Service
  */
 public final class MavenAwsCredentialsProviderChain extends AWSCredentialsProviderChain {
 
@@ -48,11 +50,14 @@ public final class MavenAwsCredentialsProviderChain extends AWSCredentialsProvid
 		// Then fall through to settings.xml
 		providers.add(new AuthenticationInfoCredentialsProvider(auth));
 
-		// Then fall through to Amazon's EC2 Instance Metadata Service
+		// Then fall thru to reading the ~/.aws/credentials files many people use.
+		providers.add(new ProfileCredentialsProvider());
+
+		// Then fall through to either Amazon's Amazon EC2 Container Service or EC2 Instance Metadata Service
 		// http://docs.aws.amazon.com/AWSSdkDocsJava/latest/DeveloperGuide/java-dg-roles.html
 		// This allows you setup an IAM role, attach that role to an EC2 Instance at launch time,
 		// and thus automatically provide the wagon with the credentials it needs
-		providers.add(new InstanceProfileCredentialsProvider());
+		providers.add(new EC2ContainerCredentialsProviderWrapper());
 
 		return providers.toArray(new AWSCredentialsProvider[providers.size()]);
 	}
