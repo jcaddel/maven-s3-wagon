@@ -37,7 +37,7 @@
     <project.scm.vendor>git</project.scm.vendor>
     <project.java.version>1.5</project.java.version>
     <slf4j.version>1.7.5</slf4j.version>
-    <aws.version>1.6.4</aws.version>
+    <aws.version>1.11.384</aws.version>
     <spring.version>3.2.5.RELEASE</spring.version>
     <kuali-s3.version>1.0.1</kuali-s3.version>
     <junit.version>4.11</junit.version>
