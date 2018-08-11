@@ -22,6 +22,7 @@ import org.apache.maven.wagon.authentication.AuthenticationInfo;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSCredentialsProviderChain;
+import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
 import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
 import com.amazonaws.auth.InstanceProfileCredentialsProvider;
 import com.amazonaws.auth.SystemPropertiesCredentialsProvider;
@@ -44,6 +45,9 @@ public final class MavenAwsCredentialsProviderChain extends AWSCredentialsProvid
 
 		// Then fall through to environment variables
 		providers.add(new EnvironmentVariableCredentialsProvider());
+		
+		// Looks up most providers
+		providers.add(new DefaultAWSCredentialsProviderChain());
 
 		// Then fall through to settings.xml
 		providers.add(new AuthenticationInfoCredentialsProvider(auth));
