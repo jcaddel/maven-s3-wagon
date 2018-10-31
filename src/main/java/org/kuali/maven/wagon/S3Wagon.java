@@ -161,6 +161,15 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 
 	}
 
+        protected boolean blankAclSet(Repository repository) {
+		RepositoryPermissions permissions = repository.getPermissions();
+		if (permissions == null) {
+			return false;
+		}
+		String filePermissions = permissions.getFileMode();
+		return StringUtils.isBlank(filePermissions);
+        }
+
 	protected CannedAccessControlList getAclFromRepository(Repository repository) {
 		RepositoryPermissions permissions = repository.getPermissions();
 		if (permissions == null) {
@@ -197,12 +206,16 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 		validateBucket(client, bucketName);
 		this.basedir = getBaseDir(source);
 
-		// If they've specified <filePermissions> in settings.xml, that always wins
+		// If they've specified <filePermissions> in settings.xml, that always wins,
+                // including if they remove the acl by setting the value to blank.
 		CannedAccessControlList repoAcl = getAclFromRepository(source);
 		if (repoAcl != null) {
 			log.info("File permissions: " + repoAcl.name());
 			acl = repoAcl;
-		}
+		} else if (blankAclSet(source)) {
+                        log.info("File permissions explicitly unset");
+                        acl = null;
+                }
 	}
 
 	@Override
@@ -388,7 +401,9 @@ public class S3Wagon extends AbstractWagon implements RequestFactory {
 			InputStream input = getInputStream(source, progress);
 			ObjectMetadata metadata = getObjectMetadata(source, destination);
 			PutObjectRequest request = new PutObjectRequest(bucketName, key, input, metadata);
-			request.setCannedAcl(acl);
+			if (acl != null) {
+                          request.setCannedAcl(acl);
+                        }
 			return request;
 		} catch (FileNotFoundException e) {
 			throw new AmazonServiceException("File not found", e);
